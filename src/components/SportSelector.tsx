@@ -9,7 +9,9 @@ const sports = [
   "Soccer",
   "Tennis Doubles",
   "Beach Volleyball",
-  "Badminton Doubles"
+  "Badminton Doubles",
+  "Padel",
+  "Golf"
 ];
 
 export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string) => void }) => {
