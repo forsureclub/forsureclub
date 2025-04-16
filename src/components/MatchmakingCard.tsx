@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -6,19 +5,11 @@ import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
-import { useToast } from "./ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Users, Briefcase, Building } from "lucide-react";
-
-type PlayerProfile = {
-  name: string;
-  sport: string;
-  abilityLevel: string;
-  spendingLevel: '1' | '2' | '3';
-  isClubMember: boolean;
-  occupation: string;
-  clubName: string;
-  location: string;
-};
+import { DateTimeSelector } from "./DateTimeSelector";
+import { PlayerProfile } from "../types/matchmaking";
+import { format } from "date-fns";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -28,6 +19,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [occupation, setOccupation] = useState("");
   const [clubName, setClubName] = useState("");
   const [location, setLocation] = useState("");
+  const [preferredDates, setPreferredDates] = useState<Date[]>([]);
+  const [preferredTimes, setPreferredTimes] = useState<string[]>([]);
   const [isJoining, setIsJoining] = useState(false);
   const [isMatched, setIsMatched] = useState(false);
   const [matchedPlayers, setMatchedPlayers] = useState<PlayerProfile[]>([]);
@@ -40,10 +33,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const abilityLabel = selectedSport === "Golf" ? "Handicap" : "Playtomic/LTA Level";
 
   const handleJoin = () => {
-    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName)) {
+    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || preferredDates.length === 0 || preferredTimes.length === 0) {
       toast({
         title: "Missing information",
-        description: "Please fill out all required fields",
+        description: "Please fill out all required fields including preferred dates and times",
         variant: "destructive"
       });
       return;
@@ -59,7 +52,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       isClubMember,
       occupation,
       clubName,
-      location
+      location,
+      preferredDates,
+      preferredTimes
     };
 
     // Simulate AI matching logic with expanded criteria
@@ -102,6 +97,12 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       const spendingVariation = Math.floor(Math.random() * 3) - 1;
       const newSpendingLevel = Math.max(1, Math.min(3, spendingLevelNum + spendingVariation));
       
+      // Generate random dates and times that overlap with the player's preferences
+      const randomDates = player.preferredDates
+        .slice(0, Math.floor(Math.random() * player.preferredDates.length + 1));
+      const randomTimes = player.preferredTimes
+        .slice(0, Math.floor(Math.random() * player.preferredTimes.length + 1));
+      
       matchedPlayers.push({
         name,
         sport: player.sport,
@@ -110,7 +111,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         isClubMember: Math.random() > 0.5,
         occupation: occupations[Math.floor(Math.random() * occupations.length)],
         clubName: clubs[Math.floor(Math.random() * clubs.length)],
-        location: locations[Math.floor(Math.random() * locations.length)]
+        location: locations[Math.floor(Math.random() * locations.length)],
+        preferredDates: randomDates,
+        preferredTimes: randomTimes,
       });
     }
     
@@ -152,6 +155,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
                     <Users className="w-4 h-4" />
                     <span>Budget: {"💰".repeat(parseInt(player.spendingLevel))}</span>
                   </div>
+                </div>
+                <div className="mt-2 text-sm text-gray-600">
+                  <p>Available dates: {player.preferredDates.map(d => format(d, "PP")).join(", ")}</p>
+                  <p>Preferred times: {player.preferredTimes.join(", ")}</p>
                 </div>
               </div>
             ))}
@@ -212,6 +219,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
             className="mt-1"
           />
         </div>
+        
+        <DateTimeSelector
+          selectedDates={preferredDates}
+          onDatesChange={setPreferredDates}
+          selectedTimes={preferredTimes}
+          onTimesChange={setPreferredTimes}
+        />
         
         <div>
           <Label htmlFor="ability" className="text-sm font-medium text-gray-700">{abilityLabel}</Label>
