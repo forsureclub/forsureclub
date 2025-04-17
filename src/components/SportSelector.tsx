@@ -2,11 +2,17 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import { GolfClub, Table } from "lucide-react";
 
 const sports = [
   "Padel",
   "Golf"
 ];
+
+const sportIcons = {
+  "Padel": Table,
+  "Golf": GolfClub
+};
 
 export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string) => void }) => {
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
@@ -18,18 +24,21 @@ export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string
 
   return (
     <Card className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Select Your Sport</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {sports.map((sport) => (
-          <Button
-            key={sport}
-            onClick={() => handleSportSelect(sport)}
-            variant={selectedSport === sport ? "default" : "outline"}
-            className="h-16 text-lg"
-          >
-            {sport}
-          </Button>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {sports.map((sport) => {
+          const Icon = sportIcons[sport as keyof typeof sportIcons];
+          return (
+            <Button
+              key={sport}
+              onClick={() => handleSportSelect(sport)}
+              variant={selectedSport === sport ? "default" : "outline"}
+              className="h-32 text-xl flex flex-col items-center justify-center gap-3 transition-all hover:scale-105"
+            >
+              <Icon className="h-10 w-10" />
+              {sport}
+            </Button>
+          );
+        })}
       </div>
     </Card>
   );
