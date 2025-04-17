@@ -1,16 +1,8 @@
 
 import { useState } from "react";
-import { format } from "date-fns";
-import { Calendar } from "./ui/calendar";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
-import { CalendarIcon } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const timeSlots = [
   "06:00-09:00",
@@ -22,15 +14,15 @@ const timeSlots = [
 ];
 
 interface DateTimeSelectorProps {
-  selectedDates: Date[];
-  onDatesChange: (dates: Date[]) => void;
+  selectedDays: 'weekdays' | 'weekends' | 'both';
+  onDaysChange: (days: 'weekdays' | 'weekends' | 'both') => void;
   selectedTimes: string[];
   onTimesChange: (times: string[]) => void;
 }
 
 export const DateTimeSelector = ({
-  selectedDates,
-  onDatesChange,
+  selectedDays,
+  onDaysChange,
   selectedTimes,
   onTimesChange,
 }: DateTimeSelectorProps) => {
@@ -45,37 +37,25 @@ export const DateTimeSelector = ({
   return (
     <div className="space-y-4">
       <div>
-        <Label>Preferred Dates</Label>
-        <div className="mt-1">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !selectedDates.length && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDates.length > 0 ? (
-                  selectedDates.map(date => format(date, "PPP")).join(", ")
-                ) : (
-                  <span>Pick dates</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="multiple"
-                selected={selectedDates}
-                onSelect={(dates) => onDatesChange(dates || [])}
-                initialFocus
-                className="pointer-events-auto"
-                disabled={(date) => date < new Date()}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <Label>Preferred Days</Label>
+        <RadioGroup
+          value={selectedDays}
+          onValueChange={(value) => onDaysChange(value as 'weekdays' | 'weekends' | 'both')}
+          className="mt-2 flex flex-col space-y-1"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="weekdays" id="weekdays" />
+            <Label htmlFor="weekdays" className="cursor-pointer">Weekdays (Monday-Friday)</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="weekends" id="weekends" />
+            <Label htmlFor="weekends" className="cursor-pointer">Weekends (Saturday-Sunday)</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="both" id="both" />
+            <Label htmlFor="both" className="cursor-pointer">Both weekdays and weekends</Label>
+          </div>
+        </RadioGroup>
       </div>
 
       <div>

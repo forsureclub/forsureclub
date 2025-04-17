@@ -8,6 +8,8 @@ export type PlayerProfile = {
   occupation: string;
   clubName: string;
   location: string;
-  preferredDates: Date[];
   preferredTimes: string[];
+  preferredDays: 'weekdays' | 'weekends' | 'both';
+  gender: 'male' | 'female' | 'other';
+  email: string;
 };
