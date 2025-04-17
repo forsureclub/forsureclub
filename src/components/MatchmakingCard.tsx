@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Users, Briefcase, Building, Mail } from "lucide-react";
-import { DateTimeSelector } from "./DateTimeSelector";
+import { MapPin, Users, Briefcase, Building, Mail, Star } from "lucide-react";
 import { PlayerProfile } from "../types/matchmaking";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+
+type MatchedPlayerWithScore = PlayerProfile & {
+  matchScore: number;
+  suggestedLocation: string;
+};
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -21,13 +25,12 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [clubName, setClubName] = useState("");
   const [location, setLocation] = useState("");
   const [preferredDays, setPreferredDays] = useState<'weekdays' | 'weekends' | 'both'>('both');
-  const [preferredTimes, setPreferredTimes] = useState<string[]>([]);
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
   const [email, setEmail] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const [isMatched, setIsMatched] = useState(false);
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
-  const [matchedPlayers, setMatchedPlayers] = useState<PlayerProfile[]>([]);
+  const [matchedPlayers, setMatchedPlayers] = useState<MatchedPlayerWithScore[]>([]);
   const { toast } = useToast();
 
   const abilityOptions = selectedSport === "Golf" 
@@ -35,6 +38,18 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     : ["Beginner", "Intermediate", "Advanced", "Professional"];
 
   const abilityLabel = selectedSport === "Golf" ? "Handicap" : "Playtomic/LTA Level";
+  
+  const spendingDescription = selectedSport === "Golf"
+    ? {
+        "1": "£20–30 per round",
+        "2": "£30–50 per round",
+        "3": "£50+ per round",
+      }
+    : {
+        "1": "£10–15 per hour",
+        "2": "£15–25 per hour",
+        "3": "£30+ per hour",
+      };
 
   const handleLocationSearch = () => {
     const searchQuery = encodeURIComponent(`${location} ${selectedSport} club`);
@@ -52,8 +67,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   };
 
   const handleJoin = () => {
-    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || 
-        preferredTimes.length === 0 || !email || !validateEmail(email)) {
+    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !validateEmail(email)) {
       toast({
         title: "Missing information",
         description: "Please fill out all required fields including email address",
@@ -74,7 +88,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       clubName,
       location,
       preferredDays,
-      preferredTimes,
+      preferredTimes: [], // No longer using preferred times
       gender,
       email
     };
@@ -86,7 +100,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       
       if (hasEnoughPlayers) {
         const simulatedPlayers = generateMatchedPlayers(currentPlayer);
-        setMatchedPlayers([currentPlayer, ...simulatedPlayers]);
+        setMatchedPlayers([{...currentPlayer, matchScore: 100, suggestedLocation: getRandomVenue(currentPlayer.location, selectedSport) }]);
+        setMatchedPlayers(prev => [...prev, ...simulatedPlayers]);
         setIsMatched(true);
         setIsWaitingForMatch(false);
         
@@ -109,8 +124,20 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     }, 2000);
   };
 
-  const generateMatchedPlayers = (player: PlayerProfile): PlayerProfile[] => {
-    const matchedPlayers: PlayerProfile[] = [];
+  const getRandomVenue = (baseLocation: string, sport: string): string => {
+    const venues = [
+      `${baseLocation} ${sport} Club`,
+      `${baseLocation} Central ${sport} Courts`,
+      `${baseLocation} Community Sports Center`,
+      `${sport} World ${baseLocation}`,
+      `The ${baseLocation} ${sport} Academy`
+    ];
+    
+    return venues[Math.floor(Math.random() * venues.length)];
+  };
+
+  const generateMatchedPlayers = (player: PlayerProfile): MatchedPlayerWithScore[] => {
+    const matchedPlayers: MatchedPlayerWithScore[] = [];
     const occupations = ["Software Engineer", "Doctor", "Lawyer", "Business Owner", "Marketing Executive", "Finance Professional"];
     const locations = ["London", "Manchester", "Birmingham", "Leeds", "Edinburgh"];
     const clubs = [
@@ -140,6 +167,15 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       
       // Match gender randomly 
       const genders: Array<'male' | 'female' | 'other'> = ['male', 'female', 'other'];
+
+      // Calculate match score
+      const baseScore = 75; // Base score
+      const abilityScore = 10 - Math.abs(abilityIndex - newAbilityIndex) * 5; // 0-10 points for ability match
+      const spendingScore = 10 - Math.abs(spendingLevelNum - newSpendingLevel) * 5; // 0-10 points for spending match
+      const randomFactors = Math.floor(Math.random() * 15); // Random variation
+      
+      const matchScore = Math.min(100, Math.max(60, baseScore + abilityScore + spendingScore + randomFactors));
+      const locationIndex = Math.floor(Math.random() * locations.length);
       
       matchedPlayers.push({
         name,
@@ -149,15 +185,17 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         isClubMember: Math.random() > 0.5,
         occupation: occupations[Math.floor(Math.random() * occupations.length)],
         clubName: clubs[Math.floor(Math.random() * clubs.length)],
-        location: locations[Math.floor(Math.random() * locations.length)],
+        location: locations[locationIndex],
         preferredDays: player.preferredDays,
-        preferredTimes: player.preferredTimes,
+        preferredTimes: [], // No longer using preferred times
         gender: genders[Math.floor(Math.random() * genders.length)],
-        email: `player${nameIndex + 1}@example.com`
+        email: `player${nameIndex + 1}@example.com`,
+        matchScore,
+        suggestedLocation: getRandomVenue(locations[locationIndex], player.sport)
       });
     }
     
-    return matchedPlayers;
+    return matchedPlayers.sort((a, b) => b.matchScore - a.matchScore); // Sort by match score
   };
 
   // Display waiting for match page
@@ -207,22 +245,42 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               <div key={index} className="p-3 bg-white rounded-md shadow-sm">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{player.name}</span>
-                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    {player.gender}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      {player.gender}
+                    </span>
+                    <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
+                      <Star className="h-3 w-3 mr-1" />
+                      {player.matchScore}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-gray-500 flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" /> {player.occupation}
+                </div>
+                <div className="mt-1 text-sm text-gray-500 flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> {player.location}
                 </div>
                 <div className="mt-1 text-sm text-gray-500">
-                  {player.location}
+                  Skill Level: {player.abilityLevel}
                 </div>
+                {player.isClubMember && (
+                  <div className="mt-1 text-sm text-gray-500">
+                    Club: {player.clubName}
+                  </div>
+                )}
               </div>
             ))}
           </div>
           
           <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <h3 className="font-medium text-blue-800">Match Information</h3>
+            <h3 className="font-medium text-blue-800">Suggested Meeting Location</h3>
+            <p className="mt-2 text-sm text-gray-700 flex items-center gap-1">
+              <Building className="h-4 w-4" /> {matchedPlayers[0]?.suggestedLocation || "To be determined"}
+            </p>
             <p className="mt-2 text-sm text-gray-700">
-              An email has been sent to you with more details about your group. You can 
-              proceed to coordinate a game time based on your specified preferences.
+              Availability: {preferredDays === 'both' ? 'Flexible (Weekdays & Weekends)' : 
+                          preferredDays === 'weekdays' ? 'Weekdays' : 'Weekends'}
             </p>
           </div>
           
@@ -286,12 +344,22 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           </div>
         </div>
         
-        <DateTimeSelector
-          selectedDays={preferredDays}
-          onDaysChange={setPreferredDays}
-          selectedTimes={preferredTimes}
-          onTimesChange={setPreferredTimes}
-        />
+        <div>
+          <Label htmlFor="availability" className="text-sm font-medium text-gray-700">Availability</Label>
+          <Select 
+            value={preferredDays} 
+            onValueChange={(value) => setPreferredDays(value as 'weekdays' | 'weekends' | 'both')}
+          >
+            <SelectTrigger id="availability" className="w-full">
+              <SelectValue placeholder="When are you available?" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekdays">Weekdays</SelectItem>
+              <SelectItem value="weekends">Weekends</SelectItem>
+              <SelectItem value="both">Both (Flexible)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
         <div>
           <Label htmlFor="ability" className="text-sm font-medium text-gray-700">{abilityLabel}</Label>
@@ -320,9 +388,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               <SelectValue placeholder="Select your budget" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">💰 Budget-friendly</SelectItem>
-              <SelectItem value="2">💰💰 Mid-range</SelectItem>
-              <SelectItem value="3">💰💰💰 Premium experience</SelectItem>
+              <SelectItem value="1">💰 {spendingDescription["1"]}</SelectItem>
+              <SelectItem value="2">💰💰 {spendingDescription["2"]}</SelectItem>
+              <SelectItem value="3">💰💰💰 {spendingDescription["3"]}</SelectItem>
             </SelectContent>
           </Select>
         </div>

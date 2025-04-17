@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { GolfClub, Table } from "lucide-react";
+import { Table, Golf } from "lucide-react";
 
 const sports = [
   "Padel",
@@ -11,7 +11,7 @@ const sports = [
 
 const sportIcons = {
   "Padel": Table,
-  "Golf": GolfClub
+  "Golf": Golf
 };
 
 export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string) => void }) => {
