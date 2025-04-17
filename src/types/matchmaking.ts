@@ -12,4 +12,5 @@ export type PlayerProfile = {
   preferredDays: 'weekdays' | 'weekends' | 'both';
   gender: 'male' | 'female' | 'other';
   email: string;
+  phoneNumber?: string;
 };

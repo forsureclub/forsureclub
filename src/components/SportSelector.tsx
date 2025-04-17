@@ -5,7 +5,8 @@ import { Card } from "./ui/card";
 import { Table } from "lucide-react";
 
 const sports = [
-  "Padel"
+  "Padel",
+  "Golf"
 ];
 
 const sportIcons = {
@@ -32,7 +33,7 @@ export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string
               variant={selectedSport === sport ? "default" : "outline"}
               className="h-32 text-xl flex flex-col items-center justify-center gap-3 transition-all hover:scale-105"
             >
-              <Icon className="h-10 w-10" />
+              {Icon && <Icon className="h-10 w-10" />}
               {sport}
             </Button>
           );

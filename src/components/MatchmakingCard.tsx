@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -7,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Users, Briefcase, Building, Mail, Star } from "lucide-react";
+import { MapPin, Users, Briefcase, Building, Mail, Star, Download } from "lucide-react";
 import { PlayerProfile } from "../types/matchmaking";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
@@ -27,6 +26,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [preferredDays, setPreferredDays] = useState<'weekdays' | 'weekends' | 'both'>('both');
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const [isMatched, setIsMatched] = useState(false);
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
@@ -39,38 +39,19 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
   const abilityLabel = selectedSport === "Golf" ? "Handicap" : "Playtomic/LTA Level";
   
-  const spendingDescription = selectedSport === "Golf"
-    ? {
-        "1": "£20–30 per round",
-        "2": "£30–50 per round",
-        "3": "£50+ per round",
-      }
-    : {
-        "1": "£10–15 per hour",
-        "2": "£15–25 per hour",
-        "3": "£30+ per hour",
-      };
-
-  const handleLocationSearch = () => {
-    const searchQuery = encodeURIComponent(`${location} ${selectedSport} club`);
-    window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
-  };
-  
-  const handleClubSearch = () => {
-    if (!clubName) return;
-    const searchQuery = encodeURIComponent(`${clubName} ${selectedSport} club`);
-    window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
-  };
-
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  const validatePhone = (phone: string) => {
+    return /^[\d\+\-\(\) ]{7,15}$/.test(phone);
+  };
+
   const handleJoin = () => {
-    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !validateEmail(email)) {
+    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !validateEmail(email) || !phoneNumber || !validatePhone(phoneNumber)) {
       toast({
         title: "Missing information",
-        description: "Please fill out all required fields including email address",
+        description: "Please fill out all required fields including valid email and phone number",
         variant: "destructive"
       });
       return;
@@ -88,9 +69,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       clubName,
       location,
       preferredDays,
-      preferredTimes: [], // No longer using preferred times
+      preferredTimes: [],
       gender,
-      email
+      email,
+      phoneNumber
     };
 
     // Simulate matching logic
@@ -148,31 +130,26 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       "Urban Padel Club"
     ];
     
-    // Generate 3 matched players (to make a group of 4 with the current player)
     for (let i = 0; i < 3; i++) {
       const nameIndex = Math.floor(Math.random() * 20);
       const name = `Player ${nameIndex + 1}`;
       
-      // Select similar ability level
       let abilityIndex = abilityOptions.indexOf(player.abilityLevel);
       if (abilityIndex < 0) abilityIndex = 0;
       
       const abilityVariation = Math.floor(Math.random() * 3) - 1;
       const newAbilityIndex = Math.max(0, Math.min(abilityOptions.length - 1, abilityIndex + abilityVariation));
       
-      // Select similar spending level
       const spendingLevelNum = parseInt(player.spendingLevel);
       const spendingVariation = Math.floor(Math.random() * 3) - 1;
       const newSpendingLevel = Math.max(1, Math.min(3, spendingLevelNum + spendingVariation));
       
-      // Match gender randomly 
       const genders: Array<'male' | 'female' | 'other'> = ['male', 'female', 'other'];
 
-      // Calculate match score
-      const baseScore = 75; // Base score
-      const abilityScore = 10 - Math.abs(abilityIndex - newAbilityIndex) * 5; // 0-10 points for ability match
-      const spendingScore = 10 - Math.abs(spendingLevelNum - newSpendingLevel) * 5; // 0-10 points for spending match
-      const randomFactors = Math.floor(Math.random() * 15); // Random variation
+      const baseScore = 75;
+      const abilityScore = 10 - Math.abs(abilityIndex - newAbilityIndex) * 5;
+      const spendingScore = 10 - Math.abs(spendingLevelNum - newSpendingLevel) * 5;
+      const randomFactors = Math.floor(Math.random() * 15);
       
       const matchScore = Math.min(100, Math.max(60, baseScore + abilityScore + spendingScore + randomFactors));
       const locationIndex = Math.floor(Math.random() * locations.length);
@@ -187,18 +164,68 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         clubName: clubs[Math.floor(Math.random() * clubs.length)],
         location: locations[locationIndex],
         preferredDays: player.preferredDays,
-        preferredTimes: [], // No longer using preferred times
+        preferredTimes: [],
         gender: genders[Math.floor(Math.random() * genders.length)],
         email: `player${nameIndex + 1}@example.com`,
+        phoneNumber: `07${Math.floor(Math.random() * 1000000000)}`.substring(0, 11),
         matchScore,
         suggestedLocation: getRandomVenue(locations[locationIndex], player.sport)
       });
     }
     
-    return matchedPlayers.sort((a, b) => b.matchScore - a.matchScore); // Sort by match score
+    return matchedPlayers.sort((a, b) => b.matchScore - a.matchScore);
   };
 
-  // Display waiting for match page
+  const exportToCSV = () => {
+    if (matchedPlayers.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "Please find a match first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+
+    csvContent += "Name,Sport,Ability Level,Spending Level,Occupation,Club Member,Club Name,Location,Availability,Gender,Email,Phone Number,Match Score,Suggested Location\n";
+
+    matchedPlayers.forEach(player => {
+      const row = [
+        player.name,
+        player.sport,
+        player.abilityLevel,
+        player.spendingLevel,
+        player.occupation,
+        player.isClubMember ? "Yes" : "No",
+        player.clubName || "N/A",
+        player.location,
+        player.preferredDays === 'both' ? 'Flexible' : player.preferredDays,
+        player.gender,
+        player.email,
+        player.phoneNumber || "N/A",
+        player.matchScore,
+        player.suggestedLocation
+      ].map(cell => `"${cell}"`).join(",");
+
+      csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${selectedSport}_Matches_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Successful",
+      description: "Your match data has been exported to CSV",
+    });
+  };
+
   if (isWaitingForMatch) {
     return (
       <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
@@ -232,7 +259,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     );
   }
 
-  // Display match result
   if (isMatched) {
     return (
       <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
@@ -284,18 +310,26 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
             </p>
           </div>
           
-          <Button
-            onClick={() => setIsMatched(false)}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            Find Another Match
-          </Button>
+          <div className="flex gap-2 mt-4">
+            <Button
+              onClick={() => setIsMatched(false)}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              Find Another Match
+            </Button>
+            <Button
+              onClick={exportToCSV}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" /> Export
+            </Button>
+          </div>
         </div>
       </Card>
     );
   }
 
-  // Main matchmaking form
   return (
     <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Join {selectedSport} Match</h2>
@@ -324,24 +358,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
         <div>
           <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
-          <div className="flex gap-2">
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter your city"
-              className="mt-1 flex-1"
-            />
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleLocationSearch}
-              className="mt-1"
-              disabled={!location}
-            >
-              Search
-            </Button>
-          </div>
+          <Input
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Enter your city"
+            className="mt-1"
+          />
         </div>
         
         <div>
@@ -388,9 +411,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               <SelectValue placeholder="Select your budget" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">💰 {spendingDescription["1"]}</SelectItem>
-              <SelectItem value="2">💰💰 {spendingDescription["2"]}</SelectItem>
-              <SelectItem value="3">💰💰💰 {spendingDescription["3"]}</SelectItem>
+              <SelectItem value="1">💰</SelectItem>
+              <SelectItem value="2">💰💰</SelectItem>
+              <SelectItem value="3">💰💰💰</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -409,24 +432,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           
           {isClubMember && (
             <div className="mt-2">
-              <div className="flex gap-2">
-                <Input
-                  id="club-name"
-                  value={clubName}
-                  onChange={(e) => setClubName(e.target.value)}
-                  placeholder="Enter your club name"
-                  className="mt-1 flex-1"
-                />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleClubSearch}
-                  className="mt-1"
-                  disabled={!clubName}
-                >
-                  Search
-                </Button>
-              </div>
+              <Input
+                id="club-name"
+                value={clubName}
+                onChange={(e) => setClubName(e.target.value)}
+                placeholder="Enter your club name"
+                className="mt-1"
+              />
             </div>
           )}
         </div>
@@ -465,9 +477,21 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           />
         </div>
         
+        <div>
+          <Label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone Number</Label>
+          <Input
+            id="phone"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="Enter your phone number"
+            className="mt-1"
+          />
+        </div>
+        
         <Button
           onClick={handleJoin}
-          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || isJoining || !email}
+          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || isJoining || !email || !phoneNumber}
           className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
         >
           {isJoining ? "Finding Match..." : "Find Match"}
