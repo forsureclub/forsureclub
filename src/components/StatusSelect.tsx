@@ -1,5 +1,12 @@
 
-import { select } from "@/lib/utils";
+import React from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type StatusSelectProps = {
   status: string;
@@ -8,14 +15,18 @@ type StatusSelectProps = {
 
 export const StatusSelect = ({ status, onChange }: StatusSelectProps) => {
   return (
-    <select
+    <Select
       value={status}
-      onChange={(e) => onChange(e.target.value)}
-      className="border rounded p-1"
+      onValueChange={onChange}
     >
-      <option value="pending">Pending</option>
-      <option value="approved">Approved</option>
-      <option value="rejected">Rejected</option>
-    </select>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Select status" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="pending">Pending</SelectItem>
+        <SelectItem value="approved">Approved</SelectItem>
+        <SelectItem value="rejected">Rejected</SelectItem>
+      </SelectContent>
+    </Select>
   );
 };
