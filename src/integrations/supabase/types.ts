@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      "New Players": {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      player_registrations: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          id: string
+          player_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          id?: string
+          player_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          id?: string
+          player_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_registrations_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           budget_range: string
@@ -59,7 +109,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
