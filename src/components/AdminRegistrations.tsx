@@ -1,25 +1,9 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Textarea } from "@/components/ui/textarea";
-
-type Registration = {
-  id: string;
-  player_id: string;
-  admin_notes: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  player: {
-    name: string;
-    sport: string;
-    occupation: string;
-    city: string;
-  };
-};
+import { useToast } from "@/hooks/use-toast";
+import { Registration } from "@/types/registration";
+import { RegistrationTable } from "./RegistrationTable";
 
 export const AdminRegistrations = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -82,55 +66,10 @@ export const AdminRegistrations = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Player Registrations</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Sport</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {registrations.map((reg) => (
-            <TableRow key={reg.id}>
-              <TableCell>{reg.player?.name}</TableCell>
-              <TableCell>{reg.player?.sport}</TableCell>
-              <TableCell>{reg.player?.city}</TableCell>
-              <TableCell>
-                <select
-                  value={reg.status}
-                  onChange={(e) => updateRegistration(reg.id, { status: e.target.value })}
-                  className="border rounded p-1"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </TableCell>
-              <TableCell>
-                <Textarea
-                  value={reg.admin_notes || ''}
-                  onChange={(e) => updateRegistration(reg.id, { admin_notes: e.target.value })}
-                  placeholder="Add notes..."
-                  className="min-h-[80px] w-full"
-                />
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateRegistration(reg.id, { status: 'approved' })}
-                >
-                  Approve
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <RegistrationTable
+        registrations={registrations}
+        onUpdateRegistration={updateRegistration}
+      />
     </div>
   );
 };
