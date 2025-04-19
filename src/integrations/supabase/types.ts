@@ -9,6 +9,75 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      match_players: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          id: string
+          match_id: string | null
+          performance_rating: number | null
+          player_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          match_id?: string | null
+          performance_rating?: number | null
+          player_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          match_id?: string | null
+          performance_rating?: number | null
+          player_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_players_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_players_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          created_at: string | null
+          id: string
+          location: string
+          played_at: string
+          sport: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location: string
+          played_at: string
+          sport: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location?: string
+          played_at?: string
+          sport?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       "New Players": {
         Row: {
           created_at: string
