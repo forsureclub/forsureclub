@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Users, Briefcase, Building, Mail } from "lucide-react";
 import { PlayerProfile } from "../types/matchmaking";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -40,7 +41,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     return /^[\d\+\-\(\) ]{7,15}$/.test(phone);
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !validateEmail(email) || !phoneNumber || !validatePhone(phoneNumber)) {
       toast({
         title: "Missing information",
@@ -68,19 +69,74 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       phoneNumber
     };
 
-    // Log the player data for manual processing
-    console.log('New Player Registration:', currentPlayer);
-    
-    // Set waiting state and show confirmation
-    setTimeout(() => {
-      setIsWaitingForMatch(true);
-      setIsJoining(false);
-      
+    try {
+      // First insert player data
+      const { data: playerData, error: playerError } = await supabase
+        .from('players')
+        .insert({
+          name: playerName,
+          sport: selectedSport,
+          occupation: occupation,
+          city: location,
+          club: isClubMember ? clubName : null,
+          gender: gender,
+          play_time: preferredDays,
+          budget_range: spendingLevel,
+          rating: 0, // Default value since it's required
+          user_id: '00000000-0000-0000-0000-000000000000' // Placeholder since it's required
+        })
+        .select('id')
+        .single();
+
+      if (playerError) {
+        console.error('Error inserting player:', playerError);
+        toast({
+          title: "Registration Failed",
+          description: "There was an error creating your profile. Please try again.",
+          variant: "destructive"
+        });
+        setIsJoining(false);
+        return;
+      }
+
+      // Then create registration record linked to the player
+      const { error: registrationError } = await supabase
+        .from('player_registrations')
+        .insert({
+          player_id: playerData.id,
+          status: 'pending'
+        });
+
+      if (registrationError) {
+        console.error('Error creating registration:', registrationError);
+        toast({
+          title: "Registration Failed",
+          description: "There was an error submitting your registration. Please try again.",
+          variant: "destructive"
+        });
+        setIsJoining(false);
+        return;
+      }
+
+      // Set waiting state and show confirmation
+      setTimeout(() => {
+        setIsWaitingForMatch(true);
+        setIsJoining(false);
+        
+        toast({
+          title: "Registration Successful",
+          description: "We'll email you when we find suitable players in your area",
+        });
+      }, 1000);
+    } catch (error) {
+      console.error('Error in registration process:', error);
       toast({
-        title: "Registration Successful",
-        description: "We'll email you when we find suitable players in your area",
+        title: "Registration Failed",
+        description: "There was an unexpected error. Please try again later.",
+        variant: "destructive"
       });
-    }, 1500);
+      setIsJoining(false);
+    }
   };
 
   if (isWaitingForMatch) {
