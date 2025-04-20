@@ -141,7 +141,7 @@ export type Database = {
           play_time: string
           rating: number
           sport: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           budget_range: string
@@ -155,7 +155,7 @@ export type Database = {
           play_time: string
           rating: number
           sport: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           budget_range?: string
@@ -169,7 +169,7 @@ export type Database = {
           play_time?: string
           rating?: number
           sport?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

@@ -42,9 +42,11 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   };
 
   const handleJoin = async () => {
-    if (!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !validateEmail(email) || !phoneNumber || !validatePhone(phoneNumber)) {
+    if (!playerName || !abilityLevel || !occupation || !location || 
+        (isClubMember && !clubName) || !email || 
+        !validateEmail(email) || !phoneNumber || !validatePhone(phoneNumber)) {
       toast({
-        title: "Missing information",
+        title: "Missing Information",
         description: "Please fill out all required fields including valid email and phone number",
         variant: "destructive"
       });
@@ -53,24 +55,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
     setIsJoining(true);
     
-    const currentPlayer: PlayerProfile = {
-      name: playerName,
-      sport: selectedSport,
-      abilityLevel,
-      spendingLevel,
-      isClubMember,
-      occupation,
-      clubName,
-      location,
-      preferredDays,
-      preferredTimes: [],
-      gender,
-      email,
-      phoneNumber
-    };
-
     try {
-      // First insert player data
       const { data: playerData, error: playerError } = await supabase
         .from('players')
         .insert({
@@ -82,43 +67,44 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           gender: gender,
           play_time: preferredDays,
           budget_range: spendingLevel,
-          rating: 0, // Default value since it's required
-          user_id: '00000000-0000-0000-0000-000000000000' // Placeholder since it's required
+          rating: 0,
+          user_id: null
         })
-        .select('id')
+        .select()
         .single();
 
       if (playerError) {
-        console.error('Error inserting player:', playerError);
+        console.error('Player insertion error:', playerError);
         toast({
           title: "Registration Failed",
-          description: "There was an error creating your profile. Please try again.",
+          description: `Error: ${playerError.message || 'Unable to create player profile'}`,
           variant: "destructive"
         });
         setIsJoining(false);
         return;
       }
 
-      // Then create registration record linked to the player
-      const { error: registrationError } = await supabase
+      const { data: registrationData, error: registrationError } = await supabase
         .from('player_registrations')
         .insert({
           player_id: playerData.id,
-          status: 'pending'
-        });
+          status: 'pending',
+          admin_notes: `Registered for ${selectedSport}`
+        })
+        .select()
+        .single();
 
       if (registrationError) {
-        console.error('Error creating registration:', registrationError);
+        console.error('Registration insertion error:', registrationError);
         toast({
           title: "Registration Failed",
-          description: "There was an error submitting your registration. Please try again.",
+          description: `Error: ${registrationError.message || 'Unable to complete registration'}`,
           variant: "destructive"
         });
         setIsJoining(false);
         return;
       }
 
-      // Set waiting state and show confirmation
       setTimeout(() => {
         setIsWaitingForMatch(true);
         setIsJoining(false);
@@ -129,10 +115,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         });
       }, 1000);
     } catch (error) {
-      console.error('Error in registration process:', error);
+      console.error('Unexpected error in registration:', error);
       toast({
         title: "Registration Failed",
-        description: "There was an unexpected error. Please try again later.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
       setIsJoining(false);
