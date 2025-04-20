@@ -1,9 +1,9 @@
+
 import { useState } from "react"
 import { Hero } from "../components/Hero"
 import { SportSelector } from "../components/SportSelector"
 import { MatchmakingCard } from "../components/MatchmakingCard"
 import { Button } from "@/components/ui/button"
-import { SubscriptionPlans } from "@/components/SubscriptionPlans"
 
 const Index = () => {
   const [isMatching, setIsMatching] = useState(false)
@@ -20,10 +20,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {!isMatching ? (
-        <>
-          <Hero onStartMatching={() => setIsMatching(true)} />
-          <SubscriptionPlans />
-        </>
+        <Hero onStartMatching={() => setIsMatching(true)} />
       ) : (
         <div className="p-6">
           <div className="max-w-4xl mx-auto space-y-8">

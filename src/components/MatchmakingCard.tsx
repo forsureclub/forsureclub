@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -6,8 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Users, Briefcase, Building, Mail } from "lucide-react";
-import { PlayerProfile } from "../types/matchmaking";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -56,14 +55,15 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     setIsJoining(true);
     
     try {
+      console.log('Attempting to insert player data...');
       const { data: playerData, error: playerError } = await supabase
         .from('players')
         .insert({
           name: playerName,
           sport: selectedSport,
-          occupation: occupation,
           city: location,
           club: isClubMember ? clubName : null,
+          occupation: occupation,
           gender: gender,
           play_time: preferredDays,
           budget_range: spendingLevel,
@@ -84,6 +84,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         return;
       }
 
+      console.log('Player data inserted successfully:', playerData);
+
+      console.log('Creating player registration...');
       const { data: registrationData, error: registrationError } = await supabase
         .from('player_registrations')
         .insert({
@@ -105,6 +108,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         return;
       }
 
+      console.log('Registration completed successfully:', registrationData);
+      
       setTimeout(() => {
         setIsWaitingForMatch(true);
         setIsJoining(false);
