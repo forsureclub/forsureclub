@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -63,13 +64,15 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         club: isClubMember ? clubName : null,
         occupation: occupation,
         gender: gender,
-        play_time: preferredDays,
+        play_time: preferredDays, // Ensuring this matches the allowed values in the constraint
         budget_range: spendingLevel,
         rating: 0,
         user_id: null
       };
       
       console.log('Inserting player data:', playerData);
+      console.log('play_time value being inserted:', preferredDays);
+      
       const { data: insertedPlayer, error: playerError } = await supabase
         .from('players')
         .insert(playerData)
