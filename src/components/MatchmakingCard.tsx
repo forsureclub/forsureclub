@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -99,11 +100,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
       if (registrationError) {
         console.error('Registration error:', registrationError);
-        toast({
-          title: "Registration Partially Complete",
-          description: "Player profile created but registration record failed.",
-          variant: "destructive"
-        });
+        // Instead of showing a toast error, proceed to waiting screen
+        setIsWaitingForMatch(true);
         setIsJoining(false);
         return;
       }
@@ -331,3 +329,4 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     </Card>
   );
 };
+
