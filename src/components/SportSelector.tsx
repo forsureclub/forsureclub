@@ -2,15 +2,18 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Table } from "lucide-react";
+import { Table, GolfIcon, TableTennis } from "lucide-react";
 
 const sports = [
   "Padel",
-  "Golf"
+  "Golf",
+  "Tennis"
 ];
 
 const sportIcons = {
-  "Padel": Table
+  "Padel": Table,
+  "Tennis": TableTennis,
+  "Golf": GolfIcon
 };
 
 export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string) => void }) => {
@@ -23,7 +26,7 @@ export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string
 
   return (
     <Card className="p-6 bg-white shadow-lg rounded-xl">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {sports.map((sport) => {
           const Icon = sportIcons[sport as keyof typeof sportIcons];
           return (
