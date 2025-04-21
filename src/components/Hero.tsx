@@ -23,7 +23,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl md:text-5xl font-bold text-gray-900 mb-4"
         >
-          Sports Matchmaking for Padel & Golf
+          To seamlessly connect padel, golf, and tennis players of similar skill levels.
         </motion.h1>
         
         <motion.p 
@@ -32,7 +32,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           transition={{ delay: 0.2 }}
           className="text-xl text-gray-600 mb-8"
         >
-          Play smarter. Match better. Connect through sport.
+          Fun, fair, and competitive matchups that elevate every game.
         </motion.p>
         
         <motion.div

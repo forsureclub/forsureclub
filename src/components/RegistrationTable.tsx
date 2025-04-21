@@ -18,6 +18,8 @@ export const RegistrationTable = ({ registrations, onUpdateRegistration }: Regis
           <TableHead>Name</TableHead>
           <TableHead>Sport</TableHead>
           <TableHead>Location</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Phone</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Notes</TableHead>
           <TableHead>Actions</TableHead>
@@ -29,6 +31,8 @@ export const RegistrationTable = ({ registrations, onUpdateRegistration }: Regis
             <TableCell>{reg.player?.name}</TableCell>
             <TableCell>{reg.player?.sport}</TableCell>
             <TableCell>{reg.player?.city}</TableCell>
+            <TableCell>{reg.player?.email || <span className="text-muted-foreground">-</span>}</TableCell>
+            <TableCell>{reg.player?.phone_number || <span className="text-muted-foreground">-</span>}</TableCell>
             <TableCell>
               <StatusSelect
                 status={reg.status}

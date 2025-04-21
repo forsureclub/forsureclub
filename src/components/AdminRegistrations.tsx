@@ -15,7 +15,7 @@ export const AdminRegistrations = () => {
       .from('player_registrations')
       .select(`
         *,
-        player:players(name, sport, occupation, city)
+        player:players(name, sport, occupation, city, email, phone_number)
       `)
       .order('created_at', { ascending: false });
 
