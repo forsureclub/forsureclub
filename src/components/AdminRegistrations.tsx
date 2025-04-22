@@ -12,6 +12,7 @@ export const AdminRegistrations = () => {
 
   const fetchRegistrations = async () => {
     try {
+      console.log("Fetching registrations...");
       const { data, error } = await supabase
         .from('player_registrations')
         .select(`
@@ -35,28 +36,34 @@ export const AdminRegistrations = () => {
         return;
       }
 
-      // Transform the data to match our Registration type
-      const formattedData = data.map(reg => ({
-        id: reg.id,
-        player_id: reg.player_id,
-        admin_notes: reg.admin_notes,
-        status: reg.status,
-        created_at: reg.created_at,
-        updated_at: reg.updated_at,
-        player: {
-          name: reg.player?.name || '',
-          sport: reg.player?.sport || '',
-          occupation: reg.player?.occupation || '',
-          city: reg.player?.city || '',
-          email: reg.player?.email || null,
-          phone_number: reg.player?.phone_number || null,
-          gender: reg.player?.gender,
-          play_time: reg.player?.play_time,
-          budget_range: reg.player?.budget_range,
-          club: reg.player?.club || null
-        }
-      }));
+      console.log("Fetched data:", data);
 
+      // Transform the data to match our Registration type
+      const formattedData = data.map(reg => {
+        console.log("Player data:", reg.player);
+        return {
+          id: reg.id,
+          player_id: reg.player_id,
+          admin_notes: reg.admin_notes,
+          status: reg.status,
+          created_at: reg.created_at,
+          updated_at: reg.updated_at,
+          player: {
+            name: reg.player?.name || '',
+            sport: reg.player?.sport || '',
+            occupation: reg.player?.occupation || '',
+            city: reg.player?.city || '',
+            email: reg.player?.email || null,
+            phone_number: reg.player?.phone_number || null,
+            gender: reg.player?.gender,
+            play_time: reg.player?.play_time,
+            budget_range: reg.player?.budget_range,
+            club: reg.player?.club || null
+          }
+        };
+      });
+
+      console.log("Formatted data:", formattedData);
       setRegistrations(formattedData);
       setLoading(false);
     } catch (err) {

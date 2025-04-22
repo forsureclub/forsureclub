@@ -35,8 +35,22 @@ export const RegistrationTable = ({ registrations, onUpdateRegistration }: Regis
             <TableCell>{reg.player?.name}</TableCell>
             <TableCell>{reg.player?.sport}</TableCell>
             <TableCell>{reg.player?.city}</TableCell>
-            <TableCell>{reg.player?.email || <span className="text-muted-foreground">-</span>}</TableCell>
-            <TableCell>{reg.player?.phone_number || <span className="text-muted-foreground">-</span>}</TableCell>
+            <TableCell>
+              {reg.player?.email ? 
+                <a href={`mailto:${reg.player.email}`} className="text-blue-500 hover:underline">
+                  {reg.player.email}
+                </a> : 
+                <span className="text-muted-foreground">-</span>
+              }
+            </TableCell>
+            <TableCell>
+              {reg.player?.phone_number ? 
+                <a href={`tel:${reg.player.phone_number}`} className="text-blue-500 hover:underline">
+                  {reg.player.phone_number}
+                </a> : 
+                <span className="text-muted-foreground">-</span>
+              }
+            </TableCell>
             <TableCell>{reg.player?.gender || <span className="text-muted-foreground">-</span>}</TableCell>
             <TableCell>{reg.player?.play_time || <span className="text-muted-foreground">-</span>}</TableCell>
             <TableCell>{reg.player?.budget_range || <span className="text-muted-foreground">-</span>}</TableCell>
