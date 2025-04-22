@@ -11,25 +11,59 @@ export const AdminRegistrations = () => {
   const { toast } = useToast();
 
   const fetchRegistrations = async () => {
-    const { data, error } = await supabase
-      .from('player_registrations')
-      .select(`
-        *,
-        player:players(name, sport, occupation, city, email, phone_number)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('player_registrations')
+        .select(`
+          id,
+          player_id,
+          admin_notes,
+          status,
+          created_at,
+          updated_at,
+          player:players(name, sport, occupation, city, email, phone_number)
+        `)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch registrations. You might not have admin access.",
+          variant: "destructive"
+        });
+        console.error("Registration error:", error);
+        return;
+      }
+
+      // Transform the data to match our Registration type
+      const formattedData = data.map(reg => ({
+        id: reg.id,
+        player_id: reg.player_id,
+        admin_notes: reg.admin_notes,
+        status: reg.status,
+        created_at: reg.created_at,
+        updated_at: reg.updated_at,
+        player: {
+          name: reg.player?.name || '',
+          sport: reg.player?.sport || '',
+          occupation: reg.player?.occupation || '',
+          city: reg.player?.city || '',
+          email: reg.player?.email || null,
+          phone_number: reg.player?.phone_number || null
+        }
+      }));
+
+      setRegistrations(formattedData);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching registrations:", err);
       toast({
         title: "Error",
-        description: "Failed to fetch registrations. You might not have admin access.",
+        description: "An unexpected error occurred while fetching registrations.",
         variant: "destructive"
       });
-      return;
+      setLoading(false);
     }
-
-    setRegistrations(data || []);
-    setLoading(false);
   };
 
   const updateRegistration = async (id: string, updates: Partial<Registration>) => {
