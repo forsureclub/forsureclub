@@ -11,7 +11,7 @@ export type Registration = {
     sport: string;
     occupation: string;
     city: string;
-    email: string;
-    phone_number: string;
+    email?: string | null;
+    phone_number?: string | null;
   };
 };
