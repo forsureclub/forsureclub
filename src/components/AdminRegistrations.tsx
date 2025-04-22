@@ -48,8 +48,8 @@ export const AdminRegistrations = () => {
           sport: reg.player?.sport || '',
           occupation: reg.player?.occupation || '',
           city: reg.player?.city || '',
-          email: reg.player?.email || '',
-          phone_number: reg.player?.phone_number || ''
+          email: reg.player?.email || null,
+          phone_number: reg.player?.phone_number || null
         }
       }));
 
