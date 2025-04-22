@@ -23,7 +23,18 @@ export const AdminRegistrations = () => {
           status,
           created_at,
           updated_at,
-          player:players(name, sport, occupation, city, email, phone_number)
+          player:players(
+            name,
+            sport,
+            occupation,
+            city,
+            email,
+            phone_number,
+            play_time,
+            budget_range,
+            gender,
+            club
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -37,7 +48,6 @@ export const AdminRegistrations = () => {
         return;
       }
 
-      // Transform the data to match our Registration type
       const formattedData = data.map(reg => ({
         id: reg.id,
         player_id: reg.player_id,
@@ -51,11 +61,14 @@ export const AdminRegistrations = () => {
           occupation: reg.player?.occupation || '',
           city: reg.player?.city || '',
           email: reg.player?.email || '',
-          phone_number: reg.player?.phone_number || ''
+          phone_number: reg.player?.phone_number || '',
+          play_time: reg.player?.play_time || '',
+          budget_range: reg.player?.budget_range || '',
+          gender: reg.player?.gender || '',
+          club: reg.player?.club || ''
         }
       }));
 
-      console.log("Fetched registrations:", formattedData);
       setRegistrations(formattedData);
       setLoading(false);
     } catch (err) {
@@ -94,8 +107,10 @@ export const AdminRegistrations = () => {
 
   const exportToCSV = () => {
     try {
-      // Create CSV content
-      const headers = ["Name", "Sport", "Location", "Email", "Phone", "Status", "Notes"];
+      const headers = [
+        "Name", "Sport", "Location", "Email", "Phone", "Gender", 
+        "Occupation", "Play Time", "Budget Range", "Club", "Status", "Notes"
+      ];
       const csvRows = [headers];
       
       registrations.forEach(reg => {
@@ -105,6 +120,11 @@ export const AdminRegistrations = () => {
           reg.player.city,
           reg.player.email,
           reg.player.phone_number,
+          reg.player.gender,
+          reg.player.occupation,
+          reg.player.play_time,
+          reg.player.budget_range,
+          reg.player.club || "",
           reg.status,
           reg.admin_notes || ""
         ];

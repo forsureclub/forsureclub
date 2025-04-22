@@ -134,12 +134,12 @@ export type Database = {
           city: string
           club: string | null
           created_at: string | null
-          email: string | null
+          email: string
           gender: string
           id: string
           name: string
           occupation: string
-          phone_number: string | null
+          phone_number: string
           play_time: string
           rating: number
           sport: string
@@ -150,12 +150,12 @@ export type Database = {
           city: string
           club?: string | null
           created_at?: string | null
-          email?: string | null
+          email: string
           gender: string
           id?: string
           name: string
           occupation: string
-          phone_number?: string | null
+          phone_number: string
           play_time: string
           rating: number
           sport: string
@@ -166,12 +166,12 @@ export type Database = {
           city?: string
           club?: string | null
           created_at?: string | null
-          email?: string | null
+          email?: string
           gender?: string
           id?: string
           name?: string
           occupation?: string
-          phone_number?: string | null
+          phone_number?: string
           play_time?: string
           rating?: number
           sport?: string
