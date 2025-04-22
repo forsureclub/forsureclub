@@ -43,11 +43,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
   const handleJoin = async () => {
     if (!playerName || !abilityLevel || !occupation || !location || 
-        (isClubMember && !clubName) || !email || 
-        !validateEmail(email) || !phoneNumber || !validatePhone(phoneNumber)) {
+        (isClubMember && !clubName)) {
       toast({
         title: "Missing Information",
-        description: "Please fill out all required fields including valid email and phone number",
+        description: "Please fill out all required fields",
         variant: "destructive"
       });
       return;
@@ -66,7 +65,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         play_time: preferredDays,
         budget_range: spendingLevel,
         rating: 0,
-        user_id: null
+        user_id: null,
+        email: email || null,
+        phone_number: phoneNumber || null
       };
       
       console.log('Attempting to insert player with data:', JSON.stringify(playerData, null, 2));
@@ -138,7 +139,12 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           <div className="bg-blue-50 p-4 rounded-lg text-left">
             <h3 className="font-medium text-blue-800 mb-2">What happens next?</h3>
             <ul className="text-sm text-gray-700 space-y-2">
-              <li>• We'll email you at <span className="font-medium">{email}</span> when we find players that match your:</li>
+              <li>• We'll contact you at {email ? <span className="font-medium">{email}</span> : ""} 
+                  {email && phoneNumber ? " or " : ""}
+                  {phoneNumber ? <span className="font-medium">{phoneNumber}</span> : ""} 
+                  {!email && !phoneNumber ? <span className="font-medium">your provided contact information</span> : ""}
+                  {" when we find players that match your:"}
+              </li>
               <li className="ml-4">- Location ({location})</li>
               <li className="ml-4">- Ability Level ({abilityLevel})</li>
               <li>• You'll receive player details and recommended game times</li>
@@ -320,7 +326,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         
         <Button
           onClick={handleJoin}
-          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || isJoining || !email || !phoneNumber}
+          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || isJoining}
           className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
         >
           {isJoining ? "Finding Match..." : "Find Match"}
@@ -329,4 +335,3 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     </Card>
   );
 };
-
