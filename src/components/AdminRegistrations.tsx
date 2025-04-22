@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Registration } from "@/types/registration";
 import { RegistrationTable } from "./RegistrationTable";
+import { Button } from "./ui/button";
+import { Download } from "lucide-react";
 
 export const AdminRegistrations = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -53,6 +55,7 @@ export const AdminRegistrations = () => {
         }
       }));
 
+      console.log("Fetched registrations:", formattedData);
       setRegistrations(formattedData);
       setLoading(false);
     } catch (err) {
@@ -89,6 +92,59 @@ export const AdminRegistrations = () => {
     fetchRegistrations();
   };
 
+  const exportToCSV = () => {
+    try {
+      // Create CSV content
+      const headers = ["Name", "Sport", "Location", "Email", "Phone", "Status", "Notes"];
+      const csvRows = [headers];
+      
+      registrations.forEach(reg => {
+        const row = [
+          reg.player.name,
+          reg.player.sport,
+          reg.player.city,
+          reg.player.email,
+          reg.player.phone_number,
+          reg.status,
+          reg.admin_notes || ""
+        ];
+        csvRows.push(row);
+      });
+      
+      // Convert to CSV string
+      const csvContent = csvRows.map(row => 
+        row.map(cell => {
+          // Escape quotes and wrap in quotes
+          const escaped = String(cell).replace(/"/g, '""');
+          return `"${escaped}"`;
+        }).join(',')
+      ).join('\n');
+      
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `player-registrations-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Success",
+        description: "Registration data exported successfully"
+      });
+    } catch (err) {
+      console.error("Error exporting data:", err);
+      toast({
+        title: "Error",
+        description: "Failed to export registration data",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchRegistrations();
   }, []);
@@ -99,7 +155,13 @@ export const AdminRegistrations = () => {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Player Registrations</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Player Registrations</h1>
+        <Button onClick={exportToCSV} className="flex items-center gap-2">
+          <Download size={16} />
+          Export to CSV
+        </Button>
+      </div>
       <RegistrationTable
         registrations={registrations}
         onUpdateRegistration={updateRegistration}
