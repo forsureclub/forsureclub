@@ -13,5 +13,9 @@ export type Registration = {
     city: string;
     email?: string | null;
     phone_number?: string | null;
+    gender?: string;
+    play_time?: string;
+    budget_range?: string;
+    club?: string | null;
   };
 };

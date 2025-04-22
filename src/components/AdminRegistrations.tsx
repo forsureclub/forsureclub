@@ -21,7 +21,7 @@ export const AdminRegistrations = () => {
           status,
           created_at,
           updated_at,
-          player:players(name, sport, occupation, city, email, phone_number)
+          player:players(name, sport, occupation, city, email, phone_number, gender, play_time, budget_range, club)
         `)
         .order('created_at', { ascending: false });
 
@@ -49,7 +49,11 @@ export const AdminRegistrations = () => {
           occupation: reg.player?.occupation || '',
           city: reg.player?.city || '',
           email: reg.player?.email || null,
-          phone_number: reg.player?.phone_number || null
+          phone_number: reg.player?.phone_number || null,
+          gender: reg.player?.gender,
+          play_time: reg.player?.play_time,
+          budget_range: reg.player?.budget_range,
+          club: reg.player?.club || null
         }
       }));
 
