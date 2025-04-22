@@ -18,8 +18,8 @@ export const RegistrationTable = ({ registrations, onUpdateRegistration }: Regis
           <TableHead>Name</TableHead>
           <TableHead>Sport</TableHead>
           <TableHead>Location</TableHead>
-          <TableHead>Contact</TableHead>
-          <TableHead>Details</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Phone</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Notes</TableHead>
           <TableHead>Actions</TableHead>
@@ -28,24 +28,11 @@ export const RegistrationTable = ({ registrations, onUpdateRegistration }: Regis
       <TableBody>
         {registrations.map((reg) => (
           <TableRow key={reg.id}>
-            <TableCell>{reg.player.name}</TableCell>
-            <TableCell>{reg.player.sport}</TableCell>
-            <TableCell>{reg.player.city}</TableCell>
-            <TableCell>
-              <div className="space-y-1">
-                <div>📧 {reg.player.email}</div>
-                <div>📱 {reg.player.phone_number}</div>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="space-y-1 text-sm">
-                <div>Gender: {reg.player.gender}</div>
-                <div>Occupation: {reg.player.occupation}</div>
-                <div>Play Time: {reg.player.play_time}</div>
-                <div>Budget: {reg.player.budget_range}</div>
-                {reg.player.club && <div>Club: {reg.player.club}</div>}
-              </div>
-            </TableCell>
+            <TableCell>{reg.player?.name}</TableCell>
+            <TableCell>{reg.player?.sport}</TableCell>
+            <TableCell>{reg.player?.city}</TableCell>
+            <TableCell>{reg.player?.email || <span className="text-muted-foreground">-</span>}</TableCell>
+            <TableCell>{reg.player?.phone_number || <span className="text-muted-foreground">-</span>}</TableCell>
             <TableCell>
               <StatusSelect
                 status={reg.status}
