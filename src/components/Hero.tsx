@@ -24,7 +24,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
         >
-          Play Sports with New People in Your Area
+          Play Sports with Strangers
         </motion.h1>
         
         <motion.div 
@@ -35,11 +35,11 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
         >
           <div className="flex items-center gap-3 text-xl text-gray-600">
             <Users className="h-6 w-6 text-orange-500" />
-            <p>Meet new people</p>
+            <p>Network with Professionals</p>
           </div>
           <div className="flex items-center gap-3 text-xl text-gray-600">
             <Link className="h-6 w-6 text-orange-500" />
-            <p>Match with similar abilities</p>
+            <p>Match with Similar Abilities</p>
           </div>
         </motion.div>
         
@@ -68,4 +68,3 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
     </div>
   );
 };
-
