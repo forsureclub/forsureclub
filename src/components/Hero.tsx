@@ -24,7 +24,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
         >
-          Connect, Play, and Network with Like-Minded Athletes
+          Play Sports with New People in Your Area
         </motion.h1>
         
         <motion.div 
@@ -35,7 +35,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
         >
           <div className="flex items-center gap-3 text-xl text-gray-600">
             <Users className="h-6 w-6 text-orange-500" />
-            <p>Network with professionals</p>
+            <p>Meet new people</p>
           </div>
           <div className="flex items-center gap-3 text-xl text-gray-600">
             <Link className="h-6 w-6 text-orange-500" />
@@ -49,7 +49,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           transition={{ delay: 0.3 }}
           className="text-xl text-gray-600 mb-8"
         >
-          Join a community of sports enthusiasts and professionals while finding your perfect match for padel, golf, or tennis.
+          Join our community and find your next sports partner for padel, golf, or tennis in your area.
         </motion.p>
         
         <motion.div
@@ -68,3 +68,4 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
     </div>
   );
 };
+

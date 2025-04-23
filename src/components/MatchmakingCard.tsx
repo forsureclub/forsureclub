@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -55,53 +54,66 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     setIsJoining(true);
     
     try {
-      const playerData = {
-        name: playerName,
-        sport: selectedSport,
-        city: location,
-        club: isClubMember ? clubName : null,
-        occupation: occupation,
-        gender: gender,
-        play_time: preferredDays,
-        budget_range: spendingLevel,
-        rating: 0,
-        user_id: null,
-        email: email || null,
-        phone_number: phoneNumber || null
-      };
-      
-      console.log('Attempting to insert player with data:', JSON.stringify(playerData, null, 2));
-      
-      const { data: insertedPlayer, error: playerError } = await supabase
+      const { data: existingPlayers } = await supabase
         .from('players')
-        .insert(playerData)
-        .select()
-        .single();
+        .select('id')
+        .eq('name', playerName)
+        .eq('sport', selectedSport);
 
-      if (playerError) {
-        console.error('Player insertion error:', playerError);
-        toast({
-          title: "Registration Failed",
-          description: `Error: ${playerError.message}`,
-          variant: "destructive"
-        });
-        setIsJoining(false);
-        return;
+      let playerId;
+
+      if (existingPlayers && existingPlayers.length > 0) {
+        playerId = existingPlayers[0].id;
+        console.log('Using existing player:', playerId);
+      } else {
+        const playerData = {
+          name: playerName,
+          sport: selectedSport,
+          city: location,
+          club: isClubMember ? clubName : null,
+          occupation: occupation,
+          gender: gender,
+          play_time: preferredDays,
+          budget_range: spendingLevel,
+          rating: 0,
+          user_id: null,
+          email: email || null,
+          phone_number: phoneNumber || null
+        };
+        
+        console.log('Creating new player with data:', JSON.stringify(playerData, null, 2));
+        
+        const { data: insertedPlayer, error: playerError } = await supabase
+          .from('players')
+          .insert(playerData)
+          .select()
+          .single();
+
+        if (playerError) {
+          console.error('Player insertion error:', playerError);
+          toast({
+            title: "Registration Failed",
+            description: `Error: ${playerError.message}`,
+            variant: "destructive"
+          });
+          setIsJoining(false);
+          return;
+        }
+
+        playerId = insertedPlayer.id;
+        console.log('Created new player:', playerId);
       }
-
-      console.log('Player inserted successfully:', insertedPlayer);
 
       const { error: registrationError } = await supabase
         .from('player_registrations')
         .insert({
-          player_id: insertedPlayer.id,
+          player_id: playerId,
           status: 'pending',
           admin_notes: `Registered for ${selectedSport}`
         });
 
       if (registrationError) {
         console.error('Registration error:', registrationError);
-        // Instead of showing a toast error, proceed to waiting screen
         setIsWaitingForMatch(true);
         setIsJoining(false);
         return;
