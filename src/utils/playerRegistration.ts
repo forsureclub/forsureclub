@@ -38,11 +38,13 @@ export async function createOrFetchPlayer({
   }
 
   if (existingPlayers && existingPlayers.length > 0) {
-    // player already exists
     return existingPlayers[0].id;
   }
 
-  // Always set email & phone_number as provided string, null only if never provided
+  // Email and phone: always trim, always insert as null if falsy (not just empty string)
+  const cleanEmail = typeof email === "string" && email.trim().length > 0 ? email.trim() : null;
+  const cleanPhone = typeof phoneNumber === "string" && phoneNumber.trim().length > 0 ? phoneNumber.trim() : null;
+
   const newPlayer = {
     name: playerName,
     sport: selectedSport,
@@ -54,8 +56,8 @@ export async function createOrFetchPlayer({
     budget_range: spendingLevel,
     rating: 0,
     user_id: null,
-    email: (email ?? "").trim() !== "" ? email.trim() : null,
-    phone_number: (phoneNumber ?? "").trim() !== "" ? phoneNumber.trim() : null,
+    email: cleanEmail,
+    phone_number: cleanPhone,
   };
 
   const { data: insertedPlayer, error: playerError } = await supabase
