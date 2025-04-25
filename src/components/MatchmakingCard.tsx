@@ -77,8 +77,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           budget_range: spendingLevel,
           rating: 0,
           user_id: null,
-          email: email || null,
-          phone_number: phoneNumber || null
+          email: email && email.trim() !== "" ? email : null,
+          phone_number: phoneNumber && phoneNumber.trim() !== "" ? phoneNumber : null
         };
         
         console.log('Creating new player with data:', JSON.stringify(playerData, null, 2));
