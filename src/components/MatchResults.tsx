@@ -54,8 +54,8 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
 
       if (matchError) throw matchError;
 
-      // Record player performance with multi-dimensional ratings
-      const { error: performanceError } = await supabase
+      // Record player performance with multi-dimensional ratings and review comment
+      const { error: playerRatingError } = await supabase
         .from('match_players')
         .insert({
           match_id: matchData.id,
@@ -68,7 +68,7 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
           feedback
         });
 
-      if (performanceError) throw performanceError;
+      if (playerRatingError) throw playerRatingError;
 
       toast({
         title: "Match Results Recorded",
@@ -103,7 +103,7 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="performance-rating">Performance Rating</Label>
+        <Label htmlFor="performance-rating">Performance (Overall) Rating</Label>
         <Select value={performanceRating} onValueChange={setPerformanceRating}>
           <SelectTrigger>
             <SelectValue placeholder="Select rating (1-5)" />
@@ -135,7 +135,7 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="reliability-rating">Reliability</Label>
+          <Label htmlFor="reliability-rating">Reliability Rating</Label>
           <Select value={reliabilityRating} onValueChange={setReliabilityRating}>
             <SelectTrigger>
               <SelectValue placeholder="Reliability (1-5)" />
@@ -150,7 +150,7 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="etiquette-rating">Etiquette</Label>
+          <Label htmlFor="etiquette-rating">Etiquette Rating</Label>
           <Select value={etiquetteRating} onValueChange={setEtiquetteRating}>
             <SelectTrigger>
               <SelectValue placeholder="Etiquette (1-5)" />
@@ -167,12 +167,12 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="review-comment">Review Comments</Label>
+        <Label htmlFor="review-comment">Review Comment</Label>
         <Textarea
           id="review-comment"
           value={reviewComment}
           onChange={(e) => setReviewComment(e.target.value)}
-          placeholder="Leave a comment about this player's behaviour"
+          placeholder="Write your feedback or remark about this player's etiquette or spirit"
         />
       </div>
 
