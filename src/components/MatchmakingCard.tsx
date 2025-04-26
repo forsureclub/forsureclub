@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail } from "lucide-react";
+import { createOrFetchPlayer, registerPlayer } from "@/utils/playerRegistration";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -52,85 +53,36 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     }
 
     setIsJoining(true);
-    
+
     try {
-      const { data: existingPlayers } = await supabase
-        .from('players')
-        .select('id')
-        .eq('name', playerName)
-        .eq('sport', selectedSport);
+      const playerId = await createOrFetchPlayer({
+        playerName,
+        selectedSport,
+        location,
+        clubName,
+        isClubMember,
+        occupation,
+        gender,
+        preferredDays,
+        spendingLevel,
+        email,
+        phoneNumber
+      });
 
-      let playerId;
-
-      if (existingPlayers && existingPlayers.length > 0) {
-        playerId = existingPlayers[0].id;
-        console.log('Using existing player:', playerId);
-      } else {
-        const playerData = {
-          name: playerName,
-          sport: selectedSport,
-          city: location,
-          club: isClubMember ? clubName : null,
-          occupation: occupation,
-          gender: gender,
-          play_time: preferredDays,
-          budget_range: spendingLevel,
-          rating: 0,
-          user_id: null,
-          email: email || null,
-          phone_number: phoneNumber || null
-        };
-        
-        console.log('Creating new player with data:', JSON.stringify(playerData, null, 2));
-        
-        const { data: insertedPlayer, error: playerError } = await supabase
-          .from('players')
-          .insert(playerData)
-          .select()
-          .single();
-
-        if (playerError) {
-          console.error('Player insertion error:', playerError);
-          toast({
-            title: "Registration Failed",
-            description: `Error: ${playerError.message}`,
-            variant: "destructive"
-          });
-          setIsJoining(false);
-          return;
-        }
-
-        playerId = insertedPlayer.id;
-        console.log('Created new player:', playerId);
-      }
-
-      const { error: registrationError } = await supabase
-        .from('player_registrations')
-        .insert({
-          player_id: playerId,
-          status: 'pending',
-          admin_notes: `Registered for ${selectedSport}`
-        });
-
-      if (registrationError) {
-        console.error('Registration error:', registrationError);
-        setIsWaitingForMatch(true);
-        setIsJoining(false);
-        return;
-      }
+      await registerPlayer(playerId, selectedSport);
 
       setIsWaitingForMatch(true);
       setIsJoining(false);
-      
+
       toast({
         title: "Registration Successful",
         description: "We'll email you when we find suitable players in your area",
       });
-    } catch (error) {
-      console.error('Unexpected error in registration:', error);
+    } catch (error: any) {
+      console.error('Player registration error:', error);
       toast({
         title: "Registration Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message ? String(error.message) : "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
       setIsJoining(false);

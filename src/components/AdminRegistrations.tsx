@@ -26,6 +26,9 @@ export const AdminRegistrations = () => {
         `)
         .order('created_at', { ascending: false });
 
+      // Add debug log for raw supabase data to help verify values received from backend
+      console.log("[DEBUG] Fetched Supabase data:", data);
+
       if (error) {
         toast({
           title: "Error",
