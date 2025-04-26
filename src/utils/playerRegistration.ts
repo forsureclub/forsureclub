@@ -41,14 +41,14 @@ export async function createOrFetchPlayer({
     return existingPlayers[0].id;
   }
 
-  // Process email and phone number
-  // Only use null if the values are empty, never use placeholder text
-  const cleanEmail = email && email.trim() ? email.trim() : null;
-  const cleanPhone = phoneNumber && phoneNumber.trim() ? phoneNumber.trim() : null;
+  // Never convert email/phone to null, use the actual input value
+  // If fields are truly empty, preserve them as empty strings
+  const emailValue = email || "";
+  const phoneValue = phoneNumber || "";
 
   // Log the values being saved to help debug
-  console.log("Saving player with email:", cleanEmail);
-  console.log("Saving player with phone:", cleanPhone);
+  console.log("Saving player with email:", emailValue || "empty string");
+  console.log("Saving player with phone:", phoneValue || "empty string");
 
   const newPlayer = {
     name: playerName,
@@ -61,8 +61,8 @@ export async function createOrFetchPlayer({
     budget_range: spendingLevel,
     rating: 0,
     user_id: null,
-    email: cleanEmail,
-    phone_number: cleanPhone,
+    email: emailValue,
+    phone_number: phoneValue,
   };
 
   const { data: insertedPlayer, error: playerError } = await supabase

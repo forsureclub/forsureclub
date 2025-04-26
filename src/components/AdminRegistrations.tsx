@@ -8,6 +8,7 @@ import { RegistrationTable } from "./RegistrationTable";
 export const AdminRegistrations = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [groupBy, setGroupBy] = useState<'none' | 'location' | 'sport'>('none');
   const { toast } = useToast();
 
   const fetchRegistrations = async () => {
@@ -44,7 +45,7 @@ export const AdminRegistrations = () => {
       // Transform the data to match our Registration type
       const formattedData = data.map(reg => {
         // Log each player's email and phone to debug
-        console.log(`Player ${reg.player?.name} - email: ${reg.player?.email}, phone: ${reg.player?.phone_number}`);
+        console.log(`Player ${reg.player?.name} - email: "${reg.player?.email}", phone: "${reg.player?.phone_number}"`);
         
         return {
           id: reg.id,
@@ -58,13 +59,13 @@ export const AdminRegistrations = () => {
             sport: reg.player?.sport || '',
             occupation: reg.player?.occupation || '',
             city: reg.player?.city || '',
-            // Don't use default values here, let null values be null
-            email: reg.player?.email,
-            phone_number: reg.player?.phone_number,
-            gender: reg.player?.gender,
-            play_time: reg.player?.play_time,
-            budget_range: reg.player?.budget_range,
-            club: reg.player?.club
+            // Preserve the original values exactly as they came from the database
+            email: reg.player?.email || '',
+            phone_number: reg.player?.phone_number || '',
+            gender: reg.player?.gender || '',
+            play_time: reg.player?.play_time || '',
+            budget_range: reg.player?.budget_range || '',
+            club: reg.player?.club || ''
           }
         };
       });
@@ -120,6 +121,8 @@ export const AdminRegistrations = () => {
       <RegistrationTable
         registrations={registrations}
         onUpdateRegistration={updateRegistration}
+        groupBy={groupBy}
+        setGroupBy={setGroupBy}
       />
     </div>
   );
