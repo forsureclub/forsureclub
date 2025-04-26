@@ -18,17 +18,13 @@ type MatchResultProps = {
 
 export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }: MatchResultProps) => {
   const [location, setLocation] = useState("");
-  const [performanceRating, setPerformanceRating] = useState<string>("");
-  const [playRating, setPlayRating] = useState<string>("");
-  const [reliabilityRating, setReliabilityRating] = useState<string>("");
-  const [etiquetteRating, setEtiquetteRating] = useState<string>("");
-  const [reviewComment, setReviewComment] = useState("");
+  const [rating, setRating] = useState<string>("");
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (!location || !performanceRating || !playRating || !reliabilityRating || !etiquetteRating) {
+    if (!location || !rating) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -54,25 +50,21 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
 
       if (matchError) throw matchError;
 
-      // Record player performance with multi-dimensional ratings and review comment
-      const { error: playerRatingError } = await supabase
+      // Record player performance
+      const { error: performanceError } = await supabase
         .from('match_players')
         .insert({
           match_id: matchData.id,
           player_id: playerId,
-          performance_rating: parseInt(performanceRating),
-          play_rating: parseInt(playRating),
-          reliability_rating: parseInt(reliabilityRating),
-          etiquette_rating: parseInt(etiquetteRating),
-          review_comment: reviewComment,
+          performance_rating: parseInt(rating),
           feedback
         });
 
-      if (playerRatingError) throw playerRatingError;
+      if (performanceError) throw performanceError;
 
       toast({
         title: "Match Results Recorded",
-        description: "Player's performance and ratings have been successfully recorded",
+        description: "The player's performance has been successfully recorded",
       });
 
       onResultSubmitted?.();
@@ -103,8 +95,8 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="performance-rating">Performance (Overall) Rating</Label>
-        <Select value={performanceRating} onValueChange={setPerformanceRating}>
+        <Label htmlFor="rating">Performance Rating</Label>
+        <Select value={rating} onValueChange={setRating}>
           <SelectTrigger>
             <SelectValue placeholder="Select rating (1-5)" />
           </SelectTrigger>
@@ -118,71 +110,13 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="play-rating">Play Rating</Label>
-          <Select value={playRating} onValueChange={setPlayRating}>
-            <SelectTrigger>
-              <SelectValue placeholder="Play (1-5)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1</SelectItem>
-              <SelectItem value="2">2</SelectItem>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="reliability-rating">Reliability Rating</Label>
-          <Select value={reliabilityRating} onValueChange={setReliabilityRating}>
-            <SelectTrigger>
-              <SelectValue placeholder="Reliability (1-5)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1</SelectItem>
-              <SelectItem value="2">2</SelectItem>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="etiquette-rating">Etiquette Rating</Label>
-          <Select value={etiquetteRating} onValueChange={setEtiquetteRating}>
-            <SelectTrigger>
-              <SelectValue placeholder="Etiquette (1-5)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1</SelectItem>
-              <SelectItem value="2">2</SelectItem>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="review-comment">Review Comment</Label>
-        <Textarea
-          id="review-comment"
-          value={reviewComment}
-          onChange={(e) => setReviewComment(e.target.value)}
-          placeholder="Write your feedback or remark about this player's etiquette or spirit"
-        />
-      </div>
-
       <div className="space-y-2">
         <Label htmlFor="feedback">Feedback (Optional)</Label>
         <Textarea
           id="feedback"
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder="General feedback about the player's performance"
+          placeholder="Enter feedback about the player's performance"
         />
       </div>
 

@@ -12,39 +12,27 @@ export type Database = {
       match_players: {
         Row: {
           created_at: string | null
-          etiquette_rating: number | null
           feedback: string | null
           id: string
           match_id: string | null
           performance_rating: number | null
-          play_rating: number | null
           player_id: string | null
-          reliability_rating: number | null
-          review_comment: string | null
         }
         Insert: {
           created_at?: string | null
-          etiquette_rating?: number | null
           feedback?: string | null
           id?: string
           match_id?: string | null
           performance_rating?: number | null
-          play_rating?: number | null
           player_id?: string | null
-          reliability_rating?: number | null
-          review_comment?: string | null
         }
         Update: {
           created_at?: string | null
-          etiquette_rating?: number | null
           feedback?: string | null
           id?: string
           match_id?: string | null
           performance_rating?: number | null
-          play_rating?: number | null
           player_id?: string | null
-          reliability_rating?: number | null
-          review_comment?: string | null
         }
         Relationships: [
           {
