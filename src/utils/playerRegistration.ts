@@ -41,9 +41,14 @@ export async function createOrFetchPlayer({
     return existingPlayers[0].id;
   }
 
-  // Email and phone: always trim, always insert as null if falsy (not just empty string)
-  const cleanEmail = typeof email === "string" && email.trim().length > 0 ? email.trim() : null;
-  const cleanPhone = typeof phoneNumber === "string" && phoneNumber.trim().length > 0 ? phoneNumber.trim() : null;
+  // Process email and phone number
+  // Only use null if the values are empty, never use placeholder text
+  const cleanEmail = email && email.trim() ? email.trim() : null;
+  const cleanPhone = phoneNumber && phoneNumber.trim() ? phoneNumber.trim() : null;
+
+  // Log the values being saved to help debug
+  console.log("Saving player with email:", cleanEmail);
+  console.log("Saving player with phone:", cleanPhone);
 
   const newPlayer = {
     name: playerName,

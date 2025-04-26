@@ -43,7 +43,9 @@ export const AdminRegistrations = () => {
 
       // Transform the data to match our Registration type
       const formattedData = data.map(reg => {
-        console.log("Player data:", reg.player);
+        // Log each player's email and phone to debug
+        console.log(`Player ${reg.player?.name} - email: ${reg.player?.email}, phone: ${reg.player?.phone_number}`);
+        
         return {
           id: reg.id,
           player_id: reg.player_id,
@@ -56,12 +58,13 @@ export const AdminRegistrations = () => {
             sport: reg.player?.sport || '',
             occupation: reg.player?.occupation || '',
             city: reg.player?.city || '',
-            email: reg.player?.email || null,
-            phone_number: reg.player?.phone_number || null,
+            // Don't use default values here, let null values be null
+            email: reg.player?.email,
+            phone_number: reg.player?.phone_number,
             gender: reg.player?.gender,
             play_time: reg.player?.play_time,
             budget_range: reg.player?.budget_range,
-            club: reg.player?.club || null
+            club: reg.player?.club
           }
         };
       });
