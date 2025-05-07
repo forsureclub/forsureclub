@@ -11,11 +11,12 @@ export type Registration = {
     sport: string;
     occupation: string;
     city: string;
-    email?: string | null;
-    phone_number?: string | null;
-    gender?: string;
-    play_time?: string;
-    budget_range?: string;
-    club?: string | null;
+    email: string;
+    phone_number: string;
+    gender: string;
+    play_time: string;
+    budget_range: string;
+    club: string;
+    rating?: number;
   };
 };

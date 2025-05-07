@@ -41,12 +41,12 @@ export async function createOrFetchPlayer({
     return existingPlayers[0].id;
   }
 
-  // Never convert email/phone to null, use the actual input value
-  // If fields are truly empty, preserve them as empty strings
+  // Transform empty strings to actual empty strings for storage in DB
+  // This is critical to ensure consistency in data display
   const emailValue = email || "";
   const phoneValue = phoneNumber || "";
 
-  // Log the values being saved to help debug
+  // Log the values being saved
   console.log("Saving player with email:", emailValue || "empty string");
   console.log("Saving player with phone:", phoneValue || "empty string");
 
@@ -54,7 +54,7 @@ export async function createOrFetchPlayer({
     name: playerName,
     sport: selectedSport,
     city: location,
-    club: isClubMember ? clubName : null,
+    club: isClubMember ? clubName : "",
     occupation,
     gender,
     play_time: preferredDays,
@@ -90,4 +90,56 @@ export async function registerPlayer(playerId: string, selectedSport: string) {
   if (registrationError) {
     throw new Error(registrationError.message);
   }
+}
+
+export async function updatePlayerSkillLevel(playerId: string, rating: number) {
+  const { error } = await supabase
+    .from('players')
+    .update({ rating })
+    .eq('id', playerId);
+
+  if (error) {
+    throw new Error(`Could not update player skill level: ${error.message}`);
+  }
+}
+
+export async function getPlayersByLocation(location: string) {
+  const { data, error } = await supabase
+    .from('players')
+    .select('*')
+    .eq('city', location);
+
+  if (error) {
+    throw new Error(`Could not fetch players by location: ${error.message}`);
+  }
+
+  return data || [];
+}
+
+export async function getPlayersBySport(sport: string) {
+  const { data, error } = await supabase
+    .from('players')
+    .select('*')
+    .eq('sport', sport);
+
+  if (error) {
+    throw new Error(`Could not fetch players by sport: ${error.message}`);
+  }
+
+  return data || [];
+}
+
+export async function getPlayersBySkillLevel(sport: string, minRating: number, maxRating: number) {
+  const { data, error } = await supabase
+    .from('players')
+    .select('*')
+    .eq('sport', sport)
+    .gte('rating', minRating)
+    .lte('rating', maxRating);
+
+  if (error) {
+    throw new Error(`Could not fetch players by skill level: ${error.message}`);
+  }
+
+  return data || [];
 }

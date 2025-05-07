@@ -1,14 +1,17 @@
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Registration } from "@/types/registration";
 import { RegistrationTable } from "./RegistrationTable";
+import { Button } from "./ui/button";
+import { Download } from "lucide-react";
 
 export const AdminRegistrations = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
-  const [groupBy, setGroupBy] = useState<'none' | 'location' | 'sport'>('none');
+  const [groupBy, setGroupBy] = useState<'none' | 'location' | 'sport' | 'skill'>('none');
   const { toast } = useToast();
 
   const fetchRegistrations = async () => {
@@ -23,11 +26,11 @@ export const AdminRegistrations = () => {
           status,
           created_at,
           updated_at,
-          player:players(name, sport, occupation, city, email, phone_number, gender, play_time, budget_range, club)
+          player:players(name, sport, occupation, city, email, phone_number, gender, play_time, budget_range, club, rating)
         `)
         .order('created_at', { ascending: false });
 
-      // Add debug log for raw supabase data to help verify values received from backend
+      // Add debug log for raw supabase data
       console.log("[DEBUG] Fetched Supabase data:", data);
 
       if (error) {
@@ -45,7 +48,7 @@ export const AdminRegistrations = () => {
       // Transform the data to match our Registration type
       const formattedData = data.map(reg => {
         // Log each player's email and phone to debug
-        console.log(`Player ${reg.player?.name} - email: "${reg.player?.email}", phone: "${reg.player?.phone_number}"`);
+        console.log(`Player ${reg.player?.name} - email: "${reg.player?.email}", phone: "${reg.player?.phone_number}", rating: "${reg.player?.rating}"`);
         
         return {
           id: reg.id,
@@ -65,7 +68,8 @@ export const AdminRegistrations = () => {
             gender: reg.player?.gender || '',
             play_time: reg.player?.play_time || '',
             budget_range: reg.player?.budget_range || '',
-            club: reg.player?.club || ''
+            club: reg.player?.club || '',
+            rating: reg.player?.rating || 0
           }
         };
       });
@@ -107,6 +111,49 @@ export const AdminRegistrations = () => {
     fetchRegistrations();
   };
 
+  const exportToCSV = () => {
+    try {
+      // Create CSV header row
+      let csvContent = "Player,Sport,Location,Email,Phone,Gender,Play Time,Budget,Rating\n";
+      
+      // Add data rows
+      registrations.forEach(reg => {
+        const player = reg.player;
+        const row = [
+          player.name,
+          player.sport,
+          player.city,
+          player.email,
+          player.phone_number,
+          player.gender,
+          player.play_time,
+          player.budget_range,
+          player.rating || 0
+        ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
+        
+        csvContent += row + "\n";
+      });
+      
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `player-registrations-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error exporting to CSV:", error);
+      toast({
+        title: "Export Failed",
+        description: "Could not export data to CSV",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchRegistrations();
   }, []);
@@ -117,12 +164,23 @@ export const AdminRegistrations = () => {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Player Registrations</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Player Registrations</h1>
+        <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
+          <Download size={16} />
+          Export to CSV
+        </Button>
+      </div>
       <RegistrationTable
         registrations={registrations}
         onUpdateRegistration={updateRegistration}
         groupBy={groupBy}
         setGroupBy={setGroupBy}
+        renderPlayerName={(player, playerId) => (
+          <Link to={`/player/${playerId}`} className="text-blue-600 hover:underline">
+            {player.name}
+          </Link>
+        )}
       />
     </div>
   );
