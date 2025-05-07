@@ -191,6 +191,44 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_assessments: {
+        Row: {
+          assessment_type: string
+          created_at: string
+          experience_level: string | null
+          id: string
+          notes: string | null
+          player_id: string
+          self_rating: number
+        }
+        Insert: {
+          assessment_type: string
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          notes?: string | null
+          player_id: string
+          self_rating: number
+        }
+        Update: {
+          assessment_type?: string
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          notes?: string | null
+          player_id?: string
+          self_rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_assessments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
