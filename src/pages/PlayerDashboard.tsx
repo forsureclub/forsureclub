@@ -9,10 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { MatchResults } from "@/components/MatchResults";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Golf, Tennis } from "lucide-react";
+import { SportSelector } from "@/components/SportSelector";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSport, setSelectedSport] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -33,6 +38,7 @@ const PlayerDashboard = () => {
 
         if (authProfile && authProfile.player) {
           setPlayerProfile(authProfile.player);
+          setSelectedSport(authProfile.player.sport);
         } else {
           // Check if there's an existing player by email
           const { data: existingPlayer } = await supabase
@@ -51,6 +57,7 @@ const PlayerDashboard = () => {
               });
             
             setPlayerProfile(existingPlayer);
+            setSelectedSport(existingPlayer.sport);
           }
         }
       } catch (error) {
@@ -68,6 +75,48 @@ const PlayerDashboard = () => {
     fetchProfile();
   }, [user, toast]);
 
+  const handleRefreshProfile = async () => {
+    setIsLoading(true);
+    await fetchProfile();
+  };
+
+  const fetchProfile = async () => {
+    try {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Get player profile
+      const { data: authProfile } = await supabase
+        .from('auth_profiles')
+        .select('*, player:player_id(*)')
+        .eq('id', user.id)
+        .single();
+
+      if (authProfile && authProfile.player) {
+        setPlayerProfile(authProfile.player);
+        setSelectedSport(authProfile.player.sport);
+      }
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getSportIcon = (sport: string) => {
+    switch (sport?.toLowerCase()) {
+      case 'golf':
+        return <Golf className="h-6 w-6" />;
+      case 'tennis':
+      case 'padel':
+        return <Tennis className="h-6 w-6" />;
+      default:
+        return null;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -83,8 +132,13 @@ const PlayerDashboard = () => {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Profile</CardTitle>
+              {playerProfile?.sport && (
+                <div className="bg-primary/10 p-2 rounded-full">
+                  {getSportIcon(playerProfile.sport)}
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -117,6 +171,12 @@ const PlayerDashboard = () => {
                 ) : (
                   <div className="py-4">
                     <p className="text-gray-500">No player profile linked yet.</p>
+                    
+                    <div className="mt-4">
+                      <p className="mb-2 font-medium">Select your sport:</p>
+                      <SportSelector onSportSelect={(sport) => setSelectedSport(sport)} />
+                    </div>
+                    
                     <Button className="mt-4" asChild>
                       <Link to="/">Complete Registration</Link>
                     </Button>
@@ -139,13 +199,29 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs defaultValue="performance" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="performance">Performance</TabsTrigger>
-                <TabsTrigger value="skill">Update Skill Level</TabsTrigger>
+                <TabsTrigger value="record-match">Record Match</TabsTrigger>
+                <TabsTrigger value="skill">Update Skill</TabsTrigger>
               </TabsList>
+              
               <TabsContent value="performance" className="space-y-4">
                 <PlayerPerformance playerId={playerProfile.id} />
               </TabsContent>
+              
+              <TabsContent value="record-match">
+                <Card>
+                  <CardContent className="pt-6">
+                    <MatchResults 
+                      playerId={playerProfile.id}
+                      playerName={playerProfile.name}
+                      sport={playerProfile.sport}
+                      onResultSubmitted={handleRefreshProfile}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
               <TabsContent value="skill">
                 <Card>
                   <CardContent className="pt-6">

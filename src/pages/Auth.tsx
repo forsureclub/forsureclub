@@ -15,7 +15,13 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
+
+  // If user is already logged in, redirect to dashboard
+  if (user) {
+    navigate("/player-dashboard");
+    return null;
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +60,7 @@ const Auth = () => {
 
       toast({
         title: "Registration successful!",
-        description: "Please check your email to verify your account.",
+        description: "Please check your email to verify your account or continue to sign in.",
       });
     } catch (error: any) {
       toast({
