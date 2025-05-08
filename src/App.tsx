@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import { Toaster } from "./components/ui/toaster";
 import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./hooks/useAuth";
+import { Navigation } from "./components/Navigation";
 import "./App.css";
 
 // Protected route component
@@ -30,7 +31,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
 
   return isAuthenticated ? (
@@ -44,24 +45,29 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/player-dashboard" element={
-            <ProtectedRoute>
-              <PlayerDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/chat" element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          } />
-          <Route path="/player/:id" element={<PlayerProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50">
+          <Navigation />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/player-dashboard" element={
+                <ProtectedRoute>
+                  <PlayerDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/chat" element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              } />
+              <Route path="/player/:id" element={<PlayerProfile />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Toaster />
+        </div>
       </Router>
     </AuthProvider>
   );
