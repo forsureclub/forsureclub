@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { MatchResults } from "@/components/MatchResults";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Golf, Tennis } from "lucide-react";
+import { GolfBall, BadmintonBall } from "lucide-react";
 import { SportSelector } from "@/components/SportSelector";
 
 const PlayerDashboard = () => {
@@ -108,10 +108,10 @@ const PlayerDashboard = () => {
   const getSportIcon = (sport: string) => {
     switch (sport?.toLowerCase()) {
       case 'golf':
-        return <Golf className="h-6 w-6" />;
+        return <GolfBall className="h-6 w-6" />;
       case 'tennis':
       case 'padel':
-        return <Tennis className="h-6 w-6" />;
+        return <BadmintonBall className="h-6 w-6" />;
       default:
         return null;
     }
