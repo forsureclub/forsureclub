@@ -1,10 +1,11 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerPerformance } from "@/components/PlayerPerformance";
 import { SkillLevelUpdate } from "@/components/SkillLevelUpdate";
+import { VideoAnalysis } from "@/components/VideoAnalysis";
+import { VideoHistory } from "@/components/VideoHistory";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -186,10 +187,11 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs defaultValue="performance" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="performance">Performance</TabsTrigger>
                 <TabsTrigger value="record-match">Record Match</TabsTrigger>
                 <TabsTrigger value="skill">Update Skill</TabsTrigger>
+                <TabsTrigger value="video">Video Analysis</TabsTrigger>
               </TabsList>
               
               <TabsContent value="performance" className="space-y-4">
@@ -220,6 +222,11 @@ const PlayerDashboard = () => {
                     />
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="video" className="space-y-6">
+                <VideoAnalysis />
+                <VideoHistory />
               </TabsContent>
             </Tabs>
           ) : (
