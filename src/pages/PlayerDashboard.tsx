@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { MatchResults } from "@/components/MatchResults";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { GolfBall, BadmintonBall } from "lucide-react";
 import { SportSelector } from "@/components/SportSelector";
 
 const PlayerDashboard = () => {
@@ -105,18 +104,6 @@ const PlayerDashboard = () => {
     }
   };
 
-  const getSportIcon = (sport: string) => {
-    switch (sport?.toLowerCase()) {
-      case 'golf':
-        return <GolfBall className="h-6 w-6" />;
-      case 'tennis':
-      case 'padel':
-        return <BadmintonBall className="h-6 w-6" />;
-      default:
-        return null;
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -136,7 +123,7 @@ const PlayerDashboard = () => {
               <CardTitle>Profile</CardTitle>
               {playerProfile?.sport && (
                 <div className="bg-primary/10 p-2 rounded-full">
-                  {getSportIcon(playerProfile.sport)}
+                  <span className="font-medium">{playerProfile.sport}</span>
                 </div>
               )}
             </CardHeader>
