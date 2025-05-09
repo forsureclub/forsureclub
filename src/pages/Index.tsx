@@ -82,15 +82,6 @@ const Index = () => {
               />
             </>
           )}
-          
-          {!user && (
-            <div className="text-center mt-8 p-4 bg-orange-50 rounded-lg">
-              <p className="text-gray-700 mb-2">Save your preferences and match history</p>
-              <Button asChild variant="outline">
-                <Link to="/auth">Create an account</Link>
-              </Button>
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-8">

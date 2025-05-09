@@ -24,7 +24,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
         >
-          Connecting Players Through Sport AI Matching
+          Connecting Players Through AI Sport-Matching
         </motion.h1>
         
         <motion.div 
@@ -56,7 +56,6 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="space-y-4"
         >
           <Button 
             onClick={onStartMatching}
@@ -64,13 +63,6 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           >
             Start Matching
           </Button>
-          
-          <div className="mt-4 text-gray-600">
-            <a href="/auth" className="text-orange-500 hover:underline">
-              Create an account
-            </a>{" "}
-            to save your preferences and match history
-          </div>
         </motion.div>
       </div>
     </div>

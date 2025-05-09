@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -10,6 +11,8 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail } from "lucide-react";
 import { createOrFetchPlayer, registerPlayer } from "@/utils/playerRegistration";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -23,9 +26,14 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [createAccount, setCreateAccount] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
   const { toast } = useToast();
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const abilityOptions = selectedSport === "Golf" 
     ? ["0-5", "6-10", "11-15", "16-20", "21+", "Beginner"] 
@@ -43,7 +51,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
   const handleJoin = async () => {
     if (!playerName || !abilityLevel || !occupation || !location || 
-        (isClubMember && !clubName)) {
+        (isClubMember && !clubName) || !email) {
       toast({
         title: "Missing Information",
         description: "Please fill out all required fields",
@@ -52,9 +60,68 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       return;
     }
 
+    if (!validateEmail(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (phoneNumber && !validatePhone(phoneNumber)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (createAccount) {
+      if (!password) {
+        toast({
+          title: "Password Required",
+          description: "Please create a password for your account",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (password.length < 6) {
+        toast({
+          title: "Password Too Short",
+          description: "Password must be at least 6 characters long",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast({
+          title: "Passwords Don't Match",
+          description: "Please make sure your passwords match",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setIsJoining(true);
 
     try {
+      // Create an account first if requested
+      if (createAccount) {
+        const { error: signUpError } = await signUp(email, password);
+        if (signUpError) throw signUpError;
+
+        toast({
+          title: "Account Created",
+          description: "Your account has been created successfully",
+        });
+      }
+
+      // Register the player
       const playerId = await createOrFetchPlayer({
         playerName,
         selectedSport,
@@ -78,6 +145,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         title: "Registration Successful",
         description: "We'll email you when we find suitable players in your area",
       });
+      
+      if (createAccount) {
+        // Short delay before navigating
+        setTimeout(() => {
+          navigate("/player-dashboard");
+        }, 3000);
+      }
     } catch (error: any) {
       console.error('Player registration error:', error);
       toast({
@@ -117,12 +191,16 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           </div>
           <Button
             onClick={() => {
-              setIsWaitingForMatch(false);
-              setIsJoining(false);
+              if (createAccount) {
+                navigate("/player-dashboard");
+              } else {
+                setIsWaitingForMatch(false);
+                setIsJoining(false);
+              }
             }}
             className="w-full bg-blue-600 hover:bg-blue-700 mt-4"
           >
-            Back to Home
+            {createAccount ? "Go to Dashboard" : "Back to Home"}
           </Button>
         </div>
       </Card>
@@ -265,7 +343,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         </div>
         
         <div>
-          <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
+          <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address *</Label>
           <Input
             id="email"
             type="email"
@@ -273,6 +351,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             className="mt-1"
+            required
           />
         </div>
         
@@ -288,9 +367,55 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           />
         </div>
         
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="create-account" 
+            checked={createAccount}
+            onCheckedChange={(checked) => setCreateAccount(checked as boolean)}
+          />
+          <Label htmlFor="create-account" className="text-sm font-medium text-gray-700">
+            Create an account for faster matching next time
+          </Label>
+        </div>
+        
+        {createAccount && (
+          <>
+            <div>
+              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password *</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a password"
+                className="mt-1"
+                required={createAccount}
+                minLength={6}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">Confirm Password *</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                className="mt-1"
+                required={createAccount}
+                minLength={6}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Password must be at least 6 characters long
+              </p>
+            </div>
+          </>
+        )}
+        
         <Button
           onClick={handleJoin}
-          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || isJoining}
+          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || isJoining}
           className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
         >
           {isJoining ? "Finding Match..." : "Find Match"}
