@@ -77,8 +77,19 @@ const Index = () => {
               <h2 className="text-3xl font-bold text-center mb-6">
                 Find Your {selectedSport} Match
               </h2>
-              <MatchmakingCard selectedSport={selectedSport} />
+              <MatchmakingCard 
+                selectedSport={selectedSport} 
+              />
             </>
+          )}
+          
+          {!user && (
+            <div className="text-center mt-8 p-4 bg-orange-50 rounded-lg">
+              <p className="text-gray-700 mb-2">Save your preferences and match history</p>
+              <Button asChild variant="outline">
+                <Link to="/auth">Create an account</Link>
+              </Button>
+            </div>
           )}
         </div>
       ) : (
