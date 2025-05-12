@@ -94,17 +94,17 @@ const PlayerProfile = () => {
 
   return (
     <div className="container max-w-4xl mx-auto p-6 space-y-6">
-      <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2 mb-4 hover:bg-transparent hover:text-blue-600">
+      <Button variant="ghost" onClick={() => navigate(-1)} className="flex items-center gap-2 mb-4 hover:bg-transparent hover:text-orange-600">
         <ChevronLeft size={16} />
         Back
       </Button>
       
       <Card className="overflow-hidden border-0 shadow-lg">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-24"></div>
+        <div className="bg-gradient-to-r from-orange-600 to-orange-400 h-24"></div>
         <CardContent className="relative pt-16 pb-6 px-6">
           <div className="absolute -top-12 left-6 w-24 h-24 rounded-full bg-white p-1 shadow-lg">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-              <span className="text-3xl font-bold text-blue-700">{player.name.charAt(0)}</span>
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+              <span className="text-3xl font-bold text-orange-600">{player.name.charAt(0)}</span>
             </div>
           </div>
           
@@ -120,8 +120,8 @@ const PlayerProfile = () => {
                   <Star 
                     key={i}
                     size={18}
-                    fill={i < Math.round(player.rating || 0) ? "#FBBF24" : "none"}
-                    stroke={i < Math.round(player.rating || 0) ? "#FBBF24" : "#D1D5DB"}
+                    fill={i < Math.round(player.rating || 0) ? "#FB923C" : "none"}
+                    stroke={i < Math.round(player.rating || 0) ? "#FB923C" : "#D1D5DB"}
                   />
                 ))}
                 <span className="ml-2 text-sm font-medium">
@@ -133,7 +133,7 @@ const PlayerProfile = () => {
             <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2 hover:bg-blue-50">
+                  <Button variant="outline" className="flex items-center gap-2 hover:bg-orange-50">
                     <Trophy size={16} />
                     Update Skill
                   </Button>
@@ -150,7 +150,7 @@ const PlayerProfile = () => {
 
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2 hover:bg-blue-50">
+                  <Button variant="outline" className="flex items-center gap-2 hover:bg-orange-50">
                     <Calendar size={16} />
                     Record Match
                   </Button>

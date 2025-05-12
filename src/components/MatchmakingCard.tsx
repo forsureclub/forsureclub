@@ -180,11 +180,11 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     return (
       <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center">
+          <div className="w-16 h-16 bg-orange-100 rounded-full mx-auto flex items-center justify-center">
             {foundMatch ? (
-              <Users className="h-8 w-8 text-blue-600" />
+              <Users className="h-8 w-8 text-orange-600" />
             ) : (
-              <Mail className="h-8 w-8 text-blue-600" />
+              <Mail className="h-8 w-8 text-orange-600" />
             )}
           </div>
           <h2 className="text-2xl font-bold text-gray-900">
@@ -195,8 +195,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               ? `Our AI has matched you with ${matchedPlayers.length} ideal ${selectedSport} players in your area!` 
               : `Our AI is analyzing player profiles to find your perfect ${selectedSport} match.`}
           </p>
-          <div className="bg-blue-50 p-4 rounded-lg text-left">
-            <h3 className="font-medium text-blue-800 mb-2">What happens next?</h3>
+          <div className="bg-orange-50 p-4 rounded-lg text-left">
+            <h3 className="font-medium text-orange-800 mb-2">What happens next?</h3>
             <ul className="text-sm text-gray-700 space-y-2">
               {foundMatch ? (
                 <>
@@ -218,7 +218,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           </div>
           <Button
             onClick={() => navigate("/player-dashboard")}
-            className="w-full bg-blue-600 hover:bg-blue-700 mt-4"
+            className="w-full bg-orange-600 hover:bg-orange-700 mt-4"
           >
             Go to Dashboard
           </Button>
@@ -421,7 +421,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         <Button
           onClick={handleJoin}
           disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !password || isJoining}
-          className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
+          className="w-full bg-orange-600 hover:bg-orange-700 mt-2"
         >
           {isJoining ? (
             <span className="flex items-center">

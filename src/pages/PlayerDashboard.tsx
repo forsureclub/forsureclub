@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,7 @@ const PlayerDashboard = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Player Dashboard</h1>
         <Link to="/chat">
-          <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex items-center gap-2">
+          <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
             <MessageSquare size={18} />
             Find Games with AI
           </Button>
@@ -133,11 +134,11 @@ const PlayerDashboard = () => {
           <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
             <CardHeader className="flex flex-row items-center justify-between bg-gray-50 dark:bg-gray-900">
               <CardTitle className="flex items-center gap-2">
-                <User size={20} className="text-blue-500" />
+                <User size={20} className="text-orange-500" />
                 Profile
               </CardTitle>
               {playerProfile?.sport && (
-                <div className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 p-2 rounded-full">
+                <div className="bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 p-2 rounded-full">
                   <span className="font-medium">{playerProfile.sport}</span>
                 </div>
               )}
@@ -167,7 +168,7 @@ const PlayerDashboard = () => {
                         </div>
                         <div className="ml-2">
                           {[...Array(5)].map((_, i) => (
-                            <span key={i} className={`text-lg ${i < Math.round(playerProfile.rating) ? 'text-yellow-500' : 'text-gray-300'}`}>★</span>
+                            <span key={i} className={`text-lg ${i < Math.round(playerProfile.rating) ? 'text-orange-500' : 'text-gray-300'}`}>★</span>
                           ))}
                         </div>
                       </div>
@@ -193,13 +194,13 @@ const PlayerDashboard = () => {
                 )}
 
                 <div className="pt-4 space-y-2">
-                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                     <Link to="/chat">
                       <MessageSquare size={16} />
                       <span>Find Games with AI</span>
                     </Link>
                   </Button>
-                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                     <Link to="/">
                       <User size={16} />
                       <span>Browse Players</span>
@@ -262,14 +263,14 @@ const PlayerDashboard = () => {
           ) : (
             <Card className="p-6 border-0 shadow-lg bg-gradient-to-b from-white to-gray-50">
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center">
-                  <User className="h-8 w-8 text-blue-600" />
+                <div className="w-16 h-16 bg-orange-100 rounded-full mx-auto flex items-center justify-center">
+                  <User className="h-8 w-8 text-orange-600" />
                 </div>
                 <h2 className="text-xl font-bold">Complete Your Profile</h2>
                 <p className="text-gray-600">
                   Complete your registration to view your game history and performance.
                 </p>
-                <Button asChild className="mt-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700">
+                <Button asChild className="mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                   <Link to="/">Get Started</Link>
                 </Button>
               </div>

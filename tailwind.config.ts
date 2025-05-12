@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -62,7 +61,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+                orange: {
+                    50: '#fff7ed',
+                    100: '#ffedd5',
+                    200: '#fed7aa',
+                    300: '#fdba74',
+                    400: '#fb923c',
+                    500: '#f97316',
+                    600: '#ea580c',
+                    700: '#c2410c',
+                    800: '#9a3412',
+                    900: '#7c2d12',
+                    950: '#431407',
+                },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -131,15 +143,15 @@ export default {
         'slide-in-up': 'slide-in-up 0.4s ease-out',
         'slide-in-right': 'slide-in-right 0.4s ease-out',
 			},
-      boxShadow: {
-        'tech': '0 4px 20px -2px rgba(39, 92, 255, 0.2)',
-        'tech-lg': '0 8px 32px -4px rgba(39, 92, 255, 0.2)',
-        'tech-hover': '0 8px 30px -2px rgba(39, 92, 255, 0.35)',
-      },
-      backgroundImage: {
-        'tech-gradient': 'linear-gradient(135deg, #3b82f6, #6366f1)',
-        'tech-gradient-hover': 'linear-gradient(135deg, #2563eb, #4f46e5)',
-      }
+            boxShadow: {
+                'tech': '0 4px 20px -2px rgba(234, 88, 12, 0.2)',
+                'tech-lg': '0 8px 32px -4px rgba(234, 88, 12, 0.2)',
+                'tech-hover': '0 8px 30px -2px rgba(234, 88, 12, 0.35)',
+            },
+            backgroundImage: {
+                'tech-gradient': 'linear-gradient(135deg, #f97316, #fb923c)',
+                'tech-gradient-hover': 'linear-gradient(135deg, #ea580c, #f97316)',
+            }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

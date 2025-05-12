@@ -25,11 +25,11 @@ body {
 }
 
 .tech-gradient {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: linear-gradient(135deg, #f97316, #fb923c);
 }
 
 .tech-gradient-text {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: linear-gradient(135deg, #f97316, #fb923c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
