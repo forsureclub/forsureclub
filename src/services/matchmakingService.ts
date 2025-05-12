@@ -6,10 +6,12 @@ type Player = Tables<"players">;
 type MatchingResult = {
   matchedPlayers: Player[];
   foundMatch: boolean;
+  matchScore?: number;
 };
 
 /**
- * Finds matching players based on sport, location, and skill level
+ * Advanced AI matchmaking algorithm that finds players based on sport, location, and skill level
+ * Uses a scoring system to find the best possible matches
  * @param sport The sport to match
  * @param location The player's location
  * @param skillLevel The player's skill level
@@ -23,47 +25,119 @@ export async function findMatchingPlayers(
 ): Promise<MatchingResult> {
   console.log(`Finding matches for ${sport} in ${location} with level ${skillLevel}`);
   
-  // First match by sport and location
-  const { data: matchedPlayers, error } = await supabase
+  // First, get all potential players for the sport
+  const { data: potentialPlayers, error } = await supabase
     .from("players")
     .select("*")
     .eq("sport", sport)
-    .eq("city", location)
-    .neq("id", playerId) // Exclude the current player
-    .limit(3);
+    .neq("id", playerId); // Exclude the current player
 
   if (error) {
     console.error("Error finding matches:", error);
     throw new Error(`Error finding matches: ${error.message}`);
   }
 
-  // If we don't have enough matches by location, try to find more players by sport only
-  if (matchedPlayers.length < 3) {
-    console.log(`Not enough matches in ${location}, trying wider search`);
-    
-    const { data: additionalPlayers, error: widerError } = await supabase
-      .from("players")
-      .select("*")
-      .eq("sport", sport)
-      .neq("city", location) // Different location
-      .neq("id", playerId)
-      .order("rating", { ascending: false }) // Prioritize by skill level
-      .limit(3 - matchedPlayers.length); // Only get what we need
-
-    if (widerError) {
-      console.error("Error in wider search:", widerError);
-    } else if (additionalPlayers) {
-      matchedPlayers.push(...additionalPlayers);
-    }
+  if (!potentialPlayers || potentialPlayers.length === 0) {
+    return { matchedPlayers: [], foundMatch: false, matchScore: 0 };
   }
 
-  // We have a match if we found at least 3 other players
-  const foundMatch = matchedPlayers.length >= 3;
+  // Calculate match score for each player
+  const scoredPlayers = potentialPlayers.map(player => {
+    // Location matching (exact match = 100, different = 0)
+    const locationScore = player.city === location ? 100 : 0;
+    
+    // Skill level matching (convert to numeric if possible for better comparison)
+    let skillScore = 0;
+    
+    // For Golf handicaps
+    if (sport === "Golf") {
+      const playerHandicap = parseHandicap(player.rating.toString());
+      const targetHandicap = parseHandicap(skillLevel);
+      
+      // Calculate difference (closer = higher score)
+      const handicapDiff = Math.abs(playerHandicap - targetHandicap);
+      skillScore = Math.max(0, 100 - (handicapDiff * 5)); // 5 points per handicap difference
+    } 
+    // For other sports with numeric ratings
+    else {
+      const playerRating = parseFloat(player.rating.toString()) || 0;
+      const targetRating = convertSkillLevelToRating(skillLevel);
+      
+      // Calculate difference (closer = higher score)
+      const ratingDiff = Math.abs(playerRating - targetRating);
+      skillScore = Math.max(0, 100 - (ratingDiff * 20)); // 20 points per rating difference
+    }
+    
+    // Availability matching bonus
+    const availabilityScore = player.play_time === "both" ? 20 : 0;
+    
+    // Calculate total score - weight location more heavily
+    const totalScore = (locationScore * 0.6) + (skillScore * 0.3) + (availabilityScore * 0.1);
+    
+    return {
+      player,
+      score: totalScore
+    };
+  });
+  
+  // Sort by score (highest first)
+  scoredPlayers.sort((a, b) => b.score - a.score);
+  
+  // Get the top matches (up to 3)
+  const bestMatches = scoredPlayers.slice(0, 3).map(match => match.player);
+  const highestScore = scoredPlayers.length > 0 ? scoredPlayers[0].score : 0;
+  
+  // We have a good match if we found players with a decent score
+  const foundMatch = bestMatches.length > 0 && highestScore > 60;
+
+  console.log(`Found ${bestMatches.length} potential matches with highest score: ${highestScore}`);
   
   return {
-    matchedPlayers,
-    foundMatch
+    matchedPlayers: bestMatches,
+    foundMatch: foundMatch,
+    matchScore: highestScore
   };
+}
+
+/**
+ * Helper function to parse golf handicaps
+ */
+function parseHandicap(handicap: string): number {
+  if (handicap === "Beginner") return 30;
+  
+  // Try to parse ranges like "0-5", "6-10" etc.
+  if (handicap.includes("-")) {
+    const parts = handicap.split("-");
+    if (parts.length === 2) {
+      const low = parseInt(parts[0], 10);
+      const high = parseInt(parts[1], 10);
+      if (!isNaN(low) && !isNaN(high)) {
+        return (low + high) / 2; // Use the middle of the range
+      }
+    }
+  }
+  
+  // Try to parse as a number
+  const numericHandicap = parseInt(handicap, 10);
+  if (!isNaN(numericHandicap)) {
+    return numericHandicap;
+  }
+  
+  // Default value if parsing fails
+  return 20;
+}
+
+/**
+ * Convert text skill levels to numeric ratings
+ */
+function convertSkillLevelToRating(level: string): number {
+  switch (level.toLowerCase()) {
+    case "beginner": return 1;
+    case "intermediate": return 3;
+    case "advanced": return 4;
+    case "professional": return 5;
+    default: return 2.5; // Default middle value
+  }
 }
 
 /**
@@ -86,7 +160,7 @@ export async function registerPlayerForMatchmaking(playerId: string, sport: stri
       throw registrationError;
     }
 
-    // Try to find an immediate match
+    // Try to find an immediate match using our AI matchmaking algorithm
     const matchResult = await findMatchingPlayers(sport, location, skillLevel, playerId);
     
     // If we found enough players, create the match
@@ -96,7 +170,6 @@ export async function registerPlayerForMatchmaking(playerId: string, sport: stri
     }
     
     // If we didn't find enough players, queue them for later matching
-    // and send an email when we find matches
     await queuePlayerForLaterMatching(playerId, email, sport, location, skillLevel);
     
     return matchResult;

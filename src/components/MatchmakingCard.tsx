@@ -9,7 +9,7 @@ import { Checkbox } from "./ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Loader2 } from "lucide-react";
+import { Mail, Loader2, Users } from "lucide-react";
 import { createOrFetchPlayer } from "@/utils/playerRegistration";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -134,7 +134,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         phoneNumber
       });
 
-      // Try to find a match using our new AI matchmaking service
+      // Use our enhanced AI matchmaking
       const matchResult = await registerPlayerForMatchmaking(
         playerId,
         selectedSport,
@@ -143,6 +143,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         email
       );
 
+      // Update state with match results
       setFoundMatch(matchResult.foundMatch);
       setMatchedPlayers(matchResult.matchedPlayers);
       setIsWaitingForMatch(true);
@@ -150,13 +151,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
       if (matchResult.foundMatch) {
         toast({
-          title: "Match Found!",
-          description: "We've found players that match your criteria! Check your email for details.",
+          title: "Perfect Match Found!",
+          description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for you! Check your email for details.`,
         });
       } else {
         toast({
           title: "Registration Successful",
-          description: "We'll email you when we find suitable players in your area",
+          description: "Our AI will continue looking for perfect matches and email you when found",
         });
       }
       
@@ -180,15 +181,19 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center">
-            <Mail className="h-8 w-8 text-blue-600" />
+            {foundMatch ? (
+              <Users className="h-8 w-8 text-blue-600" />
+            ) : (
+              <Mail className="h-8 w-8 text-blue-600" />
+            )}
           </div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {foundMatch ? "Match Found!" : "Thank You for Joining!"}
+            {foundMatch ? "Perfect Match Found!" : "Thank You for Joining!"}
           </h2>
           <p className="text-gray-600">
             {foundMatch 
-              ? `We've found ${matchedPlayers.length} players for you to play ${selectedSport} with in your area!` 
-              : `We're currently looking for players who match your profile for ${selectedSport} in your area.`}
+              ? `Our AI has matched you with ${matchedPlayers.length} ideal ${selectedSport} players in your area!` 
+              : `Our AI is analyzing player profiles to find your perfect ${selectedSport} match.`}
           </p>
           <div className="bg-blue-50 p-4 rounded-lg text-left">
             <h3 className="font-medium text-blue-800 mb-2">What happens next?</h3>
@@ -197,20 +202,15 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
                 <>
                   <li>• We've sent match details to <span className="font-medium">{email}</span></li>
                   <li>• Your dashboard has been updated with your new match</li>
-                  <li>• You can view full match details and confirm your attendance</li>
+                  <li>• View full match details and confirm your attendance</li>
                 </>
               ) : (
                 <>
-                  <li>• We'll contact you at {email && <span className="font-medium">{email}</span>} 
-                      {email && phoneNumber ? " or " : ""}
-                      {phoneNumber && <span className="font-medium">{phoneNumber}</span>} 
-                      {!email && !phoneNumber && <span className="font-medium">your provided contact information</span>}
-                      {" when we find players that match your:"}
-                  </li>
-                  <li className="ml-4">- Sport ({selectedSport})</li>
-                  <li className="ml-4">- Location ({location})</li>
-                  <li className="ml-4">- Ability Level ({abilityLevel})</li>
-                  <li>• You'll receive player details and recommended game times</li>
+                  <li>• Our AI will contact you at <span className="font-medium">{email}</span> when it finds your ideal match based on:</li>
+                  <li className="ml-4">- Sport: {selectedSport}</li>
+                  <li className="ml-4">- Location: {location}</li>
+                  <li className="ml-4">- Ability Level: {abilityLevel}</li>
+                  <li>• You'll receive AI-optimized player details and recommended game times</li>
                 </>
               )}
               <li>• No payment is required until you confirm your game</li>

@@ -1,12 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerPerformance } from "@/components/PlayerPerformance";
 import { SkillLevelUpdate } from "@/components/SkillLevelUpdate";
-import { VideoAnalysis } from "@/components/VideoAnalysis";
-import { VideoHistory } from "@/components/VideoHistory";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MatchResults } from "@/components/MatchResults";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, Calendar, Award, Video, MessageSquare, Activity } from "lucide-react";
+import { User, Calendar, Award, Activity, MessageSquare } from "lucide-react";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
@@ -217,7 +214,7 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs defaultValue="performance" className="space-y-4">
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-4">
+              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-3">
                 <TabsTrigger value="performance" className="flex items-center gap-2">
                   <Activity size={16} />
                   <span className="hidden sm:inline">Performance</span>
@@ -229,10 +226,6 @@ const PlayerDashboard = () => {
                 <TabsTrigger value="skill" className="flex items-center gap-2">
                   <Award size={16} />
                   <span className="hidden sm:inline">Update Skill</span>
-                </TabsTrigger>
-                <TabsTrigger value="video" className="flex items-center gap-2">
-                  <Video size={16} />
-                  <span className="hidden sm:inline">Video Analysis</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -264,11 +257,6 @@ const PlayerDashboard = () => {
                     />
                   </CardContent>
                 </Card>
-              </TabsContent>
-              
-              <TabsContent value="video" className="space-y-6">
-                <VideoAnalysis />
-                <VideoHistory />
               </TabsContent>
             </Tabs>
           ) : (
