@@ -9,10 +9,11 @@ import { Checkbox } from "./ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail } from "lucide-react";
-import { createOrFetchPlayer, registerPlayer } from "@/utils/playerRegistration";
+import { Mail, Loader2 } from "lucide-react";
+import { createOrFetchPlayer } from "@/utils/playerRegistration";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { registerPlayerForMatchmaking } from "@/services/matchmakingService";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -28,9 +29,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [createAccount, setCreateAccount] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
+  const [matchedPlayers, setMatchedPlayers] = useState<any[]>([]);
+  const [foundMatch, setFoundMatch] = useState(false);
   const { toast } = useToast();
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -78,48 +80,44 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       return;
     }
 
-    if (createAccount) {
-      if (!password) {
-        toast({
-          title: "Password Required",
-          description: "Please create a password for your account",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (!password) {
+      toast({
+        title: "Password Required",
+        description: "Please create a password for your account",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      if (password.length < 6) {
-        toast({
-          title: "Password Too Short",
-          description: "Password must be at least 6 characters long",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      if (password !== confirmPassword) {
-        toast({
-          title: "Passwords Don't Match",
-          description: "Please make sure your passwords match",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords Don't Match",
+        description: "Please make sure your passwords match",
+        variant: "destructive"
+      });
+      return;
     }
 
     setIsJoining(true);
 
     try {
-      // Create an account first if requested
-      if (createAccount) {
-        const { error: signUpError } = await signUp(email, password);
-        if (signUpError) throw signUpError;
+      // Create an account first
+      const { error: signUpError } = await signUp(email, password);
+      if (signUpError) throw signUpError;
 
-        toast({
-          title: "Account Created",
-          description: "Your account has been created successfully",
-        });
-      }
+      toast({
+        title: "Account Created",
+        description: "Your account has been created successfully",
+      });
 
       // Register the player
       const playerId = await createOrFetchPlayer({
@@ -136,22 +134,36 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         phoneNumber
       });
 
-      await registerPlayer(playerId, selectedSport);
+      // Try to find a match using our new AI matchmaking service
+      const matchResult = await registerPlayerForMatchmaking(
+        playerId,
+        selectedSport,
+        location,
+        abilityLevel,
+        email
+      );
 
+      setFoundMatch(matchResult.foundMatch);
+      setMatchedPlayers(matchResult.matchedPlayers);
       setIsWaitingForMatch(true);
       setIsJoining(false);
 
-      toast({
-        title: "Registration Successful",
-        description: "We'll email you when we find suitable players in your area",
-      });
-      
-      if (createAccount) {
-        // Short delay before navigating
-        setTimeout(() => {
-          navigate("/player-dashboard");
-        }, 3000);
+      if (matchResult.foundMatch) {
+        toast({
+          title: "Match Found!",
+          description: "We've found players that match your criteria! Check your email for details.",
+        });
+      } else {
+        toast({
+          title: "Registration Successful",
+          description: "We'll email you when we find suitable players in your area",
+        });
       }
+      
+      // Short delay before navigating
+      setTimeout(() => {
+        navigate("/player-dashboard");
+      }, 3000);
     } catch (error: any) {
       console.error('Player registration error:', error);
       toast({
@@ -170,37 +182,45 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center">
             <Mail className="h-8 w-8 text-blue-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Thank You for Joining!</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {foundMatch ? "Match Found!" : "Thank You for Joining!"}
+          </h2>
           <p className="text-gray-600">
-            We're currently looking for players who match your profile for {selectedSport} in your area.
+            {foundMatch 
+              ? `We've found ${matchedPlayers.length} players for you to play ${selectedSport} with in your area!` 
+              : `We're currently looking for players who match your profile for ${selectedSport} in your area.`}
           </p>
           <div className="bg-blue-50 p-4 rounded-lg text-left">
             <h3 className="font-medium text-blue-800 mb-2">What happens next?</h3>
             <ul className="text-sm text-gray-700 space-y-2">
-              <li>• We'll contact you at {email ? <span className="font-medium">{email}</span> : ""} 
-                  {email && phoneNumber ? " or " : ""}
-                  {phoneNumber ? <span className="font-medium">{phoneNumber}</span> : ""} 
-                  {!email && !phoneNumber ? <span className="font-medium">your provided contact information</span> : ""}
-                  {" when we find players that match your:"}
-              </li>
-              <li className="ml-4">- Location ({location})</li>
-              <li className="ml-4">- Ability Level ({abilityLevel})</li>
-              <li>• You'll receive player details and recommended game times</li>
+              {foundMatch ? (
+                <>
+                  <li>• We've sent match details to <span className="font-medium">{email}</span></li>
+                  <li>• Your dashboard has been updated with your new match</li>
+                  <li>• You can view full match details and confirm your attendance</li>
+                </>
+              ) : (
+                <>
+                  <li>• We'll contact you at {email && <span className="font-medium">{email}</span>} 
+                      {email && phoneNumber ? " or " : ""}
+                      {phoneNumber && <span className="font-medium">{phoneNumber}</span>} 
+                      {!email && !phoneNumber && <span className="font-medium">your provided contact information</span>}
+                      {" when we find players that match your:"}
+                  </li>
+                  <li className="ml-4">- Sport ({selectedSport})</li>
+                  <li className="ml-4">- Location ({location})</li>
+                  <li className="ml-4">- Ability Level ({abilityLevel})</li>
+                  <li>• You'll receive player details and recommended game times</li>
+                </>
+              )}
               <li>• No payment is required until you confirm your game</li>
             </ul>
           </div>
           <Button
-            onClick={() => {
-              if (createAccount) {
-                navigate("/player-dashboard");
-              } else {
-                setIsWaitingForMatch(false);
-                setIsJoining(false);
-              }
-            }}
+            onClick={() => navigate("/player-dashboard")}
             className="w-full bg-blue-600 hover:bg-blue-700 mt-4"
           >
-            {createAccount ? "Go to Dashboard" : "Back to Home"}
+            Go to Dashboard
           </Button>
         </div>
       </Card>
@@ -367,58 +387,49 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           />
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="create-account" 
-            checked={createAccount}
-            onCheckedChange={(checked) => setCreateAccount(checked as boolean)}
+        <div>
+          <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password *</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Create a password"
+            className="mt-1"
+            required
+            minLength={6}
           />
-          <Label htmlFor="create-account" className="text-sm font-medium text-gray-700">
-            Create an account for faster matching next time
-          </Label>
         </div>
         
-        {createAccount && (
-          <>
-            <div>
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a password"
-                className="mt-1"
-                required={createAccount}
-                minLength={6}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">Confirm Password *</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
-                className="mt-1"
-                required={createAccount}
-                minLength={6}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 6 characters long
-              </p>
-            </div>
-          </>
-        )}
+        <div>
+          <Label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">Confirm Password *</Label>
+          <Input
+            id="confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm your password"
+            className="mt-1"
+            required
+            minLength={6}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Password must be at least 6 characters long
+          </p>
+        </div>
         
         <Button
           onClick={handleJoin}
-          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || isJoining}
+          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !password || isJoining}
           className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
         >
-          {isJoining ? "Finding Match..." : "Find Match"}
+          {isJoining ? (
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding Match...
+            </span>
+          ) : (
+            "Find Match"
+          )}
         </Button>
       </div>
     </Card>

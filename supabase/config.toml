@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.share-sports-video]
 verify_jwt = true
+
+[functions.send-match-email]
+verify_jwt = true
