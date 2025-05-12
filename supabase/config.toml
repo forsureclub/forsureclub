@@ -1,6 +1,9 @@
 
 project_id = "joephviktsbxtkidveho"
 
+[auth.email]
+enable_confirmations = false
+
 [functions.analyze-sports-video]
 verify_jwt = true
 

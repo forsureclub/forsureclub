@@ -8,16 +8,21 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { z } from "zod";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, resetPassword } = useAuth();
+  const [activeTab, setActiveTab] = useState("login");
 
   // If user is already logged in, redirect to dashboard
   if (user) {
@@ -28,6 +33,7 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
 
     try {
       const { error } = await signIn(email, password);
@@ -41,6 +47,8 @@ const Auth = () => {
 
       navigate("/player-dashboard");
     } catch (error: any) {
+      console.error("Sign in error:", error);
+      setErrorMessage(error.message || "Failed to sign in. Please check your credentials.");
       toast({
         title: "Sign in failed",
         description: error.message,
@@ -53,9 +61,11 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     
     // Basic validation
     if (password !== confirmPassword) {
+      setErrorMessage("Passwords don't match");
       toast({
         title: "Passwords don't match",
         description: "Please make sure both passwords match.",
@@ -65,6 +75,7 @@ const Auth = () => {
     }
     
     if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters long");
       toast({
         title: "Password too short",
         description: "Password must be at least 6 characters long.",
@@ -82,11 +93,44 @@ const Auth = () => {
 
       toast({
         title: "Registration successful!",
-        description: "Please check your email to verify your account or continue to sign in.",
+        description: "You can now sign in with your new account.",
       });
+      
+      // Switch to login tab after successful registration
+      setActiveTab("login");
     } catch (error: any) {
+      console.error("Registration error:", error);
+      setErrorMessage(error.message || "Registration failed. Please try again.");
       toast({
         title: "Registration failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const { error } = await resetPassword(resetEmail);
+      
+      if (error) throw error;
+      
+      setResetSent(true);
+      toast({
+        title: "Password reset email sent",
+        description: "Check your inbox for password reset instructions.",
+      });
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      setErrorMessage(error.message || "Failed to send reset email. Please try again.");
+      toast({
+        title: "Reset failed",
         description: error.message,
         variant: "destructive",
       });
@@ -113,11 +157,19 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="reset">Reset</TabsTrigger>
             </TabsList>
+
+            {errorMessage && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
 
             <TabsContent value="login">
               <form onSubmit={handleSignIn} className="space-y-4">
@@ -130,6 +182,7 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -140,10 +193,18 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing In..." : "Sign In"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -159,6 +220,7 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -170,6 +232,7 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -181,15 +244,73 @@ const Auth = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={6}
+                    disabled={isLoading}
                   />
                   <p className="text-xs text-gray-500">
                     Password must be at least 6 characters long
                   </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Registering..." : "Register"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Registering...
+                    </>
+                  ) : (
+                    "Register"
+                  )}
                 </Button>
               </form>
+            </TabsContent>
+
+            <TabsContent value="reset">
+              {resetSent ? (
+                <div className="space-y-4 text-center">
+                  <AlertCircle className="mx-auto h-12 w-12 text-green-500" />
+                  <h3 className="text-lg font-medium">Check your email</h3>
+                  <p className="text-sm text-gray-500">
+                    We've sent password reset instructions to your email address.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setResetSent(false);
+                      setActiveTab("login");
+                    }}
+                  >
+                    Back to Sign In
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Enter your email and we'll send you instructions to reset your password
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </Button>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
