@@ -22,8 +22,11 @@ export const VideoHistory = () => {
   const fetchVideos = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('player_videos')
+      
+      // Use type assertion to work around the type issue temporarily
+      // until Supabase types get updated
+      const { data, error } = await (supabase
+        .from('player_videos') as any)
         .select('*')
         .eq('player_id', user?.id)
         .order('created_at', { ascending: false });

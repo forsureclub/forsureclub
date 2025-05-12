@@ -193,6 +193,36 @@ export type Database = {
           },
         ]
       }
+      player_videos: {
+        Row: {
+          ai_feedback: string | null
+          created_at: string
+          id: string
+          player_id: string
+          sport: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          ai_feedback?: string | null
+          created_at?: string
+          id?: string
+          player_id: string
+          sport: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          ai_feedback?: string | null
+          created_at?: string
+          id?: string
+          player_id?: string
+          sport?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           budget_range: string
