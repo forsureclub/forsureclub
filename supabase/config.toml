@@ -12,3 +12,7 @@ verify_jwt = true
 
 [functions.send-match-email]
 verify_jwt = true
+
+[functions.matchi-booking]
+verify_jwt = true
+

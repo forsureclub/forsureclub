@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -209,11 +208,13 @@ async function createMatch(
     const matchPlayers = [
       {
         match_id: match.id,
-        player_id: initiatorId
+        player_id: initiatorId,
+        has_confirmed: true  // Initiator is auto-confirmed
       },
       ...matchedPlayers.map(player => ({
         match_id: match.id,
-        player_id: player.id
+        player_id: player.id,
+        has_confirmed: false  // Other players need to confirm
       }))
     ];
 
@@ -292,7 +293,8 @@ async function sendMatchNotifications(
           location,
           players: players.map(p => p.name),
           sport,
-          matchId
+          matchId,
+          requiresConfirmation: player.id !== playerIds[0] // First player is the initiator, already confirmed
         });
       }
     }
@@ -312,6 +314,7 @@ async function sendMatchEmail(
     players: string[];
     sport: string;
     matchId: string;
+    requiresConfirmation: boolean;
   }
 ): Promise<void> {
   try {
@@ -326,5 +329,29 @@ async function sendMatchEmail(
     console.log(`Match email sent to ${playerEmail}`);
   } catch (error) {
     console.error("Error sending match email:", error);
+  }
+}
+
+/**
+ * Check if a match is ready for court booking (all players confirmed)
+ */
+export async function isMatchReadyForBooking(matchId: string): Promise<boolean> {
+  try {
+    // Get all players in the match
+    const { data: matchPlayers, error } = await supabase
+      .from("match_players")
+      .select("has_confirmed")
+      .eq("match_id", matchId);
+
+    if (error) {
+      console.error("Error checking match players:", error);
+      return false;
+    }
+
+    // Check if all players have confirmed
+    return matchPlayers && matchPlayers.length > 0 && matchPlayers.every(player => player.has_confirmed);
+  } catch (error) {
+    console.error("Error checking if match is ready for booking:", error);
+    return false;
   }
 }
