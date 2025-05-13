@@ -104,7 +104,9 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
     try {
       const { error } = await supabase
         .from("match_players")
-        .update({ has_confirmed: true })
+        .update({ 
+          has_confirmed: true 
+        })
         .eq("match_id", matchId)
         .eq("player_id", user.id);
 

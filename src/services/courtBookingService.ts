@@ -153,7 +153,7 @@ export async function checkAllPlayersConfirmed(matchId: string): Promise<boolean
       .select("has_confirmed")
       .eq("match_id", matchId);
 
-    if (error) {
+    if (error || !data) {
       console.error("Error checking player confirmations:", error);
       throw error;
     }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -58,6 +57,11 @@ export const PlayerMatches = () => {
           .order("played_at", { ascending: false });
 
         if (detailsError) throw detailsError;
+        
+        if (!matchDetails) {
+          setMatches([]);
+          return;
+        }
         
         // Get all player information for the matches
         const playerIds = matchDetails.flatMap(match => 
@@ -238,7 +242,7 @@ export const PlayerMatches = () => {
                 </div>
                 
                 <div className="flex items-start">
-                  <Users className="w-5 h-5 mr-2 mt-1 text-gray-500" />
+                  <Users className="w-5 h-5 mr-2 text-gray-500" />
                   <div>
                     <p className="font-medium">Players:</p>
                     <ul className="list-disc pl-5 space-y-1">

@@ -338,18 +338,18 @@ async function sendMatchEmail(
 export async function isMatchReadyForBooking(matchId: string): Promise<boolean> {
   try {
     // Get all players in the match
-    const { data: matchPlayers, error } = await supabase
+    const { data, error } = await supabase
       .from("match_players")
       .select("has_confirmed")
       .eq("match_id", matchId);
 
-    if (error) {
+    if (error || !data) {
       console.error("Error checking match players:", error);
       return false;
     }
 
     // Check if all players have confirmed
-    return matchPlayers && matchPlayers.length > 0 && matchPlayers.every(player => player.has_confirmed);
+    return data && data.length > 0 && data.every(player => player.has_confirmed);
   } catch (error) {
     console.error("Error checking if match is ready for booking:", error);
     return false;

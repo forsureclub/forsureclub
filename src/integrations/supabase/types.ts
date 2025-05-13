@@ -67,6 +67,7 @@ export type Database = {
           created_at: string | null
           etiquette_rating: number | null
           feedback: string | null
+          has_confirmed: boolean | null
           id: string
           match_id: string | null
           performance_rating: number | null
@@ -79,6 +80,7 @@ export type Database = {
           created_at?: string | null
           etiquette_rating?: number | null
           feedback?: string | null
+          has_confirmed?: boolean | null
           id?: string
           match_id?: string | null
           performance_rating?: number | null
@@ -91,6 +93,7 @@ export type Database = {
           created_at?: string | null
           etiquette_rating?: number | null
           feedback?: string | null
+          has_confirmed?: boolean | null
           id?: string
           match_id?: string | null
           performance_rating?: number | null
@@ -118,6 +121,8 @@ export type Database = {
       }
       matches: {
         Row: {
+          booking_details: Json | null
+          booking_id: string | null
           created_at: string | null
           id: string
           location: string
@@ -126,6 +131,8 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          booking_details?: Json | null
+          booking_id?: string | null
           created_at?: string | null
           id?: string
           location: string
@@ -134,6 +141,8 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          booking_details?: Json | null
+          booking_id?: string | null
           created_at?: string | null
           id?: string
           location?: string

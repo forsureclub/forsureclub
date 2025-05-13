@@ -112,34 +112,55 @@ async function bookCourt(facilityId: string, date: string, startTime: string, en
 
 // Update match status to confirmed when all players have confirmed
 async function confirmMatch(matchId: string, playerIds: string[]) {
-  // First check if all players in the match have confirmed
-  const { data: match, error } = await supabase
-    .from("matches")
-    .select("id, status")
-    .eq("id", matchId)
-    .single();
-
-  if (error || !match) {
-    throw new Error(`Match not found: ${error?.message}`);
-  }
-
-  // Check if all players have confirmed
-  const { data: confirmations, error: confirmationsError } = await supabase
-    .from("match_players")
-    .select("player_id, has_confirmed")
-    .eq("match_id", matchId);
-
-  if (confirmationsError || !confirmations) {
-    throw new Error(`Failed to get match confirmations: ${confirmationsError?.message}`);
-  }
-
-  const allConfirmed = confirmations.every(p => p.has_confirmed);
+  // Create a Supabase client for the Edge Function
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+  );
   
-  if (!allConfirmed) {
+  try {
+    // Check if all players have confirmed
+    const { data: confirmations, error: confirmationsError } = await supabaseClient
+      .from("match_players")
+      .select("player_id, has_confirmed")
+      .eq("match_id", matchId);
+
+    if (confirmationsError || !confirmations) {
+      throw new Error(`Failed to get match confirmations: ${confirmationsError?.message}`);
+    }
+
+    const allConfirmed = confirmations.every(p => p.has_confirmed);
+    
+    if (!allConfirmed) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Not all players have confirmed yet" 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+
+    // If all confirmed, update match status and proceed with booking
+    const { error: updateError } = await supabaseClient
+      .from("matches")
+      .update({ status: "confirmed" })
+      .eq("id", matchId);
+
+    if (updateError) {
+      throw new Error(`Failed to update match status: ${updateError.message}`);
+    }
+
     return new Response(
       JSON.stringify({ 
-        success: false, 
-        message: "Not all players have confirmed yet" 
+        success: true, 
+        message: "Match confirmed, ready for court booking" 
       }),
       { 
         headers: { 
@@ -148,28 +169,10 @@ async function confirmMatch(matchId: string, playerIds: string[]) {
         } 
       }
     );
+  } catch (error) {
+    throw new Error(`Failed to confirm match: ${error.message}`);
   }
-
-  // If all confirmed, update match status and proceed with booking
-  const { error: updateError } = await supabase
-    .from("matches")
-    .update({ status: "confirmed" })
-    .eq("id", matchId);
-
-  if (updateError) {
-    throw new Error(`Failed to update match status: ${updateError.message}`);
-  }
-
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      message: "Match confirmed, ready for court booking" 
-    }),
-    { 
-      headers: { 
-        ...corsHeaders,
-        "Content-Type": "application/json" 
-      } 
-    }
-  );
 }
+
+// Import createClient from Supabase JS client
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
