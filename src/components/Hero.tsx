@@ -5,7 +5,7 @@ import { Users, Link } from "lucide-react";
 
 export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="text-center px-4 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -61,7 +61,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
             onClick={onStartMatching}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 rounded-lg text-lg font-semibold shadow-lg transition-transform hover:scale-105"
           >
-            Start Matching
+            Start Matching & Register
           </Button>
         </motion.div>
       </div>

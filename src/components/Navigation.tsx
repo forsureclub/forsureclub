@@ -49,7 +49,7 @@ export const Navigation = () => {
               alt="For Sure Club"
               className="h-10 mr-2"
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               For Sure Club
             </span>
           </Link>
@@ -103,7 +103,7 @@ export const Navigation = () => {
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="" alt={user.email?.split("@")[0]} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                    <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -129,7 +129,7 @@ export const Navigation = () => {
             </DropdownMenu>
           ) : (
             <Link to="/auth">
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                 Sign In
               </Button>
             </Link>
@@ -152,7 +152,7 @@ export const Navigation = () => {
                       <div className="flex items-center mb-4">
                         <Avatar className="h-10 w-10 mr-2">
                           <AvatarImage src="" alt={user.email?.split("@")[0]} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                          <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
                             {user.email?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -208,7 +208,7 @@ export const Navigation = () => {
                     </Button>
                   ) : (
                     <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                      <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                         Sign In
                       </Button>
                     </Link>
