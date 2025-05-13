@@ -1,4 +1,3 @@
-
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,11 +46,8 @@ export const Navigation = () => {
             <img
               src="/lovable-uploads/af55ac11-46f4-41cd-9cdb-e68e3c019154.png"
               alt="For Sure Club"
-              className="h-10 mr-2"
+              className="h-10"
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-              For Sure Club
-            </span>
           </Link>
         </div>
 
