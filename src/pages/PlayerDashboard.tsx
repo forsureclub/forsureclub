@@ -22,63 +22,12 @@ const PlayerDashboard = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
-
-        // Get player profile
-        const { data: authProfile } = await supabase
-          .from('auth_profiles')
-          .select('*, player:player_id(*)')
-          .eq('id', user.id)
-          .single();
-
-        if (authProfile && authProfile.player) {
-          setPlayerProfile(authProfile.player);
-          setSelectedSport(authProfile.player.sport);
-        } else {
-          // Check if there's an existing player by email
-          const { data: existingPlayer } = await supabase
-            .from('players')
-            .select('*')
-            .eq('email', user.email)
-            .maybeSingle();
-
-          if (existingPlayer) {
-            // Link existing player to auth profile
-            await supabase
-              .from('auth_profiles')
-              .upsert({
-                id: user.id,
-                player_id: existingPlayer.id
-              });
-            
-            setPlayerProfile(existingPlayer);
-            setSelectedSport(existingPlayer.sport);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProfile();
+    if (user) {
+      fetchProfile();
+    } else {
+      setIsLoading(false);
+    }
   }, [user, toast]);
-
-  const handleRefreshProfile = async () => {
-    setIsLoading(true);
-    await fetchProfile();
-  };
 
   const fetchProfile = async () => {
     try {
@@ -97,11 +46,97 @@ const PlayerDashboard = () => {
       if (authProfile && authProfile.player) {
         setPlayerProfile(authProfile.player);
         setSelectedSport(authProfile.player.sport);
+      } else {
+        // Check if there's an existing player by email
+        const { data: existingPlayer } = await supabase
+          .from('players')
+          .select('*')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        if (existingPlayer) {
+          // Link existing player to auth profile
+          await supabase
+            .from('auth_profiles')
+            .upsert({
+              id: user.id,
+              player_id: existingPlayer.id
+            });
+          
+          setPlayerProfile(existingPlayer);
+          setSelectedSport(existingPlayer.sport);
+          
+          toast({
+            title: "Profile Linked",
+            description: `Your account has been linked to your ${existingPlayer.sport} player profile.`,
+          });
+        }
       }
     } catch (error) {
-      console.error("Error refreshing profile:", error);
+      console.error("Error fetching user profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefreshProfile = async () => {
+    setIsLoading(true);
+    await fetchProfile();
+  };
+
+  const handleSportSelection = async (sport: string) => {
+    setSelectedSport(sport);
+    
+    try {
+      if (!user) return;
+      
+      // If no player profile exists yet, create a simple one based on the selected sport
+      if (!playerProfile) {
+        const { data: newPlayer, error } = await supabase
+          .from('players')
+          .insert({
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'Player',
+            email: user.email,
+            sport: sport,
+            rating: 2.5, // Default middle rating
+            gender: 'other', // Default, will be updated later
+            city: 'Not specified',
+            occupation: 'Not specified',
+            budget_range: 'Not specified',
+            play_time: 'weekends'
+          })
+          .select()
+          .single();
+          
+        if (error) throw error;
+        
+        // Link to auth profile
+        await supabase
+          .from('auth_profiles')
+          .upsert({
+            id: user.id,
+            player_id: newPlayer.id
+          });
+          
+        setPlayerProfile(newPlayer);
+        
+        toast({
+          title: "Sport Selected",
+          description: `You've selected ${sport}. Please complete your profile.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating player profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create player profile",
+        variant: "destructive",
+      });
     }
   };
 
@@ -180,16 +215,13 @@ const PlayerDashboard = () => {
                   </>
                 ) : (
                   <div className="py-4">
-                    <p className="text-gray-500 dark:text-gray-400">No player profile linked yet.</p>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">Please select your sport to continue:</p>
                     
-                    <div className="mt-4">
-                      <p className="mb-2 font-medium">Select your sport:</p>
-                      <SportSelector onSportSelect={(sport) => setSelectedSport(sport)} />
-                    </div>
+                    <SportSelector onSportSelect={handleSportSelection} />
                     
-                    <Button className="mt-4 w-full" asChild>
-                      <Link to="/">Complete Registration</Link>
-                    </Button>
+                    <p className="mt-4 text-sm text-gray-500">
+                      Your profile will be created automatically based on your selection.
+                    </p>
                   </div>
                 )}
 
@@ -268,11 +300,8 @@ const PlayerDashboard = () => {
                 </div>
                 <h2 className="text-xl font-bold">Complete Your Profile</h2>
                 <p className="text-gray-600">
-                  Complete your registration to view your game history and performance.
+                  Select your sport to create your player profile and start tracking your games.
                 </p>
-                <Button asChild className="mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-                  <Link to="/">Get Started</Link>
-                </Button>
               </div>
             </Card>
           )}
