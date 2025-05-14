@@ -12,7 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { MatchResults } from "@/components/MatchResults";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, Calendar, Award, Activity, MessageSquare } from "lucide-react";
+import { User, Calendar, Award, Activity, MessageSquare, Video } from "lucide-react";
+import { VideoAnalysis } from "@/components/VideoAnalysis";
+import { VideoHistory } from "@/components/VideoHistory";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
@@ -258,7 +260,7 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-3">
+              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-5">
                 <TabsTrigger value="performance" className="flex items-center gap-2">
                   <Activity size={16} />
                   <span className="hidden sm:inline">Performance</span>
@@ -270,6 +272,14 @@ const PlayerDashboard = () => {
                 <TabsTrigger value="skill" className="flex items-center gap-2">
                   <Award size={16} />
                   <span className="hidden sm:inline">Update Skill</span>
+                </TabsTrigger>
+                <TabsTrigger value="coaching" className="flex items-center gap-2">
+                  <Video size={16} />
+                  <span className="hidden sm:inline">Coaching</span>
+                </TabsTrigger>
+                <TabsTrigger value="videos" className="flex items-center gap-2">
+                  <Video size={16} />
+                  <span className="hidden sm:inline">My Videos</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -301,6 +311,14 @@ const PlayerDashboard = () => {
                     />
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="coaching">
+                <VideoAnalysis />
+              </TabsContent>
+              
+              <TabsContent value="videos">
+                <VideoHistory />
               </TabsContent>
             </Tabs>
           ) : (
