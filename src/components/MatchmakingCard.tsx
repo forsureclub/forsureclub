@@ -6,14 +6,14 @@ import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Loader2, Users } from "lucide-react";
 import { createOrFetchPlayer } from "@/utils/playerRegistration";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { registerPlayerForMatchmaking } from "@/services/matchmakingService";
+import { registerPlayerForMatchmaking, organizeFourPlayerMatch } from "@/services/matchmakingService";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
@@ -33,6 +33,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
   const [matchedPlayers, setMatchedPlayers] = useState<any[]>([]);
   const [foundMatch, setFoundMatch] = useState(false);
+  const [matchType, setMatchType] = useState<'singles' | 'doubles'>('singles');
   const { toast } = useToast();
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -134,14 +135,29 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         phoneNumber
       });
 
-      // Use our enhanced AI matchmaking
-      const matchResult = await registerPlayerForMatchmaking(
-        playerId,
-        selectedSport,
-        location,
-        abilityLevel,
-        email
-      );
+      let matchResult;
+      
+      // Use appropriate matching function based on match type
+      if (matchType === 'doubles') {
+        // For 4-player doubles match
+        matchResult = await organizeFourPlayerMatch(
+          playerId,
+          selectedSport,
+          location,
+          abilityLevel,
+          gender,
+          email
+        );
+      } else {
+        // For regular singles match
+        matchResult = await registerPlayerForMatchmaking(
+          playerId,
+          selectedSport,
+          location,
+          abilityLevel,
+          email
+        );
+      }
 
       // Update state with match results
       setFoundMatch(matchResult.foundMatch);
@@ -151,13 +167,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
       if (matchResult.foundMatch) {
         toast({
-          title: "Perfect Match Found!",
-          description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for you! Check your email for details.`,
+          title: `Perfect ${matchType === 'doubles' ? 'Doubles' : 'Singles'} Match Found!`,
+          description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for your ${matchType} game! Check your email for details.`,
         });
       } else {
         toast({
           title: "Registration Successful",
-          description: "Our AI will continue looking for perfect matches and email you when found",
+          description: `Our AI will continue looking for perfect ${matchType} matches and email you when found`,
         });
       }
       
@@ -188,12 +204,12 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
             )}
           </div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {foundMatch ? "Perfect Match Found!" : "Thank You for Joining!"}
+            {foundMatch ? `Perfect ${matchType === 'doubles' ? 'Doubles' : 'Singles'} Match Found!` : "Thank You for Joining!"}
           </h2>
           <p className="text-gray-600">
             {foundMatch 
-              ? `Our AI has matched you with ${matchedPlayers.length} ideal ${selectedSport} players in your area!` 
-              : `Our AI is analyzing player profiles to find your perfect ${selectedSport} match.`}
+              ? `Our AI has matched you with ${matchedPlayers.length} ideal ${selectedSport} players in your area for a ${matchType} game!` 
+              : `Our AI is analyzing player profiles to find your perfect ${selectedSport} ${matchType} match.`}
           </p>
           <div className="bg-orange-50 p-4 rounded-lg text-left">
             <h3 className="font-medium text-orange-800 mb-2">What happens next?</h3>
@@ -206,7 +222,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
                 </>
               ) : (
                 <>
-                  <li>• Our AI will contact you at <span className="font-medium">{email}</span> when it finds your ideal match based on:</li>
+                  <li>• Our AI will contact you at <span className="font-medium">{email}</span> when it finds your ideal {matchType} match based on:</li>
                   <li className="ml-4">- Sport: {selectedSport}</li>
                   <li className="ml-4">- Location: {location}</li>
                   <li className="ml-4">- Ability Level: {abilityLevel}</li>
@@ -231,6 +247,24 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Join {selectedSport} Match</h2>
       <div className="space-y-4">
+        <div>
+          <Label htmlFor="match-type" className="text-sm font-medium text-gray-700">Match Type</Label>
+          <RadioGroup
+            value={matchType}
+            onValueChange={(value) => setMatchType(value as 'singles' | 'doubles')}
+            className="mt-2 flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="singles" id="singles" />
+              <Label htmlFor="singles" className="cursor-pointer">Singles (2 players)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="doubles" id="doubles" />
+              <Label htmlFor="doubles" className="cursor-pointer">Doubles (4 players)</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
         <div>
           <Label htmlFor="name" className="text-sm font-medium text-gray-700">Your Name</Label>
           <Input
@@ -428,7 +462,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding Match...
             </span>
           ) : (
-            "Find Match"
+            `Find ${matchType === 'doubles' ? '4-Player' : '2-Player'} Match`
           )}
         </Button>
       </div>
