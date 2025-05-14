@@ -145,9 +145,8 @@ export const TournamentCreation = () => {
           <div>
             <Label htmlFor="start-date">Start Date</Label>
             <DatePicker
-              id="start-date"
-              selected={startDate}
-              onSelect={setStartDate}
+              date={startDate}
+              setDate={setStartDate}
               className="mt-1"
             />
           </div>
@@ -155,9 +154,8 @@ export const TournamentCreation = () => {
           <div>
             <Label htmlFor="end-date">End Date</Label>
             <DatePicker
-              id="end-date"
-              selected={endDate}
-              onSelect={setEndDate}
+              date={endDate}
+              setDate={setEndDate}
               className="mt-1"
             />
           </div>

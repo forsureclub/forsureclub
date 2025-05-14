@@ -345,6 +345,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tournaments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          format: string
+          id: string
+          location: string
+          max_rating: number | null
+          min_rating: number | null
+          name: string
+          sport: string
+          start_date: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          format: string
+          id?: string
+          location: string
+          max_rating?: number | null
+          min_rating?: number | null
+          name: string
+          sport: string
+          start_date: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          format?: string
+          id?: string
+          location?: string
+          max_rating?: number | null
+          min_rating?: number | null
+          name?: string
+          sport?: string
+          start_date?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
