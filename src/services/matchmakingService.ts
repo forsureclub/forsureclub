@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
@@ -267,10 +268,9 @@ export async function registerPlayerForMatchmaking(playerId: string, sport: stri
     return matchResult;
   } catch (error) {
     console.error("Error in registerPlayerForMatchmaking:", error);
-    toast({
+    toast.error({
         title: "Matching Error",
         description: "There was an error organizing your match. Please try again.",
-        variant: "destructive",
     });
     throw error;
   }
@@ -302,7 +302,7 @@ export async function organizeFourPlayerMatch(playerId: string, sport: string, l
     // If we found enough players, create the match
     if (matchResult.foundMatch) {
       await createDoublesMatch(playerId, matchResult.matchedPlayers, sport, location);
-      toast({
+      toast.success({
         title: "Doubles Match Organized!",
         description: `We've found 3 other players for your ${sport} match in ${location}!`,
       });
@@ -311,7 +311,7 @@ export async function organizeFourPlayerMatch(playerId: string, sport: string, l
     
     // If we didn't find enough players, queue them for later matching
     await queuePlayerForDoublesMatching(playerId, email, sport, location, skillLevel, gender);
-    toast({
+    toast.success({
         title: "Doubles Match Pending",
         description: `We'll notify you when we find 3 more players for your ${sport} match.`,
     });
@@ -319,10 +319,9 @@ export async function organizeFourPlayerMatch(playerId: string, sport: string, l
     return matchResult;
   } catch (error) {
     console.error("Error in organizeFourPlayerMatch:", error);
-    toast({
+    toast.error({
         title: "Matching Error",
         description: "There was an error organizing your match. Please try again.",
-        variant: "destructive",
     });
     throw error;
   }

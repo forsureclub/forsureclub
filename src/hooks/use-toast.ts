@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { ToastActionElement, ToastProps } from "@/components/ui/toast"
@@ -167,6 +168,7 @@ export function useToast() {
   }
 }
 
+// Modified toast object with method interfaces instead of direct call functionality
 export const toast = {
   dismiss: (toastId?: string) => {
     dispatch({
