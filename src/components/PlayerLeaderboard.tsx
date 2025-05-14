@@ -11,7 +11,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal } from "lucide-react";
+import { Trophy, Medal, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,6 +22,8 @@ type LeaderboardPlayer = {
   rank: number;
   matchesPlayed: number;
   performanceRating: number;
+  winPercentage: number;
+  recentMatches: number;
   isCurrentUser: boolean;
 };
 
@@ -50,7 +52,10 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
           sport,
           match_players(
             performance_rating,
-            match_id
+            play_rating,
+            match_id,
+            feedback,
+            created_at
           )
         `)
         .eq('sport', sportType);
@@ -73,12 +78,36 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
           
         const avgRating = matchesPlayed > 0 ? totalRating / matchesPlayed : 0;
         
+        // Calculate win percentage (based on scores in feedback)
+        let wins = 0;
+        player.match_players?.forEach((mp: any) => {
+          if (mp.feedback && mp.feedback.includes("Score:")) {
+            // Simple heuristic: if the score indicates a win
+            // This is a simplification - in real app we'd need proper score parsing
+            if (mp.feedback.includes("won") || mp.feedback.includes("victory")) {
+              wins++;
+            }
+          }
+        });
+        
+        const winPercentage = matchesPlayed > 0 ? (wins / matchesPlayed) * 100 : 0;
+        
+        // Count recent matches (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentMatches = player.match_players?.filter((mp: any) => 
+          new Date(mp.created_at) >= thirtyDaysAgo
+        ).length || 0;
+        
         return {
           id: player.id,
           name: player.name,
           sport: player.sport,
           matchesPlayed,
           performanceRating: avgRating,
+          winPercentage,
+          recentMatches,
           rank: 0, // Will be assigned after sorting
           isCurrentUser: user?.id === player.id
         };
@@ -148,6 +177,7 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
             <TableHead>Player</TableHead>
             <TableHead className="text-center">Matches</TableHead>
             <TableHead className="text-center">Rating</TableHead>
+            <TableHead className="text-center hidden md:table-cell">Recent</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -172,13 +202,30 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
               </TableCell>
               <TableCell className="text-center">{player.matchesPlayed}</TableCell>
               <TableCell className="text-center">
-                <span className={`font-medium ${
-                  player.performanceRating >= 4.5 ? "text-green-600" : 
-                  player.performanceRating >= 3.5 ? "text-blue-600" :
-                  player.performanceRating >= 2.5 ? "text-amber-600" : "text-red-600"
-                }`}>
-                  {player.performanceRating.toFixed(1)}/5
-                </span>
+                <div className="flex items-center justify-center gap-1">
+                  <span className={`font-medium ${
+                    player.performanceRating >= 4.5 ? "text-green-600" : 
+                    player.performanceRating >= 3.5 ? "text-blue-600" :
+                    player.performanceRating >= 2.5 ? "text-amber-600" : "text-red-600"
+                  }`}>
+                    {player.performanceRating.toFixed(1)}
+                  </span>
+                  <Star 
+                    className={`h-3 w-3 ${
+                      player.performanceRating >= 4.5 ? "text-green-600" : 
+                      player.performanceRating >= 3.5 ? "text-blue-600" :
+                      player.performanceRating >= 2.5 ? "text-amber-600" : "text-red-600"
+                    }`} 
+                    fill="currentColor" 
+                  />
+                </div>
+              </TableCell>
+              <TableCell className="text-center hidden md:table-cell">
+                {player.recentMatches > 0 ? (
+                  <Badge variant="secondary" className="text-xs">
+                    {player.recentMatches} in last 30 days
+                  </Badge>
+                ) : "—"}
               </TableCell>
             </TableRow>
           ))}

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerPerformance } from "@/components/PlayerPerformance";
@@ -18,8 +18,19 @@ const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("performance");
   const { toast } = useToast();
   const { user } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check for tab query parameter
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam && ["performance", "record-match", "skill"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   useEffect(() => {
     if (user) {
@@ -246,7 +257,7 @@ const PlayerDashboard = () => {
 
         <div className="md:col-span-2">
           {playerProfile ? (
-            <Tabs defaultValue="performance" className="space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-3">
                 <TabsTrigger value="performance" className="flex items-center gap-2">
                   <Activity size={16} />

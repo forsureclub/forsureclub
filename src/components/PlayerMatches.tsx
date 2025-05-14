@@ -1,19 +1,23 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Calendar, MapPin, Users, Clock, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CheckCircle, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow, format } from "date-fns";
 import { CourtBooking } from "./CourtBooking";
 import { isMatchReadyForBooking } from "@/services/matchmakingService";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export const PlayerMatches = () => {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -50,7 +54,8 @@ export const PlayerMatches = () => {
             booking_details,
             match_players (
               player_id,
-              has_confirmed
+              has_confirmed,
+              performance_rating
             )
           `)
           .in("id", matchIds)
@@ -84,6 +89,10 @@ export const PlayerMatches = () => {
           const userConfirmed = match.match_players.find(
             (mp: any) => mp.player_id === user.id
           )?.has_confirmed || false;
+
+          const userRatedMatch = match.match_players.find(
+            (mp: any) => mp.player_id === user.id
+          )?.performance_rating != null;
           
           const allConfirmed = match.match_players.every(
             (mp: any) => mp.has_confirmed
@@ -93,11 +102,26 @@ export const PlayerMatches = () => {
             ...match,
             players: matchPlayers,
             userConfirmed,
-            allConfirmed
+            userRatedMatch,
+            allConfirmed,
+            isPastMatch: new Date(match.played_at) < new Date()
           };
         });
         
         setMatches(enrichedMatches);
+
+        // Remind about recording results for past matches that haven't been rated
+        const unratedPastMatches = enrichedMatches.filter(
+          match => match.isPastMatch && !match.userRatedMatch
+        );
+        
+        if (unratedPastMatches.length > 0) {
+          toast({
+            title: "Reminder",
+            description: `You have ${unratedPastMatches.length} match${unratedPastMatches.length > 1 ? 'es' : ''} that need results recorded.`,
+            variant: "default",
+          });
+        }
       } catch (error) {
         console.error("Error fetching matches:", error);
       } finally {
@@ -106,7 +130,7 @@ export const PlayerMatches = () => {
     };
 
     fetchMatches();
-  }, [user]);
+  }, [user, toast]);
 
   const confirmMatch = async (matchId: string) => {
     if (!user) return;
@@ -135,12 +159,28 @@ export const PlayerMatches = () => {
         }
         return match;
       }));
+
+      toast({
+        title: "Match confirmed",
+        description: "You have confirmed your participation in this match.",
+      });
     } catch (error) {
       console.error("Error confirming match:", error);
+      toast({
+        title: "Error",
+        description: "Could not confirm match participation. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const getStatusBadge = (status: string, userConfirmed: boolean, allConfirmed: boolean) => {
+  const getStatusBadge = (status: string, userConfirmed: boolean, allConfirmed: boolean, isPastMatch: boolean, userRatedMatch: boolean) => {
+    if (isPastMatch) {
+      return userRatedMatch 
+        ? <Badge className="bg-green-100 text-green-800">Results recorded</Badge>
+        : <Badge className="bg-red-100 text-red-800">Needs results</Badge>;
+    }
+    
     switch(status) {
       case "scheduled":
         return userConfirmed 
@@ -217,7 +257,7 @@ export const PlayerMatches = () => {
             <div className="space-y-4">
               <div className="flex items-center">
                 <h3 className="text-xl font-semibold">{match.sport} Match</h3>
-                {getStatusBadge(match.status, match.userConfirmed, match.allConfirmed)}
+                {getStatusBadge(match.status, match.userConfirmed, match.allConfirmed, match.isPastMatch, match.userRatedMatch)}
               </div>
               
               <div className="flex flex-col space-y-2">
@@ -272,7 +312,19 @@ export const PlayerMatches = () => {
               )}
               
               <div className="flex flex-col space-y-2">
-                {!match.userConfirmed && (
+                {match.isPastMatch && !match.userRatedMatch && (
+                  <Button 
+                    asChild
+                    className="bg-orange-600 hover:bg-orange-700 flex items-center gap-2"
+                  >
+                    <Link to="/player-dashboard?tab=record-match">
+                      <Award className="h-4 w-4" />
+                      Record Results
+                    </Link>
+                  </Button>
+                )}
+                
+                {!match.isPastMatch && !match.userConfirmed && (
                   <Button 
                     onClick={() => confirmMatch(match.id)}
                     className="bg-green-600 hover:bg-green-700"
@@ -281,7 +333,7 @@ export const PlayerMatches = () => {
                   </Button>
                 )}
                 
-                {(match.status === "scheduled" || match.status === "confirmed") && match.allConfirmed && (
+                {!match.isPastMatch && (match.status === "scheduled" || match.status === "confirmed") && match.allConfirmed && (
                   <Button 
                     onClick={() => setSelectedMatch(match.id)}
                     className="bg-orange-600 hover:bg-orange-700"
