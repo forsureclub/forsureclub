@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, Share2 } from "lucide-react";
 import { Progress } from "./ui/progress";
@@ -18,14 +18,18 @@ export const VideoAnalysis = () => {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [shareCaption, setShareCaption] = useState("");
   const [isSharing, setIsSharing] = useState(false);
-  const [selectedSport, setSelectedSport] = useState<string>("tennis");
+  const [selectedSport, setSelectedSport] = useState<string>("padel");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
   const { user } = useAuth();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    // Clear previous states
+    setErrorMessage(null);
+    setFeedback(null);
     
     // Check file type
     if (!file.type.includes("video/")) {
@@ -80,11 +84,16 @@ export const VideoAnalysis = () => {
         .getPublicUrl(data.path);
 
       setVideoUrl(publicUrl);
+      toast({
+        title: "Upload Complete",
+        description: "Video uploaded successfully. Starting analysis...",
+      });
 
       // Trigger AI analysis
       await analyzeVideo(publicUrl, selectedSport);
     } catch (error: any) {
       console.error("Upload error:", error);
+      setErrorMessage("Failed to upload video. Please try again.");
       toast({
         title: "Upload Failed",
         description: error.message || "Could not upload video",
@@ -97,24 +106,37 @@ export const VideoAnalysis = () => {
 
   const analyzeVideo = async (videoUrl: string, sport: string) => {
     setIsAnalyzing(true);
+    setErrorMessage(null);
+    
     try {
       // Call the Supabase Edge Function for AI analysis
       const { data, error } = await supabase.functions.invoke('analyze-sports-video', {
         body: { videoUrl, sport }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Function error:", error);
+        throw new Error(error.message || "Analysis function failed");
+      }
+
+      if (!data || !data.analysis) {
+        throw new Error("No analysis was returned");
+      }
 
       setFeedback(data.analysis);
       
-      // Save to database using type assertion to work around the type issue temporarily
-      // until Supabase types get updated
-      await (supabase.from('player_videos') as any).insert({
+      // Save to database
+      const { error: dbError } = await supabase.from('player_videos').insert({
         player_id: user?.id,
         video_url: videoUrl,
         sport: selectedSport,
         ai_feedback: data.analysis,
       });
+
+      if (dbError) {
+        console.error("Database error:", dbError);
+        // We still show the feedback even if saving to DB fails
+      }
 
       toast({
         title: "Analysis Complete",
@@ -122,15 +144,31 @@ export const VideoAnalysis = () => {
       });
     } catch (error: any) {
       console.error("Analysis error:", error);
+      setErrorMessage("Analysis failed. Please try again or contact support if the problem persists.");
+      setFeedback("Could not analyze the video at this time. Please try again later.");
       toast({
         title: "Analysis Failed",
         description: error.message || "Could not analyze video",
         variant: "destructive",
       });
-      setFeedback("Could not analyze the video at this time. Please try again later.");
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const retryAnalysis = async () => {
+    if (!videoUrl) {
+      toast({
+        title: "No Video",
+        description: "Please upload a video first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setFeedback(null);
+    setErrorMessage(null);
+    await analyzeVideo(videoUrl, selectedSport);
   };
 
   const shareToSocial = async () => {
@@ -182,9 +220,9 @@ export const VideoAnalysis = () => {
             className="w-full p-2 border rounded"
             disabled={isUploading || isAnalyzing}
           >
+            <option value="padel">Padel</option>
             <option value="tennis">Tennis</option>
             <option value="golf">Golf</option>
-            <option value="padel">Padel</option>
           </select>
         </div>
 
@@ -244,6 +282,14 @@ export const VideoAnalysis = () => {
               <div className="p-4 bg-orange-50 rounded-md mt-2">
                 <p className="whitespace-pre-line">{feedback}</p>
               </div>
+              
+              {errorMessage && (
+                <div className="mt-2">
+                  <Button onClick={retryAnalysis} variant="secondary">
+                    Retry Analysis
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Social Media Sharing */}

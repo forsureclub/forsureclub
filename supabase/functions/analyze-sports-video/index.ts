@@ -35,7 +35,40 @@ serve(async (req) => {
     console.log(`Analyzing ${sport} video: ${videoUrl}`);
 
     // In a real implementation, we would use computer vision APIs to analyze the video
-    // For this demo, we'll use OpenAI to generate feedback based on the sport type
+    // For this demo, we'll use OpenAI to generate specific feedback based on the sport type
+    
+    let systemPrompt;
+    if (sport === 'padel') {
+      systemPrompt = `You are an expert padel coach with years of experience training professionals. 
+      
+      Provide detailed, constructive feedback as if you're watching a video of someone playing padel. Focus on:
+      1. Positioning on the court
+      2. Grip and racket technique
+      3. Footwork and movement
+      4. Shot selection and strategy
+      5. Common mistakes that padel players make at various levels
+      
+      Structure your feedback in a clear format with:
+      - Overall assessment (1-2 sentences)
+      - Strengths (2-3 bullet points)
+      - Areas for improvement (3-4 specific tips with clear instructions)
+      - Drills to practice (2-3 recommendations)
+      
+      Be encouraging but honest, as if you're a real coach helping your student improve their padel game.`;
+    } else {
+      systemPrompt = `You are an expert ${sport} coach with years of experience training professionals. 
+      
+      Provide detailed, constructive feedback on a player's technique and suggest specific areas for improvement. 
+      Focus on the fundamentals of ${sport} and common errors that players make.
+      
+      Structure your feedback in a clear format with:
+      - Overall assessment (1-2 sentences)
+      - Strengths (2-3 bullet points)
+      - Areas for improvement (3-4 specific tips with clear instructions)
+      - Drills to practice (2-3 recommendations)
+      
+      Be encouraging but honest, as if you're a real coach helping your student improve their ${sport} game.`;
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -48,21 +81,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert ${sport} coach. Provide detailed, constructive feedback on a player's technique and suggest specific areas for improvement. Focus on the fundamentals of the sport and common errors that players make. Include 3-5 specific tips they can work on to improve their game.`
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: `Analyze this ${sport} video and provide feedback on technique, form, and areas for improvement. The video URL is: ${videoUrl}`
+            content: `Analyze this ${sport} video and provide coaching feedback on technique, form, and areas for improvement. The video URL is: ${videoUrl}`
           }
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 800,
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error (${response.status}):`, errorText);
+      throw new Error(`OpenAI API error: Status ${response.status}`);
     }
 
     const data = await response.json();
@@ -75,7 +109,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in analyze-sports-video function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "An unknown error occurred" }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
