@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Calendar, MapPin, Users, Clock, CheckCircle, Award } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CheckCircle, Award, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow, format } from "date-fns";
@@ -75,7 +75,7 @@ export const PlayerMatches = () => {
         
         const { data: players, error: playersError } = await supabase
           .from("players")
-          .select("id, name, rating, club, city")
+          .select("id, name, rating, club, city")  // Only select non-personal information
           .in("id", playerIds);
         
         if (playersError) throw playersError;
@@ -287,10 +287,13 @@ export const PlayerMatches = () => {
                     <p className="font-medium">Players:</p>
                     <ul className="list-disc pl-5 space-y-1">
                       {match.players.map((player: any) => (
-                        <li key={player.id} className="flex items-center">
-                          {player.name}
+                        <li key={player.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span>{player.name}</span>
+                            <span className="text-sm text-gray-500">(Rating: {player.rating.toFixed(1)})</span>
+                          </div>
                           {match.match_players.find((mp: any) => mp.player_id === player.id)?.has_confirmed && (
-                            <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
+                            <UserCheck className="w-4 h-4 ml-2 text-green-500" />
                           )}
                         </li>
                       ))}

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { findMatchingPlayers, findFourPlayersForMatch, type MatchingResult } from "./matchingAlgorithm";
@@ -12,7 +11,8 @@ export async function registerPlayerForMatchmaking(
   playerId: string, 
   sport: string, 
   location: string, 
-  skillLevel: string, 
+  skillLevel: string,
+  gender: string,
   email: string
 ): Promise<MatchingResult> {
   try {
@@ -31,24 +31,26 @@ export async function registerPlayerForMatchmaking(
       throw registrationError;
     }
 
-    // Get all potential players for the sport
+    // Get all potential players for the sport who have registrations
     const { data: potentialPlayers, error } = await supabase
       .from("players")
       .select("*")
       .eq("sport", sport)
-      .neq("id", playerId); // Exclude the current player
+      .neq("id", playerId)
+      .in("id", supabase.from("player_registrations").select("player_id")); // Only include registered players
 
     if (error) {
       console.error("Error finding matches:", error);
       throw new Error(`Error finding matches: ${error.message}`);
     }
 
-    // Try to find an immediate match using our AI matchmaking algorithm
+    // Try to find an immediate match using our AI matchmaking algorithm with gender filter
     const matchResult = await findMatchingPlayers(
       potentialPlayers || [], 
       sport, 
       location, 
-      skillLevel, 
+      skillLevel,
+      gender, 
       playerId
     );
     
@@ -65,8 +67,8 @@ export async function registerPlayerForMatchmaking(
   } catch (error) {
     console.error("Error in registerPlayerForMatchmaking:", error);
     toast.error({
-        title: "Matching Error",
-        description: "There was an error organizing your match. Please try again.",
+      title: "Matching Error",
+      description: "There was an error organizing your match. Please try again.",
     });
     throw error;
   }

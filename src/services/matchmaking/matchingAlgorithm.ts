@@ -1,4 +1,3 @@
-
 import { Tables } from "@/integrations/supabase/types";
 
 type Player = Tables<"players">;
@@ -9,11 +8,12 @@ export type MatchingResult = {
 };
 
 /**
- * Advanced AI matchmaking algorithm that finds players based on sport, location, and skill level
+ * Advanced AI matchmaking algorithm that finds players based on sport, location, skill level and gender
  * Uses a scoring system to find the best possible matches
  * @param sport The sport to match
  * @param location The player's location
  * @param skillLevel The player's skill level
+ * @param gender The player's gender
  * @param playerId The current player's ID (to exclude from results)
  */
 export async function findMatchingPlayers(
@@ -21,12 +21,16 @@ export async function findMatchingPlayers(
   sport: string,
   location: string,
   skillLevel: string,
+  gender: string,
   playerId: string
 ): Promise<MatchingResult> {
-  console.log(`Finding matches for ${sport} in ${location} with level ${skillLevel}`);
+  console.log(`Finding matches for ${sport} in ${location} with level ${skillLevel}, gender: ${gender}`);
   
-  // Filter out the current player
-  const potentialPlayers = players.filter(player => player.id !== playerId);
+  // Filter out the current player and only include players of the same gender
+  const potentialPlayers = players.filter(player => 
+    player.id !== playerId && 
+    player.gender === gender
+  );
 
   if (!potentialPlayers || potentialPlayers.length === 0) {
     return { matchedPlayers: [], foundMatch: false, matchScore: 0 };
@@ -62,8 +66,8 @@ export async function findMatchingPlayers(
     // Availability matching bonus
     const availabilityScore = player.play_time === "both" ? 20 : 0;
     
-    // Calculate total score - weight location more heavily
-    const totalScore = (locationScore * 0.6) + (skillScore * 0.3) + (availabilityScore * 0.1);
+    // Calculate total score - weight location and skill level more heavily
+    const totalScore = (locationScore * 0.5) + (skillScore * 0.4) + (availabilityScore * 0.1);
     
     return {
       player,

@@ -132,12 +132,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           email
         );
       } else {
-        // For regular singles match
+        // For regular singles match - now with gender parameter
         matchResult = await registerPlayerForMatchmaking(
           playerId,
           selectedSport,
           location,
           abilityLevel,
+          gender,
           email
         );
       }

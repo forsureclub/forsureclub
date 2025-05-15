@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { ToastActionElement, type ToastProps as RadixToastProps } from "@/components/ui/toast";
 import { Toast as ToastPrimitive } from "@/components/ui/toast";
@@ -139,13 +140,13 @@ function dispatch(action: Action) {
   });
 }
 
-// Proper type definition to avoid circular reference
-export type ToastProps = {
+// Proper type definition for ToastProps
+export interface ToastProps {
   title?: React.ReactNode;
   description?: React.ReactNode;
   variant?: "default" | "destructive" | "success" | "warning" | "info";
   action?: ToastActionElement;
-};
+}
 
 function toast(props: ToastProps) {
   const id = genId();
