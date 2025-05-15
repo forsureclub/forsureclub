@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, Share2, Award } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const VideoAnalysis = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -18,6 +26,8 @@ export const VideoAnalysis = () => {
   const [shareCaption, setShareCaption] = useState("");
   const [isSharing, setIsSharing] = useState(false);
   const [selectedSport, setSelectedSport] = useState<string>("padel");
+  const [playerLevel, setPlayerLevel] = useState<string>("intermediate");
+  const [focusArea, setFocusArea] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryAttempt, setRetryAttempt] = useState(0); // Track retry attempts
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,9 +66,6 @@ export const VideoAnalysis = () => {
       // Upload to Supabase Storage
       const fileName = `${user?.id}_${Date.now()}_${file.name}`;
       
-      // Create a custom upload handler to track progress
-      let uploadProgress = 0;
-      
       // Use the upload method without the onUploadProgress option
       const { data, error } = await supabase.storage
         .from('sports_videos')
@@ -76,11 +83,9 @@ export const VideoAnalysis = () => {
       setVideoUrl(publicUrl);
       toast.success({
         title: "Upload Complete",
-        description: "Video uploaded successfully. Starting analysis...",
+        description: "Video uploaded successfully. Start analysis when ready.",
       });
 
-      // Trigger AI analysis
-      await analyzeVideo(publicUrl, selectedSport);
     } catch (error: any) {
       console.error("Upload error:", error);
       setErrorMessage("Failed to upload video. Please try again.");
@@ -93,14 +98,27 @@ export const VideoAnalysis = () => {
     }
   };
 
-  const analyzeVideo = async (videoUrl: string, sport: string) => {
+  const analyzeVideo = async () => {
+    if (!videoUrl) {
+      toast.error({
+        title: "No Video",
+        description: "Please upload a video first",
+      });
+      return;
+    }
+    
     setIsAnalyzing(true);
     setErrorMessage(null);
     
     try {
-      // Call the Supabase Edge Function for AI analysis
+      // Call the Supabase Edge Function for AI analysis with player context
       const { data, error } = await supabase.functions.invoke('analyze-sports-video', {
-        body: { videoUrl, sport }
+        body: { 
+          videoUrl, 
+          sport: selectedSport,
+          playerLevel,
+          focusArea
+        }
       });
 
       if (error) {
@@ -161,7 +179,7 @@ export const VideoAnalysis = () => {
     setFeedback(null);
     setErrorMessage(null);
     setRetryAttempt(prev => prev + 1); // Increment retry counter
-    await analyzeVideo(videoUrl, selectedSport);
+    await analyzeVideo();
   };
 
   const shareToSocial = async () => {
@@ -197,25 +215,93 @@ export const VideoAnalysis = () => {
     fileInputRef.current?.click();
   };
 
+  // Focus area options based on selected sport
+  const getFocusAreaOptions = () => {
+    if (selectedSport === "padel") {
+      return [
+        { value: "bandeja", label: "Bandeja Shot" },
+        { value: "vibora", label: "Vibora Shot" },
+        { value: "smash", label: "Smash" },
+        { value: "volley", label: "Volley" },
+        { value: "positioning", label: "Court Positioning" },
+        { value: "footwork", label: "Footwork" },
+      ];
+    } else if (selectedSport === "tennis") {
+      return [
+        { value: "forehand", label: "Forehand" },
+        { value: "backhand", label: "Backhand" },
+        { value: "serve", label: "Serve" },
+        { value: "volley", label: "Volley" },
+        { value: "footwork", label: "Footwork" },
+      ];
+    } else if (selectedSport === "golf") {
+      return [
+        { value: "drive", label: "Drive" },
+        { value: "iron", label: "Iron Play" },
+        { value: "putting", label: "Putting" },
+        { value: "chipping", label: "Chipping" },
+        { value: "swing", label: "Swing Mechanics" },
+      ];
+    }
+    return [];
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Video Analysis</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Sport Selection */}
-        <div>
-          <label className="text-sm font-medium mb-2 block">Select Sport</label>
-          <select 
-            value={selectedSport} 
-            onChange={(e) => setSelectedSport(e.target.value)}
-            className="w-full p-2 border rounded"
-            disabled={isUploading || isAnalyzing}
-          >
-            <option value="padel">Padel</option>
-            <option value="tennis">Tennis</option>
-            <option value="golf">Golf</option>
-          </select>
+        {/* Player Context Information */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Sport Selection */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Select Sport</label>
+            <select 
+              value={selectedSport} 
+              onChange={(e) => {
+                setSelectedSport(e.target.value);
+                setFocusArea(""); // Reset focus area when sport changes
+              }}
+              className="w-full p-2 border rounded"
+              disabled={isUploading || isAnalyzing}
+            >
+              <option value="padel">Padel</option>
+              <option value="tennis">Tennis</option>
+              <option value="golf">Golf</option>
+            </select>
+          </div>
+          
+          {/* Player Level */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Your Skill Level</label>
+            <select 
+              value={playerLevel} 
+              onChange={(e) => setPlayerLevel(e.target.value)}
+              className="w-full p-2 border rounded"
+              disabled={isUploading || isAnalyzing}
+            >
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+          
+          {/* Focus Area */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Specific Focus (Optional)</label>
+            <select 
+              value={focusArea} 
+              onChange={(e) => setFocusArea(e.target.value)}
+              className="w-full p-2 border rounded"
+              disabled={isUploading || isAnalyzing}
+            >
+              <option value="">No specific focus</option>
+              {getFocusAreaOptions().map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Upload Section */}
@@ -254,9 +340,25 @@ export const VideoAnalysis = () => {
                 style={{ maxHeight: '300px' }}
               />
               
-              <Button variant="outline" onClick={triggerFileInput} className="w-full">
-                Upload Different Video
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 justify-between">
+                <Button variant="outline" onClick={triggerFileInput}>
+                  Upload Different Video
+                </Button>
+                <Button 
+                  onClick={analyzeVideo} 
+                  disabled={isAnalyzing} 
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    "Analyze My Technique"
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -265,7 +367,8 @@ export const VideoAnalysis = () => {
         {isAnalyzing ? (
           <div className="text-center p-6">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2">Analyzing your technique with AI...</p>
+            <p className="mt-2">Analyzing your {selectedSport} technique with AI...</p>
+            <p className="text-sm text-gray-500">Generating personalized feedback for {playerLevel} level player</p>
           </div>
         ) : feedback && (
           <div className="space-y-4">
