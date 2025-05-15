@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,20 +32,18 @@ export const VideoAnalysis = () => {
     
     // Check file type
     if (!file.type.includes("video/")) {
-      toast({
+      toast.error({
         title: "Invalid File",
         description: "Please upload a video file.",
-        variant: "destructive",
       });
       return;
     }
 
     // Check file size (max 50MB)
     if (file.size > 50 * 1024 * 1024) {
-      toast({
+      toast.error({
         title: "File Too Large",
         description: "Video must be less than 50MB.",
-        variant: "destructive",
       });
       return;
     }
@@ -84,7 +81,7 @@ export const VideoAnalysis = () => {
         .getPublicUrl(data.path);
 
       setVideoUrl(publicUrl);
-      toast({
+      toast.success({
         title: "Upload Complete",
         description: "Video uploaded successfully. Starting analysis...",
       });
@@ -94,10 +91,9 @@ export const VideoAnalysis = () => {
     } catch (error: any) {
       console.error("Upload error:", error);
       setErrorMessage("Failed to upload video. Please try again.");
-      toast({
+      toast.error({
         title: "Upload Failed",
         description: error.message || "Could not upload video",
-        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
@@ -138,7 +134,7 @@ export const VideoAnalysis = () => {
         // We still show the feedback even if saving to DB fails
       }
 
-      toast({
+      toast.success({
         title: "Analysis Complete",
         description: "AI has analyzed your video and provided feedback.",
       });
@@ -146,10 +142,9 @@ export const VideoAnalysis = () => {
       console.error("Analysis error:", error);
       setErrorMessage("Analysis failed. Please try again or contact support if the problem persists.");
       setFeedback("Could not analyze the video at this time. Please try again later.");
-      toast({
+      toast.error({
         title: "Analysis Failed",
         description: error.message || "Could not analyze video",
-        variant: "destructive",
       });
     } finally {
       setIsAnalyzing(false);
@@ -158,10 +153,9 @@ export const VideoAnalysis = () => {
 
   const retryAnalysis = async () => {
     if (!videoUrl) {
-      toast({
+      toast.error({
         title: "No Video",
         description: "Please upload a video first",
-        variant: "destructive",
       });
       return;
     }
@@ -185,16 +179,15 @@ export const VideoAnalysis = () => {
 
       if (error) throw error;
 
-      toast({
+      toast.success({
         title: "Shared Successfully",
         description: "Your video has been shared to social media.",
       });
     } catch (error: any) {
       console.error("Sharing error:", error);
-      toast({
+      toast.error({
         title: "Sharing Failed",
         description: error.message || "Could not share video",
-        variant: "destructive",
       });
     } finally {
       setIsSharing(false);
