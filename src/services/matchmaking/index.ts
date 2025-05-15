@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { findMatchingPlayers, findFourPlayersForMatch, type MatchingResult } from "./matchingAlgorithm";
@@ -31,13 +32,26 @@ export async function registerPlayerForMatchmaking(
       throw registrationError;
     }
 
+    // First, get the player_ids from registrations
+    const { data: registeredPlayerIds, error: registrationQueryError } = await supabase
+      .from("player_registrations")
+      .select("player_id");
+    
+    if (registrationQueryError) {
+      console.error("Error fetching registered players:", registrationQueryError);
+      throw new Error(`Error fetching registered players: ${registrationQueryError.message}`);
+    }
+
+    // Extract the player_id values into an array
+    const playerIdArray = registeredPlayerIds.map(row => row.player_id);
+
     // Get all potential players for the sport who have registrations
     const { data: potentialPlayers, error } = await supabase
       .from("players")
       .select("*")
       .eq("sport", sport)
       .neq("id", playerId)
-      .in("id", supabase.from("player_registrations").select("player_id")); // Only include registered players
+      .in("id", playerIdArray); // Use the array of player_ids
 
     if (error) {
       console.error("Error finding matches:", error);
