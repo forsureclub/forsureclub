@@ -10,7 +10,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { User, MessageSquare, LogOut, Menu, ChevronDown, Activity, Search } from "lucide-react";
+import { User, MessageSquare, LogOut, Menu, ChevronDown, Activity, Search, Video } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -86,6 +86,17 @@ export const Navigation = () => {
                     >
                       <Activity size={16} />
                       Dashboard
+                    </Button>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/coaching">
+                    <Button 
+                      variant={isActive("/coaching") ? "secondary" : "ghost"} 
+                      className="flex items-center gap-1.5 text-sm font-medium"
+                    >
+                      <Video size={16} />
+                      AI Coaching
                     </Button>
                   </Link>
                 </NavigationMenuItem>
@@ -185,6 +196,16 @@ export const Navigation = () => {
                         >
                           <Activity size={16} className="mr-2" />
                           Dashboard
+                        </Button>
+                      </Link>
+                      
+                      <Link to="/coaching" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button 
+                          variant={isActive("/coaching") ? "secondary" : "ghost"} 
+                          className="w-full justify-start text-left mb-1"
+                        >
+                          <Video size={16} className="mr-2" />
+                          AI Coaching
                         </Button>
                       </Link>
                     </div>

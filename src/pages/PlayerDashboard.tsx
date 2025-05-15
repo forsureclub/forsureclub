@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,6 @@ import { MatchResults } from "@/components/MatchResults";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
 import { User, Calendar, Award, Activity, MessageSquare, Video } from "lucide-react";
-import { VideoAnalysis } from "@/components/VideoAnalysis";
-import { VideoHistory } from "@/components/VideoHistory";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
@@ -169,12 +166,20 @@ const PlayerDashboard = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Player Dashboard</h1>
-        <Link to="/chat">
-          <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
-            <MessageSquare size={18} />
-            Find Games with AI
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/coaching">
+            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
+              <Video size={18} />
+              AI Coaching
+            </Button>
+          </Link>
+          <Link to="/chat">
+            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
+              <MessageSquare size={18} />
+              Find Games
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -240,6 +245,12 @@ const PlayerDashboard = () => {
 
                 <div className="pt-4 space-y-2">
                   <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
+                    <Link to="/coaching">
+                      <Video size={16} />
+                      <span>AI Coaching</span>
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                     <Link to="/chat">
                       <MessageSquare size={16} />
                       <span>Find Games with AI</span>
@@ -260,7 +271,7 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-5">
+              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-3">
                 <TabsTrigger value="performance" className="flex items-center gap-2">
                   <Activity size={16} />
                   <span className="hidden sm:inline">Performance</span>
@@ -272,14 +283,6 @@ const PlayerDashboard = () => {
                 <TabsTrigger value="skill" className="flex items-center gap-2">
                   <Award size={16} />
                   <span className="hidden sm:inline">Update Skill</span>
-                </TabsTrigger>
-                <TabsTrigger value="coaching" className="flex items-center gap-2">
-                  <Video size={16} />
-                  <span className="hidden sm:inline">Coaching</span>
-                </TabsTrigger>
-                <TabsTrigger value="videos" className="flex items-center gap-2">
-                  <Video size={16} />
-                  <span className="hidden sm:inline">My Videos</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -311,14 +314,6 @@ const PlayerDashboard = () => {
                     />
                   </CardContent>
                 </Card>
-              </TabsContent>
-              
-              <TabsContent value="coaching">
-                <VideoAnalysis />
-              </TabsContent>
-              
-              <TabsContent value="videos">
-                <VideoHistory />
               </TabsContent>
             </Tabs>
           ) : (

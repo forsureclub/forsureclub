@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
@@ -8,6 +7,7 @@ import PlayerDashboard from "./pages/PlayerDashboard";
 import Chat from "./pages/Chat";
 import PlayerProfile from "./pages/PlayerProfile";
 import NotFound from "./pages/NotFound";
+import Coaching from "./pages/Coaching";
 import { Toaster } from "./components/ui/toaster";
 import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./hooks/useAuth";
@@ -65,6 +65,11 @@ function App() {
               <Route path="/chat" element={
                 <ProtectedRoute>
                   <Chat />
+                </ProtectedRoute>
+              } />
+              <Route path="/coaching" element={
+                <ProtectedRoute>
+                  <Coaching />
                 </ProtectedRoute>
               } />
               <Route path="/player/:id" element={<PlayerProfile />} />
