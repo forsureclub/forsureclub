@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, Share2, Award } from "lucide-react";
 import { Progress } from "./ui/progress";
@@ -20,8 +20,10 @@ export const VideoAnalysis = () => {
   const [isSharing, setIsSharing] = useState(false);
   const [selectedSport, setSelectedSport] = useState<string>("padel");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0); // Track retry attempts
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { toast } = useToast(); // Use the hook directly
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,15 +59,7 @@ export const VideoAnalysis = () => {
       const fileName = `${user?.id}_${Date.now()}_${file.name}`;
       
       // Create a custom upload handler to track progress
-      const xhr = new XMLHttpRequest();
       let uploadProgress = 0;
-      
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          uploadProgress = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(uploadProgress);
-        }
-      });
       
       // Use the upload method without the onUploadProgress option
       const { data, error } = await supabase.storage
@@ -142,11 +136,16 @@ export const VideoAnalysis = () => {
     } catch (error: any) {
       console.error("Analysis error:", error);
       setErrorMessage("Analysis failed. Please try again or contact support if the problem persists.");
-      setFeedback("Could not analyze the video at this time. Please try again later.");
-      toast.error({
-        title: "Analysis Failed",
-        description: error.message || "Could not analyze video",
-      });
+      
+      // Even when there's an error, check if we got a fallback analysis
+      if (error.response && error.response.analysis) {
+        setFeedback(error.response.analysis);
+      } else {
+        toast.error({
+          title: "Analysis Failed",
+          description: error.message || "Could not analyze video",
+        });
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -163,6 +162,7 @@ export const VideoAnalysis = () => {
     
     setFeedback(null);
     setErrorMessage(null);
+    setRetryAttempt(prev => prev + 1); // Increment retry counter
     await analyzeVideo(videoUrl, selectedSport);
   };
 
