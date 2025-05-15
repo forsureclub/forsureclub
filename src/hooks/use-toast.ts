@@ -1,14 +1,19 @@
 
-import { Toast, ToastActionElement, ToastProps } from "@/components/ui/toast";
+import * as React from "react";
+import { ToastActionElement, type ToastProps as RadixToastProps } from "@/components/ui/toast";
+import { Toast as ToastPrimitive } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToasterToast = Toast & {
+type ToasterToast = {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  variant?: "default" | "destructive" | "success" | "warning" | "info";
 };
 
 const actionTypes = {
@@ -135,8 +140,8 @@ function dispatch(action: Action) {
   });
 }
 
-// Fixed type definition to avoid circular reference
-type ToastProps = {
+// Proper type definition to avoid circular reference
+export type ToastProps = {
   title?: React.ReactNode;
   description?: React.ReactNode;
   variant?: "default" | "destructive" | "success" | "warning" | "info";
