@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload, Share2 } from "lucide-react";
+import { Loader2, Upload, Share2, Award } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -271,9 +272,24 @@ export const VideoAnalysis = () => {
         ) : feedback && (
           <div className="space-y-4">
             <div>
-              <h3 className="font-medium text-lg">AI Analysis & Feedback</h3>
+              <h3 className="font-medium text-lg flex items-center">
+                <Award className="mr-2 h-5 w-5 text-orange-500" /> 
+                AI Coach Feedback
+              </h3>
               <div className="p-4 bg-orange-50 rounded-md mt-2">
-                <p className="whitespace-pre-line">{feedback}</p>
+                <div className="prose max-w-none whitespace-pre-line">
+                  {feedback.split('##').map((section, i) => {
+                    if (i === 0) return null; // Skip first empty part
+                    
+                    const [title, ...content] = section.split('\n');
+                    return (
+                      <div key={i} className="mb-4">
+                        <h4 className="font-bold text-md mb-2">{title.trim()}</h4>
+                        <div>{content.join('\n')}</div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               
               {errorMessage && (
