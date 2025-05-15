@@ -1,10 +1,9 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, Share2, Award } from "lucide-react";
 import { Progress } from "./ui/progress";
@@ -23,7 +22,6 @@ export const VideoAnalysis = () => {
   const [retryAttempt, setRetryAttempt] = useState(0); // Track retry attempts
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const { toast } = useToast(); // Use the hook directly
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

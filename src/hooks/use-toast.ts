@@ -168,33 +168,50 @@ export function useToast() {
   }
 }
 
-// Modified toast object with method interfaces instead of direct call functionality
+// Modified toast object to expose the methods directly
 export const toast = {
-  dismiss: (toastId?: string) => {
-    dispatch({
-      type: "DISMISS_TOAST",
-      toastId,
-    })
-  },
-  custom: (props: Omit<ToasterToast, "id">) =>
-    dispatch({
-      type: "ADD_TOAST",
-      toast: props,
-    }),
-  error: (props: Omit<ToasterToast, "id">) =>
-    dispatch({
-      type: "ADD_TOAST",
-      toast: {
-        ...props,
-        variant: "destructive",
-      },
-    }),
-  success: (props: Omit<ToasterToast, "id">) =>
+  // Basic toast function (default variant)
+  default: (props: Omit<ToasterToast, "id">) => {
     dispatch({
       type: "ADD_TOAST",
       toast: {
         ...props,
         variant: "default",
       },
-    }),
+    })
+  },
+  // Method for error toasts
+  error: (props: Omit<ToasterToast, "id">) => {
+    dispatch({
+      type: "ADD_TOAST",
+      toast: {
+        ...props,
+        variant: "destructive",
+      },
+    })
+  },
+  // Method for success toasts
+  success: (props: Omit<ToasterToast, "id">) => {
+    dispatch({
+      type: "ADD_TOAST",
+      toast: {
+        ...props,
+        variant: "default",
+      },
+    })
+  },
+  // Custom toast for additional variants if needed
+  custom: (props: Omit<ToasterToast, "id">) => {
+    dispatch({
+      type: "ADD_TOAST",
+      toast: props,
+    })
+  },
+  // Dismiss method
+  dismiss: (toastId?: string) => {
+    dispatch({
+      type: "DISMISS_TOAST",
+      toastId,
+    })
+  },
 }
