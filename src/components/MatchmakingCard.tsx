@@ -68,10 +68,39 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       const { error: signUpError } = await signUp(email, password);
       if (signUpError) throw signUpError;
 
-      toast({
+      toast.success({
         title: "Account Created",
         description: "Your account has been created successfully",
       });
+
+      // Calculate a rating based on ability level
+      let initialRating = 2.5; // Default middle rating
+      
+      if (abilityLevel) {
+        if (abilityLevel === "Beginner") {
+          initialRating = 1.5;
+        } else if (abilityLevel === "Intermediate") {
+          initialRating = 2.5;
+        } else if (abilityLevel === "Advanced") {
+          initialRating = 3.5;
+        } else if (abilityLevel === "Professional") {
+          initialRating = 4.5;
+        } else if (selectedSport === "Golf") {
+          // For Golf, lower handicap means higher rating
+          const handicapRange = abilityLevel.split('-');
+          if (handicapRange[0] === "0") {
+            initialRating = 4.5; // 0-5 handicap is very good
+          } else if (handicapRange[0] === "6") {
+            initialRating = 3.5; // 6-10 handicap is good
+          } else if (handicapRange[0] === "11") {
+            initialRating = 2.5; // 11-15 handicap is average
+          } else if (handicapRange[0] === "16") {
+            initialRating = 1.5; // 16-20 handicap is beginner
+          } else {
+            initialRating = 1.0; // 21+ handicap is very beginner
+          }
+        }
+      }
 
       // Register the player
       const playerId = await createOrFetchPlayer({
@@ -85,7 +114,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         preferredDays,
         spendingLevel,
         email,
-        phoneNumber
+        phoneNumber,
+        initialRating
       });
 
       let matchResult;
@@ -119,27 +149,26 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       setIsJoining(false);
 
       if (matchResult.foundMatch) {
-        toast({
+        toast.success({
           title: `Perfect ${matchType === 'doubles' ? 'Doubles' : 'Singles'} Match Found!`,
           description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for your ${matchType} game! Check your email for details.`,
         });
       } else {
-        toast({
+        toast.success({
           title: "Registration Successful",
           description: `Our AI will continue looking for perfect ${matchType} matches and email you when found`,
         });
       }
       
-      // Short delay before navigating
+      // Short delay before navigating to dashboard
       setTimeout(() => {
         navigate("/player-dashboard");
       }, 3000);
     } catch (error: any) {
       console.error('Player registration error:', error);
-      toast({
+      toast.error({
         title: "Registration Failed",
         description: error.message ? String(error.message) : "An unexpected error occurred. Please try again.",
-        variant: "destructive"
       });
       setIsJoining(false);
     }

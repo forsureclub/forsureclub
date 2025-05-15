@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ const PlayerDashboard = () => {
     } else {
       setIsLoading(false);
     }
-  }, [user, toast]);
+  }, [user]);
 
   const fetchProfile = async () => {
     try {
@@ -56,6 +57,10 @@ const PlayerDashboard = () => {
       if (authProfile && authProfile.player) {
         setPlayerProfile(authProfile.player);
         setSelectedSport(authProfile.player.sport);
+        toast({
+          title: "Welcome back!",
+          description: `You're logged in as ${authProfile.player.name}.`,
+        });
       } else {
         // Check if there's an existing player by email
         const { data: existingPlayer } = await supabase
@@ -84,10 +89,9 @@ const PlayerDashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      toast({
+      toast.error({
         title: "Error",
         description: "Failed to load profile data",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -135,17 +139,16 @@ const PlayerDashboard = () => {
           
         setPlayerProfile(newPlayer);
         
-        toast({
+        toast.success({
           title: "Sport Selected",
           description: `You've selected ${sport}. Please complete your profile.`,
         });
       }
     } catch (error) {
       console.error("Error creating player profile:", error);
-      toast({
+      toast.error({
         title: "Error",
         description: "Failed to create player profile",
-        variant: "destructive",
       });
     }
   };
