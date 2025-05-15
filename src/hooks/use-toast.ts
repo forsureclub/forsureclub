@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ToastActionElement, type ToastProps as RadixToastProps } from "@/components/ui/toast";
 import { Toast as ToastPrimitive } from "@/components/ui/toast";
@@ -163,7 +162,6 @@ function toast(props: ToastProps) {
     type: actionTypes.ADD_TOAST,
     toast: {
       ...props,
-      id,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss();
