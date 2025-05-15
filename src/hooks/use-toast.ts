@@ -135,12 +135,18 @@ function dispatch(action: Action) {
   });
 }
 
-type Toast = Omit<ToasterToast, "id">;
+// Fixed type definition to avoid circular reference
+type ToastProps = {
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  variant?: "default" | "destructive" | "success" | "warning" | "info";
+  action?: ToastActionElement;
+};
 
-function toast(props: Toast) {
+function toast(props: ToastProps) {
   const id = genId();
 
-  const update = (props: ToasterToast) =>
+  const update = (props: ToastProps & { id: string }) =>
     dispatch({
       type: actionTypes.UPDATE_TOAST,
       toast: { ...props, id },
@@ -168,13 +174,44 @@ function toast(props: Toast) {
 }
 
 // Enhanced toast object with variant methods
-toast.success = (props: Omit<ToastProps, "variant">) => toast({ ...props, variant: "success" });
-toast.error = (props: Omit<ToastProps, "variant">) => toast({ ...props, variant: "destructive" });
-toast.warning = (props: Omit<ToastProps, "variant">) => toast({ ...props, variant: "warning" });
-toast.info = (props: Omit<ToastProps, "variant">) => toast({ ...props, variant: "info" });
+toast.success = (props: Omit<ToastProps, "variant">) => 
+  toast({ ...props, variant: "success" });
+  
+toast.error = (props: Omit<ToastProps, "variant">) => 
+  toast({ ...props, variant: "destructive" });
+  
+toast.warning = (props: Omit<ToastProps, "variant">) => 
+  toast({ ...props, variant: "warning" });
+  
+toast.info = (props: Omit<ToastProps, "variant">) => 
+  toast({ ...props, variant: "info" });
 
 function useToast() {
-  return { toast };
+  const [toasts, setToasts] = React.useState<ToasterToast[]>(memoryState.toasts);
+
+  React.useEffect(() => {
+    const listener = (state: State) => {
+      setToasts(state.toasts);
+    };
+
+    listeners.push(listener);
+
+    return () => {
+      const index = listeners.indexOf(listener);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    };
+  }, []);
+
+  return {
+    toast,
+    toasts,
+    dismiss: (toastId?: string) => dispatch({
+      type: actionTypes.DISMISS_TOAST,
+      toastId,
+    }),
+  };
 }
 
 export { useToast, toast };

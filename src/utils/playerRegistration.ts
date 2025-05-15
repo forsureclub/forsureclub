@@ -1,19 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function createOrFetchPlayer({
-  playerName,
-  selectedSport,
-  location,
-  clubName,
-  isClubMember,
-  occupation,
-  gender,
-  preferredDays,
-  spendingLevel,
-  email,
-  phoneNumber
-}: {
+export interface PlayerRegistrationData {
   playerName: string;
   selectedSport: string;
   location: string;
@@ -25,121 +13,58 @@ export async function createOrFetchPlayer({
   spendingLevel: string;
   email: string;
   phoneNumber: string;
-}) {
-  // Look for existing player by name and sport
-  const { data: existingPlayers, error: findError } = await supabase
-    .from('players')
-    .select('id')
-    .eq('name', playerName)
-    .eq('sport', selectedSport);
-
-  if (findError) {
-    throw new Error(`Could not check for existing player: ${findError.message}`);
-  }
-
-  if (existingPlayers && existingPlayers.length > 0) {
-    return existingPlayers[0].id;
-  }
-
-  // Transform empty strings to actual empty strings for storage in DB
-  // This is critical to ensure consistency in data display
-  const emailValue = email || "";
-  const phoneValue = phoneNumber || "";
-
-  // Log the values being saved
-  console.log("Saving player with email:", emailValue || "empty string");
-  console.log("Saving player with phone:", phoneValue || "empty string");
-
-  const newPlayer = {
-    name: playerName,
-    sport: selectedSport,
-    city: location,
-    club: isClubMember ? clubName : "",
-    occupation,
-    gender,
-    play_time: preferredDays,
-    budget_range: spendingLevel,
-    rating: 0,
-    user_id: null,
-    email: emailValue,
-    phone_number: phoneValue,
-  };
-
-  const { data: insertedPlayer, error: playerError } = await supabase
-    .from('players')
-    .insert(newPlayer)
-    .select()
-    .single();
-
-  if (playerError) {
-    throw new Error(playerError.message);
-  }
-
-  return insertedPlayer.id;
+  initialRating?: number;
 }
 
-export async function registerPlayer(playerId: string, selectedSport: string) {
-  const { error: registrationError } = await supabase
-    .from('player_registrations')
-    .insert({
-      player_id: playerId,
-      status: 'pending',
-      admin_notes: `Registered for ${selectedSport}`
-    });
+export const createOrFetchPlayer = async (data: PlayerRegistrationData): Promise<string> => {
+  try {
+    // Check if player already exists with this email
+    const { data: existingPlayer, error: fetchError } = await supabase
+      .from('players')
+      .select('id')
+      .eq('email', data.email)
+      .maybeSingle();
 
-  if (registrationError) {
-    throw new Error(registrationError.message);
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    if (existingPlayer) {
+      console.log("Player already exists, returning ID:", existingPlayer.id);
+      return existingPlayer.id;
+    }
+
+    // Create new player
+    const { data: newPlayer, error: createError } = await supabase
+      .from('players')
+      .insert([
+        {
+          name: data.playerName,
+          email: data.email,
+          phone: data.phoneNumber,
+          sport: data.selectedSport,
+          city: data.location,
+          club_name: data.isClubMember ? data.clubName : null,
+          is_club_member: data.isClubMember,
+          occupation: data.occupation,
+          gender: data.gender,
+          budget_range: data.spendingLevel,
+          play_time: data.preferredDays,
+          rating: data.initialRating || 2.5, // Default to 2.5 if not provided
+          status: 'active',
+        }
+      ])
+      .select('id')
+      .single();
+
+    if (createError) {
+      throw createError;
+    }
+
+    console.log("New player created:", newPlayer.id);
+    return newPlayer.id;
+  } catch (error) {
+    console.error("Error in createOrFetchPlayer:", error);
+    throw error;
   }
-}
-
-export async function updatePlayerSkillLevel(playerId: string, rating: number) {
-  const { error } = await supabase
-    .from('players')
-    .update({ rating })
-    .eq('id', playerId);
-
-  if (error) {
-    throw new Error(`Could not update player skill level: ${error.message}`);
-  }
-}
-
-export async function getPlayersByLocation(location: string) {
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('city', location);
-
-  if (error) {
-    throw new Error(`Could not fetch players by location: ${error.message}`);
-  }
-
-  return data || [];
-}
-
-export async function getPlayersBySport(sport: string) {
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('sport', sport);
-
-  if (error) {
-    throw new Error(`Could not fetch players by sport: ${error.message}`);
-  }
-
-  return data || [];
-}
-
-export async function getPlayersBySkillLevel(sport: string, minRating: number, maxRating: number) {
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('sport', sport)
-    .gte('rating', minRating)
-    .lte('rating', maxRating);
-
-  if (error) {
-    throw new Error(`Could not fetch players by skill level: ${error.message}`);
-  }
-
-  return data || [];
-}
+};
