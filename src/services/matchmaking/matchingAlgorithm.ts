@@ -1,5 +1,6 @@
 import { Tables } from "@/integrations/supabase/types";
 import { getDefaultElo } from "./eloSystem";
+import { getSkillLevelDescription } from "@/types/matchmaking";
 
 type Player = Tables<"players">;
 export type MatchingResult = {
@@ -39,36 +40,20 @@ export async function findMatchingPlayers(
     return { matchedPlayers: [], foundMatch: false, matchScore: 0 };
   }
   
-  // Find the ELO rating of the requesting player
+  // Find the ELO rating and skill level of the requesting player
   const initiatorPlayer = players.find(p => p.id === playerId);
   const initiatorElo = initiatorPlayer?.elo_rating || getDefaultElo();
+  const initiatorSkill = initiatorPlayer?.rating || 1;
 
   // Calculate match score for each player
   const scoredPlayers = potentialPlayers.map(player => {
     // Location matching (exact match = 100, different = 0)
     const locationScore = player.city === location ? 100 : 0;
     
-    // Skill level matching (convert to numeric if possible for better comparison)
-    let skillScore = 0;
-    
-    // For Golf handicaps
-    if (sport === "Golf") {
-      const playerHandicap = parseHandicap(player.rating.toString());
-      const targetHandicap = parseHandicap(skillLevel);
-      
-      // Calculate difference (closer = higher score)
-      const handicapDiff = Math.abs(playerHandicap - targetHandicap);
-      skillScore = Math.max(0, 100 - (handicapDiff * 5)); // 5 points per handicap difference
-    } 
-    // For other sports with numeric ratings
-    else {
-      const playerRating = parseFloat(player.rating.toString()) || 0;
-      const targetRating = convertSkillLevelToRating(skillLevel);
-      
-      // Calculate difference (closer = higher score)
-      const ratingDiff = Math.abs(playerRating - targetRating);
-      skillScore = Math.max(0, 100 - (ratingDiff * 20)); // 20 points per rating difference
-    }
+    // Skill level matching (closer = higher score)
+    const playerSkill = player.rating || 1;
+    const skillDiff = Math.abs(playerSkill - initiatorSkill);
+    const skillScore = Math.max(0, 100 - (skillDiff * 20)); // 20 points per rating unit difference
     
     // ELO matching (closer = higher score)
     const playerElo = player.elo_rating || getDefaultElo();
@@ -137,36 +122,20 @@ export async function findFourPlayersForMatch(
     return { matchedPlayers: [], foundMatch: false, matchScore: 0 };
   }
   
-  // Find the ELO rating of the requesting player
+  // Find the ELO rating and skill level of the requesting player
   const initiatorPlayer = players.find(p => p.id === playerId);
   const initiatorElo = initiatorPlayer?.elo_rating || getDefaultElo();
+  const initiatorSkill = initiatorPlayer?.rating || 1;
 
   // Calculate match score for each player
   const scoredPlayers = potentialPlayers.map(player => {
     // Location matching (exact match = 100, different = 0)
     const locationScore = player.city === location ? 100 : 0;
     
-    // Skill level matching (convert to numeric if possible for better comparison)
-    let skillScore = 0;
-    
-    // For Golf handicaps
-    if (sport === "Golf") {
-      const playerHandicap = parseHandicap(player.rating.toString());
-      const targetHandicap = parseHandicap(skillLevel);
-      
-      // Calculate difference (closer = higher score)
-      const handicapDiff = Math.abs(playerHandicap - targetHandicap);
-      skillScore = Math.max(0, 100 - (handicapDiff * 5)); // 5 points per handicap difference
-    } 
-    // For other sports with numeric ratings
-    else {
-      const playerRating = parseFloat(player.rating.toString()) || 0;
-      const targetRating = convertSkillLevelToRating(skillLevel);
-      
-      // Calculate difference (closer = higher score)
-      const ratingDiff = Math.abs(playerRating - targetRating);
-      skillScore = Math.max(0, 100 - (ratingDiff * 20)); // 20 points per rating difference
-    }
+    // Skill level matching (closer = higher score)
+    const playerSkill = player.rating || 1;
+    const skillDiff = Math.abs(playerSkill - initiatorSkill);
+    const skillScore = Math.max(0, 100 - (skillDiff * 20)); // 20 points per rating unit difference
     
     // ELO matching (closer = higher score)
     const playerElo = player.elo_rating || getDefaultElo();
@@ -237,14 +206,17 @@ export function parseHandicap(handicap: string): number {
 }
 
 /**
- * Convert text skill levels to numeric ratings
+ * Convert text skill levels to numeric ratings on the 1-7 scale
  */
 export function convertSkillLevelToRating(level: string): number {
   switch (level.toLowerCase()) {
     case "beginner": return 1;
+    case "beginner advanced": return 2;
     case "intermediate": return 3;
-    case "advanced": return 4;
-    case "professional": return 5;
-    default: return 2.5; // Default middle value
+    case "intermediate high": return 4;
+    case "intermediate advanced": return 5;
+    case "competition": return 6;
+    case "professional": return 7;
+    default: return 3; // Default to intermediate
   }
 }

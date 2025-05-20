@@ -9,6 +9,7 @@ import { updatePlayerEloRating, processMatchResult } from "@/services/matchmakin
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { getSkillLevelDescription } from "@/types/matchmaking";
 
 export const EloMatchRecorder = ({ sport }: { sport: string }) => {
   const [winnerIds, setWinnerIds] = useState<string[]>([]);
@@ -24,7 +25,7 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
       try {
         const { data, error } = await supabase
           .from('players')
-          .select('id, name, elo_rating')
+          .select('id, name, rating, elo_rating')
           .eq('sport', sport)
           .order('name', { ascending: true });
 
@@ -33,7 +34,7 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
         if (data) {
           setAvailablePlayers(data.map(player => ({
             id: player.id,
-            name: player.name
+            name: `${player.name} - ${getSkillLevelDescription(player.rating)}`
           })));
         }
       } catch (error) {

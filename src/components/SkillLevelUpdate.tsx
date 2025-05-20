@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Slider } from "./ui/slider";
+import { SKILL_LEVELS } from "@/types/matchmaking";
 
 type SkillLevelUpdateProps = {
   playerId: string;
@@ -20,17 +22,25 @@ export const SkillLevelUpdate = ({
   sport, 
   currentRating 
 }: SkillLevelUpdateProps) => {
-  const [selfRating, setSelfRating] = useState<string>("");
+  const [skillLevel, setSkillLevel] = useState<number>(currentRating || 1);
   const [experience, setExperience] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const getCurrentLevelDescription = () => {
+    const level = SKILL_LEVELS.find(
+      l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
+           skillLevel <= parseFloat(l.range.split(' to ')[1])
+    );
+    return level ? `${level.description} (${level.level})` : 'Unrated';
+  };
+
   const handleSubmit = async () => {
-    if (!selfRating) {
+    if (!skillLevel) {
       toast({
         title: "Missing Information",
-        description: "Please provide your self-assessment rating",
+        description: "Please provide your skill level assessment",
         variant: "destructive",
       });
       return;
@@ -44,7 +54,7 @@ export const SkillLevelUpdate = ({
         .from('skill_assessments')
         .insert({
           player_id: playerId,
-          self_rating: parseInt(selfRating),
+          self_rating: Math.round(skillLevel),
           experience_level: experience || null,
           notes,
           assessment_type: 'self',
@@ -54,16 +64,13 @@ export const SkillLevelUpdate = ({
 
       if (assessmentError) throw assessmentError;
 
-      // Update the player's rating if no existing rating or if self-assessment is significantly different
-      const newRating = parseInt(selfRating);
-      if (!currentRating || Math.abs(currentRating - newRating) > 1) {
-        const { error: updateError } = await supabase
-          .from('players')
-          .update({ rating: newRating })
-          .eq('id', playerId);
-        
-        if (updateError) throw updateError;
-      }
+      // Update the player's rating
+      const { error: updateError } = await supabase
+        .from('players')
+        .update({ rating: skillLevel })
+        .eq('id', playerId);
+      
+      if (updateError) throw updateError;
 
       toast({
         title: "Skill Level Updated",
@@ -96,19 +103,28 @@ export const SkillLevelUpdate = ({
       
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="rating">Your Skill Level (1-5)</Label>
-          <Select value={selfRating} onValueChange={setSelfRating}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your skill rating" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 - Beginner</SelectItem>
-              <SelectItem value="2">2 - Novice</SelectItem>
-              <SelectItem value="3">3 - Intermediate</SelectItem>
-              <SelectItem value="4">4 - Advanced</SelectItem>
-              <SelectItem value="5">5 - Expert</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="skillLevel">Your Skill Level (1-7)</Label>
+          <div className="pt-6 pb-2">
+            <Slider 
+              id="skillLevel"
+              min={1} 
+              max={7} 
+              step={0.1}
+              value={[skillLevel]} 
+              onValueChange={(value) => setSkillLevel(value[0])}
+            />
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Beginner (1)</span>
+            <span>Professional (7)</span>
+          </div>
+          <div className="mt-2 p-3 bg-muted rounded-md">
+            <p className="font-medium">Current Level: {getCurrentLevelDescription()}</p>
+            <p className="text-sm text-muted-foreground">
+              {SKILL_LEVELS.find(l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
+                                     skillLevel <= parseFloat(l.range.split(' to ')[1]))?.range || ''}
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">

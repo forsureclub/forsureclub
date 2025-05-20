@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SKILL_LEVELS } from "@/types/matchmaking";
+import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
 
 interface PlayerInfoFormProps {
   playerName: string;
@@ -32,6 +35,8 @@ interface PlayerInfoFormProps {
   setPassword: (value: string) => void;
   confirmPassword: string;
   setConfirmPassword: (value: string) => void;
+  skillLevel?: number;
+  setSkillLevel?: (value: number) => void;
 }
 
 export const PlayerInfoForm = ({
@@ -60,8 +65,18 @@ export const PlayerInfoForm = ({
   password,
   setPassword,
   confirmPassword,
-  setConfirmPassword
+  setConfirmPassword,
+  skillLevel = 1,
+  setSkillLevel = () => {}
 }: PlayerInfoFormProps) => {
+  const getCurrentLevelDescription = () => {
+    const level = SKILL_LEVELS.find(
+      l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
+           skillLevel <= parseFloat(l.range.split(' to ')[1])
+    );
+    return level ? `${level.description} (${level.level})` : 'Unrated';
+  };
+
   return (
     <>
       <div>
@@ -95,6 +110,31 @@ export const PlayerInfoForm = ({
           placeholder="Enter your city"
           className="mt-1"
         />
+      </div>
+      
+      <div>
+        <Label htmlFor="skill-level" className="text-sm font-medium text-gray-700">Skill Level (1-7)</Label>
+        <div className="pt-6 pb-2">
+          <Slider 
+            id="skillLevel"
+            min={1} 
+            max={7} 
+            step={0.1}
+            value={[skillLevel]} 
+            onValueChange={(value) => setSkillLevel(value[0])}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>Beginner (1)</span>
+          <span>Professional (7)</span>
+        </div>
+        <div className="mt-2 p-3 bg-gray-50 rounded-md">
+          <p className="text-sm font-medium">{getCurrentLevelDescription()}</p>
+          <p className="text-xs text-gray-500">
+            {SKILL_LEVELS.find(l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
+                                   skillLevel <= parseFloat(l.range.split(' to ')[1]))?.range || ''}
+          </p>
+        </div>
       </div>
       
       <div>
