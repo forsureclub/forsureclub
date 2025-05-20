@@ -1,4 +1,3 @@
-
 import { Tables } from "@/integrations/supabase/types";
 import { getDefaultElo } from "./eloSystem";
 import { getSkillLevelDescription, SKILL_LEVELS } from "@/types/matchmaking";
@@ -54,9 +53,13 @@ export async function findMatchingPlayers(
     // Skill level matching (closer = higher score)
     const playerSkill = player.rating || 1;
     const skillDiff = Math.abs(playerSkill - initiatorSkill);
-    // For the new 0-7 scale, we want to be more granular
-    // 0.5 difference = 90 points, 1.0 difference = 80 points, etc.
-    const skillScore = Math.max(0, 100 - (skillDiff * 20)); 
+    
+    // Prioritize matches within 1.0 skill level difference
+    // If within 1.0 level, high score (80-100)
+    // If outside 1.0 level, much lower score (0-60)
+    const skillScore = skillDiff <= 1.0 
+      ? Math.max(80, 100 - (skillDiff * 20)) // Within desired range: 80-100 points
+      : Math.max(0, 60 - ((skillDiff - 1.0) * 20)); // Outside desired range: 0-60 points
     
     // ELO matching (closer = higher score)
     const playerElo = player.elo_rating || getDefaultElo();
@@ -66,16 +69,17 @@ export async function findMatchingPlayers(
     // Availability matching bonus
     const availabilityScore = player.play_time === "both" ? 20 : 0;
     
-    // Calculate total score with weights
+    // Calculate total score with weights - skill level is now even more important
     const totalScore = 
-      (locationScore * 0.4) + // Location is most important
-      (skillScore * 0.35) +   // Skill level is very important (more than before)
-      (eloScore * 0.15) +     // ELO is less important now that we have detailed skill levels
-      (availabilityScore * 0.1); // Availability is least important
+      (locationScore * 0.35) + // Location is still important
+      (skillScore * 0.45) +    // Skill level is now the most important factor
+      (eloScore * 0.10) +      // ELO is less important given our detailed skill levels
+      (availabilityScore * 0.10); // Availability is still considered
     
     return {
       player,
-      score: totalScore
+      score: totalScore,
+      skillDiff: skillDiff // Store skill difference for debugging and filtering
     };
   });
   
@@ -86,10 +90,16 @@ export async function findMatchingPlayers(
   const bestMatches = scoredPlayers.slice(0, desiredPlayerCount).map(match => match.player);
   const highestScore = scoredPlayers.length > 0 ? scoredPlayers[0].score : 0;
   
-  // We have a good match if we found the exact number of players requested and with a decent score
-  const foundMatch = bestMatches.length === desiredPlayerCount && highestScore > 60;
+  // A good match is now defined as:
+  // 1. Found the exact number of players requested
+  // 2. The highest score is above 70 (was 60)
+  // 3. For the highest-scoring player, the skill difference is within 1.0 level
+  const bestSkillDiff = scoredPlayers.length > 0 ? scoredPlayers[0].skillDiff : 999;
+  const foundMatch = bestMatches.length === desiredPlayerCount && 
+                    highestScore > 70 && 
+                    bestSkillDiff <= 1.0;
 
-  console.log(`Found ${bestMatches.length} potential matches with highest score: ${highestScore}`);
+  console.log(`Found ${bestMatches.length} potential matches with highest score: ${highestScore}, skill diff: ${bestSkillDiff}`);
   
   return {
     matchedPlayers: bestMatches,
@@ -138,8 +148,13 @@ export async function findFourPlayersForMatch(
     // Skill level matching (closer = higher score)
     const playerSkill = player.rating || 1;
     const skillDiff = Math.abs(playerSkill - initiatorSkill);
-    // For the new 0-7 scale, give more weight to skill matching
-    const skillScore = Math.max(0, 100 - (skillDiff * 20));
+    
+    // For doubles, being within 1.0 skill level is even more important
+    // If within 1.0 level, high score (85-100)
+    // If outside 1.0 level, much lower score (0-50)
+    const skillScore = skillDiff <= 1.0 
+      ? Math.max(85, 100 - (skillDiff * 15)) // Within desired range: 85-100 points
+      : Math.max(0, 50 - ((skillDiff - 1.0) * 25)); // Outside desired range: 0-50 points
     
     // ELO matching (closer = higher score)
     const playerElo = player.elo_rating || getDefaultElo();
@@ -149,16 +164,17 @@ export async function findFourPlayersForMatch(
     // Availability matching bonus
     const availabilityScore = player.play_time === "both" ? 20 : 0;
     
-    // Calculate total score with weights
+    // Calculate total score with weights - skill level is now even more important for doubles
     const totalScore = 
-      (locationScore * 0.5) + // Location is most important
-      (skillScore * 0.25) +   // Skill level is important for doubles
-      (eloScore * 0.15) +     // ELO is less important
-      (availabilityScore * 0.1); // Availability is least important
+      (locationScore * 0.30) + // Location is important
+      (skillScore * 0.50) +    // Skill level is the most important factor for doubles
+      (eloScore * 0.10) +      // ELO is less important
+      (availabilityScore * 0.10); // Availability is still considered
     
     return {
       player,
-      score: totalScore
+      score: totalScore,
+      skillDiff: skillDiff // Store skill difference for filtering and reporting
     };
   });
   
@@ -169,10 +185,12 @@ export async function findFourPlayersForMatch(
   const bestMatches = scoredPlayers.slice(0, 3).map(match => match.player);
   const highestScore = scoredPlayers.length > 0 ? scoredPlayers[0].score : 0;
   
-  // We have a good match if we found enough players with a decent score
-  const foundMatch = bestMatches.length === 3 && highestScore > 60;
+  // For doubles, we're even more strict about skill matching
+  // We want all players to be within 1.0 skill level of each other if possible
+  const allWithinRange = scoredPlayers.slice(0, 3).every(match => match.skillDiff <= 1.0);
+  const foundMatch = bestMatches.length === 3 && highestScore > 70 && allWithinRange;
 
-  console.log(`Found ${bestMatches.length} potential players for 4-player match with highest score: ${highestScore}`);
+  console.log(`Found ${bestMatches.length} potential players for 4-player match with highest score: ${highestScore}, all within 1.0 level: ${allWithinRange}`);
   
   return {
     matchedPlayers: bestMatches,

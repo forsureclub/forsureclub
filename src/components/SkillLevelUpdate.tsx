@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Slider } from "./ui/slider";
 import { SKILL_LEVELS } from "@/types/matchmaking";
+import { AlertCircle } from "lucide-react";
 
 type SkillLevelUpdateProps = {
   playerId: string;
@@ -117,6 +118,10 @@ export const SkillLevelUpdate = ({
   const experienceOptions = sportSpecificOptions[sport as keyof typeof sportSpecificOptions] || 
     ["Beginner", "Intermediate", "Advanced"];
 
+  // Calculate optimal match range (±1.0 level)
+  const optimalMinLevel = Math.max(0, skillLevel - 1.0);
+  const optimalMaxLevel = Math.min(7, skillLevel + 1.0);
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold">Update Skill Level for {playerName}</h3>
@@ -141,6 +146,17 @@ export const SkillLevelUpdate = ({
           <div className="mt-2 p-3 bg-muted rounded-md">
             <p className="font-medium">Current Level: {currentLevelInfo.level} - {currentLevelInfo.category}</p>
             <p className="text-sm text-muted-foreground">{currentLevelInfo.description}</p>
+          </div>
+
+          <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md flex items-start gap-3">
+            <AlertCircle className="text-orange-500 h-5 w-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-orange-800">Optimal Matchmaking Range</p>
+              <p className="text-sm text-orange-700">
+                Our AI will prioritize matching you with players between level {optimalMinLevel.toFixed(1)} and {optimalMaxLevel.toFixed(1)} 
+                for the best game experience.
+              </p>
+            </div>
           </div>
         </div>
 
