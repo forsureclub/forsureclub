@@ -1,6 +1,7 @@
+
 import { Tables } from "@/integrations/supabase/types";
 import { getDefaultElo } from "./eloSystem";
-import { getSkillLevelDescription } from "@/types/matchmaking";
+import { getSkillLevelDescription, SKILL_LEVELS } from "@/types/matchmaking";
 
 type Player = Tables<"players">;
 export type MatchingResult = {
@@ -53,7 +54,9 @@ export async function findMatchingPlayers(
     // Skill level matching (closer = higher score)
     const playerSkill = player.rating || 1;
     const skillDiff = Math.abs(playerSkill - initiatorSkill);
-    const skillScore = Math.max(0, 100 - (skillDiff * 20)); // 20 points per rating unit difference
+    // For the new 0-7 scale, we want to be more granular
+    // 0.5 difference = 90 points, 1.0 difference = 80 points, etc.
+    const skillScore = Math.max(0, 100 - (skillDiff * 20)); 
     
     // ELO matching (closer = higher score)
     const playerElo = player.elo_rating || getDefaultElo();
@@ -66,8 +69,8 @@ export async function findMatchingPlayers(
     // Calculate total score with weights
     const totalScore = 
       (locationScore * 0.4) + // Location is most important
-      (skillScore * 0.2) +    // Skill level is somewhat important
-      (eloScore * 0.3) +      // ELO is important
+      (skillScore * 0.35) +   // Skill level is very important (more than before)
+      (eloScore * 0.15) +     // ELO is less important now that we have detailed skill levels
       (availabilityScore * 0.1); // Availability is least important
     
     return {
@@ -135,7 +138,8 @@ export async function findFourPlayersForMatch(
     // Skill level matching (closer = higher score)
     const playerSkill = player.rating || 1;
     const skillDiff = Math.abs(playerSkill - initiatorSkill);
-    const skillScore = Math.max(0, 100 - (skillDiff * 20)); // 20 points per rating unit difference
+    // For the new 0-7 scale, give more weight to skill matching
+    const skillScore = Math.max(0, 100 - (skillDiff * 20));
     
     // ELO matching (closer = higher score)
     const playerElo = player.elo_rating || getDefaultElo();
@@ -148,8 +152,8 @@ export async function findFourPlayersForMatch(
     // Calculate total score with weights
     const totalScore = 
       (locationScore * 0.5) + // Location is most important
-      (eloScore * 0.3) +      // ELO is important
-      (skillScore * 0.1) +    // Less emphasis on skill level for doubles
+      (skillScore * 0.25) +   // Skill level is important for doubles
+      (eloScore * 0.15) +     // ELO is less important
       (availabilityScore * 0.1); // Availability is least important
     
     return {
@@ -206,17 +210,22 @@ export function parseHandicap(handicap: string): number {
 }
 
 /**
- * Convert text skill levels to numeric ratings on the 1-7 scale
+ * Convert text skill levels to numeric ratings on the 0-7 scale
  */
 export function convertSkillLevelToRating(level: string): number {
   switch (level.toLowerCase()) {
-    case "beginner": return 1;
-    case "beginner advanced": return 2;
-    case "intermediate": return 3;
-    case "intermediate high": return 4;
-    case "intermediate advanced": return 5;
-    case "competition": return 6;
-    case "professional": return 7;
-    default: return 3; // Default to intermediate
+    case "beginner": return 1.0;
+    case "initiation": return 1.0;
+    case "initiation/intermediate": return 2.0;
+    case "intermediate": return 3.0;
+    case "intermediate high": return 4.0;
+    case "intermediate advanced": return 5.0;
+    case "advanced": return 6.0;
+    case "elite": return 7.0;
+    case "professional": return 7.0;
+    default:
+      // Try to parse it as a number
+      const numLevel = parseFloat(level);
+      return !isNaN(numLevel) ? numLevel : 3.0; // Default to intermediate
   }
 }

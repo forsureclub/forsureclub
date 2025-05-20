@@ -27,53 +27,109 @@ export type SkillLevelDescription = {
   level: number;
   range: string;
   description: string;
+  category?: string;
 };
 
 export const SKILL_LEVELS: SkillLevelDescription[] = [
   {
+    level: 0,
+    range: '0.0',
+    description: 'Has never played any racket sports.',
+    category: 'INITIATION'
+  },
+  {
+    level: 0.5,
+    range: '0.5',
+    description: 'No classes. Less than 6 months playing. No technique or tactics.',
+    category: 'INITIATION'
+  },
+  {
     level: 1,
-    range: '1.0 to 1.49',
-    description: 'Beginner'
+    range: '1.0',
+    description: 'No classes or only few. Less than 12 months playing. No technique or tactics.',
+    category: 'INITIATION'
+  },
+  {
+    level: 1.5,
+    range: '1.5',
+    description: 'Few classes. A couple of games a month. Rally and return at low speed.',
+    category: 'INITIATION/INTERMEDIATE'
   },
   {
     level: 2,
-    range: '1.5 to 2.49',
-    description: 'Beginner Advanced'
+    range: '2.0',
+    description: 'Few classes. At least 1 year of play. A couple of games a month. Rally and return at low speed.',
+    category: 'INITIATION/INTERMEDIATE'
+  },
+  {
+    level: 2.5,
+    range: '2.5',
+    description: 'Has almost mastered most of the strokes and controls the directions at a normal pace.',
+    category: 'INTERMEDIATE'
   },
   {
     level: 3,
-    range: '2.5 to 3.49',
-    description: 'Intermediate'
+    range: '3.0',
+    description: 'Dominates most strokes, plays flat and drives the ball. Makes many unforced errors.',
+    category: 'INTERMEDIATE'
+  },
+  {
+    level: 3.5,
+    range: '3.5',
+    description: 'Dominates most strokes. Can play slice forehand, slice backhand and flat. Can direct the ball correctly. Makes a lot of unforced errors.',
+    category: 'INTERMEDIATE'
   },
   {
     level: 4,
-    range: '3.5 to 4.49',
-    description: 'Intermediate High'
+    range: '4.0',
+    description: 'Masters most strokes. Controls the directions. Is able to play slice forehand, slice backhand or flat and direct the ball. Makes a few unforced errors.',
+    category: 'INTERMEDIATE HIGH'
+  },
+  {
+    level: 4.5,
+    range: '4.5',
+    description: 'Masters the stroke. Controls the directions. Is able to play slice forehand, slice backhand or flat and direct the ball where wanted. Puts the ball at speed but has difficulties finishing points.',
+    category: 'INTERMEDIATE HIGH'
   },
   {
     level: 5,
-    range: '4.5 to 5.49',
-    description: 'Intermediate Advanced'
+    range: '5.0',
+    description: 'Medium technique and high tactical mindset. Is ready to play matches with good pace.',
+    category: 'INTERMEDIATE ADVANCED'
+  },
+  {
+    level: 5.5,
+    range: '5.5',
+    description: 'Dominates technical and tactical skills. Prepared to play matches at high pace.',
+    category: 'ADVANCED'
   },
   {
     level: 6,
-    range: '5.5 to 6.49',
-    description: 'Competition'
+    range: '6.0',
+    description: 'Advanced technical and tactical skills with good control. Plays difficult volleys, hard hitting with control, manages to read the game.',
+    category: 'ADVANCED'
   },
   {
     level: 7,
-    range: '6.5 to 7.0',
-    description: 'Professional'
+    range: '7.0',
+    description: 'Professional player. Top 30 WPT',
+    category: 'ELITE'
   }
 ];
 
 export function getSkillLevelDescription(skillLevel: number): string {
-  if (!skillLevel) return 'Unrated';
+  if (!skillLevel && skillLevel !== 0) return 'Unrated';
   
-  const level = SKILL_LEVELS.find(
-    l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
-         skillLevel <= parseFloat(l.range.split(' to ')[1])
-  );
+  // Find the exact level match
+  const level = SKILL_LEVELS.find(l => l.level === skillLevel);
   
-  return level ? `${level.description} (${skillLevel})` : 'Unknown';
+  if (level) {
+    return `${level.category} (${level.level})`;
+  }
+  
+  // If no exact match, find the closest level below
+  const closestLevel = SKILL_LEVELS.filter(l => l.level <= skillLevel)
+    .sort((a, b) => b.level - a.level)[0];
+  
+  return closestLevel ? `${closestLevel.category} (${skillLevel})` : 'Unknown';
 }

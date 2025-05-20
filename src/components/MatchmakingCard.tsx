@@ -17,6 +17,7 @@ import { useFormValidation } from "./matchmaking/useFormValidation";
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
   const [abilityLevel, setAbilityLevel] = useState("");
+  const [skillLevel, setSkillLevel] = useState(1.0);
   const [spendingLevel, setSpendingLevel] = useState<'1' | '2' | '3'>('1');
   const [isClubMember, setIsClubMember] = useState(false);
   const [occupation, setOccupation] = useState("");
@@ -38,7 +39,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const { validateForm } = useFormValidation();
 
   const abilityOptions = ["Beginner", "Intermediate", "Advanced", "Professional"];
-  const abilityLabel = "Playtomic/LTA Level";
+  const abilityLabel = "Experience Level";
 
   const handleJoin = async () => {
     // Validate form
@@ -69,22 +70,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         description: "Your account has been created successfully",
       });
 
-      // Calculate a rating based on ability level
-      let initialRating = 2.5; // Default middle rating
-      
-      if (abilityLevel) {
-        if (abilityLevel === "Beginner") {
-          initialRating = 1.5;
-        } else if (abilityLevel === "Intermediate") {
-          initialRating = 2.5;
-        } else if (abilityLevel === "Advanced") {
-          initialRating = 3.5;
-        } else if (abilityLevel === "Professional") {
-          initialRating = 4.5;
-        }
-      }
-
-      // Register the player - always with "Padel" as the sport
+      // Register the player with the skill level from the slider
       const playerId = await createOrFetchPlayer({
         playerName,
         location,
@@ -96,7 +82,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         spendingLevel,
         email,
         phoneNumber,
-        initialRating
+        initialRating: skillLevel // Use the slider value directly
       });
 
       // For regular singles match - now with additional playerCount parameter
@@ -192,11 +178,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setPassword={setPassword}
           confirmPassword={confirmPassword}
           setConfirmPassword={setConfirmPassword}
+          skillLevel={skillLevel}
+          setSkillLevel={setSkillLevel}
         />
         
         <Button
           onClick={handleJoin}
-          disabled={!playerName || !abilityLevel || !occupation || !location || (isClubMember && !clubName) || !email || !password || isJoining}
+          disabled={!playerName || !occupation || !location || (isClubMember && !clubName) || !email || !password || isJoining}
           className="w-full bg-orange-600 hover:bg-orange-700 mt-2"
         >
           {isJoining ? (

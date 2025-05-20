@@ -29,18 +29,37 @@ export const SkillLevelUpdate = ({
   const { toast } = useToast();
 
   const getCurrentLevelDescription = () => {
-    const level = SKILL_LEVELS.find(
-      l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
-           skillLevel <= parseFloat(l.range.split(' to ')[1])
-    );
-    return level ? `${level.description} (${level.level})` : 'Unrated';
+    // Find the exact level match or closest level
+    const exactLevel = SKILL_LEVELS.find(l => l.level === skillLevel);
+    
+    if (exactLevel) {
+      return {
+        level: exactLevel.level,
+        description: exactLevel.description,
+        category: exactLevel.category
+      };
+    }
+    
+    // If no exact match (for in-between values like 2.3), find the closest level below
+    const closestLevel = SKILL_LEVELS.filter(l => l.level <= skillLevel)
+      .sort((a, b) => b.level - a.level)[0];
+    
+    return closestLevel ? {
+      level: skillLevel,
+      description: closestLevel.description,
+      category: closestLevel.category
+    } : {
+      level: skillLevel,
+      description: 'Custom level',
+      category: ''
+    };
   };
 
   const handleSubmit = async () => {
-    if (!skillLevel) {
+    if (skillLevel < 0 || skillLevel > 7) {
       toast({
-        title: "Missing Information",
-        description: "Please provide your skill level assessment",
+        title: "Invalid Level",
+        description: "Please provide a skill level between 0 and 7",
         variant: "destructive",
       });
       return;
@@ -54,7 +73,7 @@ export const SkillLevelUpdate = ({
         .from('skill_assessments')
         .insert({
           player_id: playerId,
-          self_rating: Math.round(skillLevel),
+          self_rating: skillLevel,
           experience_level: experience || null,
           notes,
           assessment_type: 'self',
@@ -88,6 +107,7 @@ export const SkillLevelUpdate = ({
     }
   };
 
+  const currentLevelInfo = getCurrentLevelDescription();
   const sportSpecificOptions = {
     "Tennis": ["Beginner", "Intermediate", "Advanced", "NTRP 2.5", "NTRP 3.0", "NTRP 3.5", "NTRP 4.0", "NTRP 4.5", "NTRP 5.0+"],
     "Padel": ["Beginner", "Intermediate", "Advanced", "Category 5", "Category 4", "Category 3", "Category 2", "Category 1"],
@@ -103,27 +123,24 @@ export const SkillLevelUpdate = ({
       
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="skillLevel">Your Skill Level (1-7)</Label>
+          <Label htmlFor="skillLevel">Your Skill Level (0-7)</Label>
           <div className="pt-6 pb-2">
             <Slider 
               id="skillLevel"
-              min={1} 
+              min={0} 
               max={7} 
-              step={0.1}
+              step={0.5}
               value={[skillLevel]} 
               onValueChange={(value) => setSkillLevel(value[0])}
             />
           </div>
           <div className="flex justify-between text-sm">
-            <span>Beginner (1)</span>
-            <span>Professional (7)</span>
+            <span>Beginner (0)</span>
+            <span>Elite (7)</span>
           </div>
           <div className="mt-2 p-3 bg-muted rounded-md">
-            <p className="font-medium">Current Level: {getCurrentLevelDescription()}</p>
-            <p className="text-sm text-muted-foreground">
-              {SKILL_LEVELS.find(l => skillLevel >= parseFloat(l.range.split(' to ')[0]) && 
-                                     skillLevel <= parseFloat(l.range.split(' to ')[1]))?.range || ''}
-            </p>
+            <p className="font-medium">Current Level: {currentLevelInfo.level} - {currentLevelInfo.category}</p>
+            <p className="text-sm text-muted-foreground">{currentLevelInfo.description}</p>
           </div>
         </div>
 
