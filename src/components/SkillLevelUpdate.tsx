@@ -8,7 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Slider } from "./ui/slider";
 import { SKILL_LEVELS } from "@/types/matchmaking";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Search } from "lucide-react";
+import { Input } from "./ui/input";
+import { registerPlayerForMatchmaking } from "@/services/matchmakingService";
 
 type SkillLevelUpdateProps = {
   playerId: string;
@@ -27,6 +29,8 @@ export const SkillLevelUpdate = ({
   const [experience, setExperience] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [location, setLocation] = useState("Liverpool");
   const { toast } = useToast();
 
   const getCurrentLevelDescription = () => {
@@ -87,7 +91,10 @@ export const SkillLevelUpdate = ({
       // Update the player's rating
       const { error: updateError } = await supabase
         .from('players')
-        .update({ rating: skillLevel })
+        .update({ 
+          rating: skillLevel,
+          city: location // Update location too
+        })
         .eq('id', playerId);
       
       if (updateError) throw updateError;
@@ -105,6 +112,53 @@ export const SkillLevelUpdate = ({
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleFindMatch = async () => {
+    setIsSearching(true);
+    
+    try {
+      // Get player details
+      const { data: playerData, error: playerError } = await supabase
+        .from('players')
+        .select('gender, email')
+        .eq('id', playerId)
+        .single();
+      
+      if (playerError) throw playerError;
+      
+      // Find a match using the matchmaking service
+      const matchResult = await registerPlayerForMatchmaking(
+        playerId,
+        sport,
+        location,
+        skillLevel.toString(),
+        playerData.gender,
+        playerData.email,
+        '1' // Find 1 player for singles
+      );
+      
+      if (matchResult.foundMatch) {
+        toast({
+          title: "Match Found!",
+          description: `We found a perfect match for you in ${location}! Check your email for details.`,
+        });
+      } else {
+        toast({
+          title: "Match Request Registered",
+          description: `We'll keep looking for a player in ${location} with similar skill level and notify you when found.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error finding match:', error);
+      toast({
+        title: "Error",
+        description: "Failed to find a match. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -161,6 +215,16 @@ export const SkillLevelUpdate = ({
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="location">Your Location</Label>
+          <Input 
+            id="location" 
+            value={location} 
+            onChange={(e) => setLocation(e.target.value)} 
+            placeholder="Enter your location (city)"
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="experience">Experience Level</Label>
           <Select value={experience} onValueChange={setExperience}>
             <SelectTrigger>
@@ -185,13 +249,24 @@ export const SkillLevelUpdate = ({
         </div>
       </div>
 
-      <Button 
-        onClick={handleSubmit} 
-        disabled={isSubmitting}
-        className="w-full"
-      >
-        {isSubmitting ? "Updating..." : "Update Skill Level"}
-      </Button>
+      <div className="flex flex-col gap-3">
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? "Updating..." : "Update Skill Level"}
+        </Button>
+        
+        <Button 
+          onClick={handleFindMatch} 
+          disabled={isSearching}
+          className="w-full bg-orange-600 hover:bg-orange-700 flex items-center gap-2"
+        >
+          <Search size={18} />
+          {isSearching ? "Searching..." : `Find ${sport} Match in ${location}`}
+        </Button>
+      </div>
     </div>
   );
 };
