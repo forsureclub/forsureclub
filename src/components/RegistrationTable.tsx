@@ -42,6 +42,28 @@ export const RegistrationTable = ({
     }));
   };
 
+  // Function to display contact information correctly
+  const formatContactInfo = (email: string | null | undefined, phone: string | null | undefined) => {
+    const defaultEmail = "no-email@provided.com";
+    const defaultPhone = "no-number-provided";
+    
+    const formattedEmail = !email || email === "null" || email === defaultEmail ? 
+      <span className="text-gray-400 italic">No email provided</span> : 
+      <span>{email}</span>;
+    
+    const formattedPhone = !phone || phone === "null" || phone === defaultPhone ? 
+      <span className="text-gray-400 italic">No phone provided</span> : 
+      <span>{phone}</span>;
+
+    return (
+      <>
+        {formattedEmail}
+        {(email && email !== "null" && email !== defaultEmail) && (phone && phone !== "null" && phone !== defaultPhone) && <br />}
+        {formattedPhone}
+      </>
+    );
+  };
+
   // Function to group registrations
   const groupRegistrations = () => {
     if (groupBy === 'none') {
@@ -147,12 +169,7 @@ export const RegistrationTable = ({
                         <TableCell>{registration.player.city}</TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            {registration.player.email && (
-                              <div>{registration.player.email}</div>
-                            )}
-                            {registration.player.phone_number && (
-                              <div>{registration.player.phone_number}</div>
-                            )}
+                            {formatContactInfo(registration.player.email, registration.player.phone_number)}
                           </div>
                         </TableCell>
                         <TableCell>

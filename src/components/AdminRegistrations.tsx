@@ -30,9 +30,6 @@ export const AdminRegistrations = () => {
         `)
         .order('created_at', { ascending: false });
 
-      // Add debug log for raw supabase data
-      console.log("[DEBUG] Fetched Supabase data:", data);
-
       if (error) {
         toast({
           title: "Error",
@@ -43,12 +40,11 @@ export const AdminRegistrations = () => {
         return;
       }
 
-      console.log("Fetched data:", data);
-
       // Transform the data to match our Registration type
       const formattedData = data.map(reg => {
-        // Log each player's email and phone to debug
-        console.log(`Player ${reg.player?.name} - email: "${reg.player?.email}", phone: "${reg.player?.phone_number}", rating: "${reg.player?.rating}"`);
+        // Normalize email and phone values to ensure consistency
+        const email = reg.player?.email || null;
+        const phone = reg.player?.phone_number || null;
         
         return {
           id: reg.id,
@@ -62,9 +58,8 @@ export const AdminRegistrations = () => {
             sport: reg.player?.sport || '',
             occupation: reg.player?.occupation || '',
             city: reg.player?.city || '',
-            // Preserve the original values exactly as they came from the database
-            email: reg.player?.email || '',
-            phone_number: reg.player?.phone_number || '',
+            email: email,
+            phone_number: phone,
             gender: reg.player?.gender || '',
             play_time: reg.player?.play_time || '',
             budget_range: reg.player?.budget_range || '',
@@ -74,7 +69,6 @@ export const AdminRegistrations = () => {
         };
       });
 
-      console.log("Formatted data:", formattedData);
       setRegistrations(formattedData);
       setLoading(false);
     } catch (err) {
@@ -119,12 +113,19 @@ export const AdminRegistrations = () => {
       // Add data rows
       registrations.forEach(reg => {
         const player = reg.player;
+        const email = player.email && player.email !== "null" && player.email !== "no-email@provided.com" 
+          ? player.email 
+          : "";
+        const phone = player.phone_number && player.phone_number !== "null" && player.phone_number !== "no-number-provided" 
+          ? player.phone_number 
+          : "";
+          
         const row = [
           player.name,
           player.sport,
           player.city,
-          player.email,
-          player.phone_number,
+          email,
+          phone,
           player.gender,
           player.play_time,
           player.budget_range,

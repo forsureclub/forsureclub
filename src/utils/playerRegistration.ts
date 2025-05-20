@@ -40,18 +40,16 @@ export const createOrFetchPlayer = async (data: PlayerRegistrationData): Promise
       .insert([
         {
           name: data.playerName,
-          email: data.email,
-          phone: data.phoneNumber,
+          email: data.email || null,
+          phone_number: data.phoneNumber || null,
           sport: data.selectedSport,
           city: data.location,
-          club_name: data.isClubMember ? data.clubName : null,
-          is_club_member: data.isClubMember,
+          club: data.isClubMember ? data.clubName : null,
           occupation: data.occupation,
           gender: data.gender,
           budget_range: data.spendingLevel,
           play_time: data.preferredDays,
           rating: data.initialRating || 2.5, // Default to 2.5 if not provided
-          status: 'active',
         }
       ])
       .select('id')
