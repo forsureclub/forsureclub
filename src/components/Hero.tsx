@@ -24,7 +24,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
         >
-          Connecting Players Through AI Sport-Matching
+          Connecting Players Through AI Padel Matching
         </motion.h1>
         
         <motion.div 
@@ -49,7 +49,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           transition={{ delay: 0.3 }}
           className="text-xl text-gray-600 mb-8"
         >
-          Join our community and find your next sports partner for padel, golf, or tennis in your area.
+          Find your next padel partner, play every Wednesday.
         </motion.p>
         
         <motion.div
