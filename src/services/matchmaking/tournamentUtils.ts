@@ -1,32 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getPlayerEloRating } from "./eloSystem";
 import { Json } from "@/integrations/supabase/types";
-
-interface BracketPlayer {
-  id: string;
-  name: string;
-  eloRating: number;
-  seed?: number;
-}
-
-interface BracketMatch {
-  id: string;
-  player1?: BracketPlayer | null;
-  player2?: BracketPlayer | null;
-  winner?: string | null;
-  nextMatchId?: string | null;
-  round: number;
-  matchNumber: number;
-}
-
-export interface TournamentBracket {
-  id: string;
-  name: string;
-  matches: BracketMatch[];
-  rounds: number;
-  roundNames?: string[];
-}
+import { BracketPlayer, BracketMatch, TournamentBracket } from "@/types/tournament";
 
 interface BracketData {
   matches: BracketMatch[];
@@ -173,7 +148,7 @@ export async function advancePlayerInBracket(
       throw new Error(`Error fetching tournament bracket: ${tournamentError?.message}`);
     }
     
-    const bracketData = tournament.bracket_data as BracketData | null;
+    const bracketData = tournament.bracket_data as unknown as BracketData;
     if (!bracketData || !bracketData.matches) {
       throw new Error('Tournament bracket not found or is invalid');
     }
