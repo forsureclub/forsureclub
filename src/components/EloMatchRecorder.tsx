@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { updatePlayerEloRating, processMatchResult } from "@/services/matchmaking/eloSystem";
 import { supabase } from "@/integrations/supabase/client";
+import { X } from "lucide-react";
+import { Badge } from "./ui/badge";
 
 export const EloMatchRecorder = ({ sport }: { sport: string }) => {
   const [winnerIds, setWinnerIds] = useState<string[]>([]);
@@ -17,7 +19,7 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
   const { toast } = useToast();
 
   // Fetch available players for this sport
-  useState(() => {
+  useEffect(() => {
     const fetchPlayers = async () => {
       try {
         const { data, error } = await supabase
@@ -28,7 +30,12 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
 
         if (error) throw error;
         
-        setAvailablePlayers(data || []);
+        if (data) {
+          setAvailablePlayers(data.map(player => ({
+            id: player.id,
+            name: player.name
+          })));
+        }
       } catch (error) {
         console.error('Error fetching players:', error);
         toast({
@@ -42,7 +49,7 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
     };
 
     fetchPlayers();
-  }, [sport]);
+  }, [sport, toast]);
 
   const addWinner = (playerId: string) => {
     if (winnerIds.includes(playerId)) return;
@@ -249,7 +256,3 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
     </Card>
   );
 };
-
-// Missing imports
-import { X } from "lucide-react";
-import { Badge } from "./ui/badge";

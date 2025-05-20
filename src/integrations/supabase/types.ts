@@ -238,6 +238,7 @@ export type Database = {
           city: string
           club: string | null
           created_at: string | null
+          elo_rating: number | null
           email: string | null
           gender: string
           id: string
@@ -254,6 +255,7 @@ export type Database = {
           city: string
           club?: string | null
           created_at?: string | null
+          elo_rating?: number | null
           email?: string | null
           gender: string
           id?: string
@@ -270,6 +272,7 @@ export type Database = {
           city?: string
           club?: string | null
           created_at?: string | null
+          elo_rating?: number | null
           email?: string | null
           gender?: string
           id?: string
