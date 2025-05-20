@@ -9,7 +9,7 @@ export type PlayerProfile = {
   clubName: string;
   location: string;
   preferredTimes: string[];
-  preferredDays: 'weekdays' | 'weekends' | 'both';
+  preferredDays?: 'weekdays' | 'weekends' | 'both'; // Made optional
   gender: 'male' | 'female' | 'other';
   email: string;
   phoneNumber?: string;

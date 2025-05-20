@@ -12,8 +12,6 @@ interface PlayerInfoFormProps {
   setOccupation: (value: string) => void;
   location: string;
   setLocation: (value: string) => void;
-  preferredDays: 'weekdays' | 'weekends' | 'both';
-  setPreferredDays: (value: 'weekdays' | 'weekends' | 'both') => void;
   abilityLevel: string;
   setAbilityLevel: (value: string) => void;
   abilityOptions: string[];
@@ -43,8 +41,6 @@ export const PlayerInfoForm = ({
   setOccupation,
   location,
   setLocation,
-  preferredDays,
-  setPreferredDays,
   abilityLevel,
   setAbilityLevel,
   abilityOptions,
@@ -99,23 +95,6 @@ export const PlayerInfoForm = ({
           placeholder="Enter your city"
           className="mt-1"
         />
-      </div>
-      
-      <div>
-        <Label htmlFor="availability" className="text-sm font-medium text-gray-700">Availability</Label>
-        <Select 
-          value={preferredDays} 
-          onValueChange={(value) => setPreferredDays(value as 'weekdays' | 'weekends' | 'both')}
-        >
-          <SelectTrigger id="availability" className="w-full">
-            <SelectValue placeholder="When are you available?" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="weekdays">Weekdays</SelectItem>
-            <SelectItem value="weekends">Weekends</SelectItem>
-            <SelectItem value="both">Both (Flexible)</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       
       <div>

@@ -22,7 +22,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [occupation, setOccupation] = useState("");
   const [clubName, setClubName] = useState("");
   const [location, setLocation] = useState("");
-  const [preferredDays, setPreferredDays] = useState<'weekdays' | 'weekends' | 'both'>('both');
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -93,7 +92,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         isClubMember,
         occupation,
         gender,
-        preferredDays,
+        preferredDays: 'both', // Set a default value since we removed the field
         spendingLevel,
         email,
         phoneNumber,
@@ -173,8 +172,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setOccupation={setOccupation}
           location={location}
           setLocation={setLocation}
-          preferredDays={preferredDays}
-          setPreferredDays={setPreferredDays}
           abilityLevel={abilityLevel}
           setAbilityLevel={setAbilityLevel}
           abilityOptions={abilityOptions}
