@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { createSingleEliminationBracket, advancePlayerInBracket } from "@/services/matchmaking/tournamentUtils";
+import { createSingleEliminationBracket, advancePlayerInBracket, TournamentBracket as TournamentBracketType } from "@/services/matchmaking/tournamentUtils";
 import { getEloRankDescription } from "@/services/matchmaking/eloSystem";
 import { Trophy, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,20 +16,12 @@ interface BracketPlayer {
 
 interface BracketMatch {
   id: string;
-  player1?: BracketPlayer;
-  player2?: BracketPlayer;
-  winner?: string;
-  nextMatchId?: string;
+  player1?: BracketPlayer | null;
+  player2?: BracketPlayer | null;
+  winner?: string | null;
+  nextMatchId?: string | null;
   round: number;
   matchNumber: number;
-}
-
-interface TournamentBracket {
-  id: string;
-  name: string;
-  matches: BracketMatch[];
-  rounds: number;
-  roundNames?: string[];
 }
 
 interface TournamentBracketProps {
@@ -39,7 +30,7 @@ interface TournamentBracketProps {
 }
 
 export const TournamentBracket = ({ tournamentId, editable = false }: TournamentBracketProps) => {
-  const [bracket, setBracket] = useState<TournamentBracket | null>(null);
+  const [bracket, setBracket] = useState<TournamentBracketType | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
@@ -65,7 +56,9 @@ export const TournamentBracket = ({ tournamentId, editable = false }: Tournament
         setBracket({
           id,
           name: tournament.name,
-          ...tournament.bracket_data
+          matches: tournament.bracket_data.matches || [],
+          rounds: tournament.bracket_data.rounds || 0,
+          roundNames: tournament.bracket_data.roundNames || []
         });
       } else {
         // No bracket data yet

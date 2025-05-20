@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getPlayerEloRating } from "./eloSystem";
+import { Json } from "@/integrations/supabase/types";
 
 interface BracketPlayer {
   id: string;
@@ -11,10 +12,10 @@ interface BracketPlayer {
 
 interface BracketMatch {
   id: string;
-  player1?: BracketPlayer;
-  player2?: BracketPlayer;
-  winner?: string;
-  nextMatchId?: string;
+  player1?: BracketPlayer | null;
+  player2?: BracketPlayer | null;
+  winner?: string | null;
+  nextMatchId?: string | null;
   round: number;
   matchNumber: number;
 }
@@ -25,6 +26,12 @@ export interface TournamentBracket {
   matches: BracketMatch[];
   rounds: number;
   roundNames?: string[];
+}
+
+interface BracketData {
+  matches: BracketMatch[];
+  rounds: number;
+  roundNames: string[];
 }
 
 /**
@@ -112,17 +119,20 @@ export async function createSingleEliminationBracket(
       }
     }
     
-    const bracketData = {
+    const bracketData: BracketData = {
       matches,
       rounds: roundCount,
       roundNames: ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final']
     };
     
     // Store the bracket in Supabase
+    // Convert to a plain object that can be stored as JSON
+    const bracketDataJson = JSON.parse(JSON.stringify(bracketData)) as Json;
+    
     const { error: bracketError } = await supabase
       .from('tournaments')
       .update({
-        bracket_data: bracketData
+        bracket_data: bracketDataJson
       })
       .eq('id', tournamentId);
       
@@ -133,7 +143,9 @@ export async function createSingleEliminationBracket(
     return {
       id: tournamentId,
       name: tournamentName,
-      ...bracketData
+      matches: bracketData.matches,
+      rounds: bracketData.rounds,
+      roundNames: bracketData.roundNames
     };
   } catch (error) {
     console.error("Error creating tournament bracket:", error);
@@ -161,7 +173,7 @@ export async function advancePlayerInBracket(
       throw new Error(`Error fetching tournament bracket: ${tournamentError?.message}`);
     }
     
-    const bracketData = tournament.bracket_data as any;
+    const bracketData = tournament.bracket_data as BracketData | null;
     if (!bracketData || !bracketData.matches) {
       throw new Error('Tournament bracket not found or is invalid');
     }
@@ -206,9 +218,12 @@ export async function advancePlayerInBracket(
     bracketData.matches = matches;
     
     // Update the bracket in the database
+    // Convert to a plain object that can be stored as JSON
+    const bracketDataJson = JSON.parse(JSON.stringify(bracketData)) as Json;
+    
     const { error: updateError } = await supabase
       .from('tournaments')
-      .update({ bracket_data: bracketData })
+      .update({ bracket_data: bracketDataJson })
       .eq('id', tournamentId);
       
     if (updateError) {
