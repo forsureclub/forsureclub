@@ -10,7 +10,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { User, MessageSquare, LogOut, Menu, ChevronDown, Activity, Search, Video } from "lucide-react";
+import { User, MessageSquare, LogOut, Menu, ChevronDown, Activity, Search, Video, Trophy } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -97,6 +97,17 @@ export const Navigation = () => {
                     >
                       <Video size={16} />
                       AI Coaching
+                    </Button>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/tournament-results">
+                    <Button 
+                      variant={isActive("/tournament-results") ? "secondary" : "ghost"} 
+                      className="flex items-center gap-1.5 text-sm font-medium"
+                    >
+                      <Trophy size={16} />
+                      Tournament Results
                     </Button>
                   </Link>
                 </NavigationMenuItem>

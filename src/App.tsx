@@ -73,6 +73,7 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/player/:id" element={<PlayerProfile />} />
+              <Route path="/tournament-results" element={<TournamentResults />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
