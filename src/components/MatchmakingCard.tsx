@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -32,6 +33,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [matchedPlayers, setMatchedPlayers] = useState<any[]>([]);
   const [foundMatch, setFoundMatch] = useState(false);
   const [matchType, setMatchType] = useState<'singles' | 'doubles'>('singles');
+  const [playerCount, setPlayerCount] = useState<'1' | '2' | '3'>('1');
   const { toast } = useToast();
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -101,7 +103,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
       let matchResult;
       
-      // Use appropriate matching function based on match type
+      // Determine which matchmaking function to use based on preferences
       if (matchType === 'doubles') {
         // For 4-player doubles match
         matchResult = await organizeFourPlayerMatch(
@@ -113,14 +115,15 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           email
         );
       } else {
-        // For regular singles match - now with gender parameter
+        // For regular singles match - now with additional playerCount parameter
         matchResult = await registerPlayerForMatchmaking(
           playerId,
           "Padel",
           location,
           abilityLevel,
           gender,
-          email
+          email,
+          playerCount
         );
       }
       
@@ -177,6 +180,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         <MatchTypeSelector
           matchType={matchType}
           onMatchTypeChange={setMatchType}
+          playerCount={playerCount}
+          onPlayerCountChange={setPlayerCount}
         />
         
         <PlayerInfoForm
@@ -220,7 +225,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding Match...
             </span>
           ) : (
-            `Find ${matchType === 'doubles' ? '4-Player' : '2-Player'} Match`
+            `Find ${playerCount === '1' ? 'a Partner' : playerCount === '2' ? '2 Players' : '3 Players'}`
           )}
         </Button>
       </div>

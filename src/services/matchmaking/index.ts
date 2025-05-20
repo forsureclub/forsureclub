@@ -14,18 +14,19 @@ export async function registerPlayerForMatchmaking(
   location: string, 
   skillLevel: string,
   gender: string,
-  email: string
+  email: string,
+  playerCount: '1' | '2' | '3' = '1'
 ): Promise<MatchingResult> {
   try {
-    console.log(`Registering player ${playerId} for matchmaking`);
+    console.log(`Registering player ${playerId} for matchmaking, looking for ${playerCount} players`);
     
-    // Register the player in the matchmaking queue
+    // Register the player in the matchmaking queue with player count info
     const { error: registrationError } = await supabase
       .from("player_registrations")
       .upsert({
         player_id: playerId,
         status: "waiting",
-        admin_notes: `Looking for ${sport} match in ${location}`
+        admin_notes: `Looking for ${sport} match in ${location} with ${playerCount} additional player(s)`
       });
 
     if (registrationError) {
@@ -58,14 +59,15 @@ export async function registerPlayerForMatchmaking(
       throw new Error(`Error finding matches: ${error.message}`);
     }
 
-    // Try to find an immediate match using our AI matchmaking algorithm with gender filter
+    // Try to find an immediate match using our AI matchmaking algorithm, specifying player count
     const matchResult = await findMatchingPlayers(
       potentialPlayers || [], 
       sport, 
       location, 
       skillLevel,
       gender, 
-      playerId
+      playerId,
+      parseInt(playerCount) // Convert to number for the algorithm
     );
     
     // If we found enough players, create the match
@@ -75,7 +77,7 @@ export async function registerPlayerForMatchmaking(
     }
     
     // If we didn't find enough players, queue them for later matching
-    await queuePlayerForLaterMatching(playerId, email, sport, location, skillLevel);
+    await queuePlayerForLaterMatching(playerId, email, sport, location, skillLevel, playerCount);
     
     return matchResult;
   } catch (error) {

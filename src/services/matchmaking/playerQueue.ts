@@ -9,16 +9,17 @@ export async function queuePlayerForLaterMatching(
   email: string, 
   sport: string,
   location: string,
-  skillLevel: string
+  skillLevel: string,
+  playerCount: '1' | '2' | '3' = '1'
 ): Promise<void> {
-  console.log(`Queueing player ${playerId} for later matching`);
+  console.log(`Queueing player ${playerId} for later matching, looking for ${playerCount} player(s)`);
   
   // Update the registration status to indicate we're waiting for more players
   const { error: updateError } = await supabase
     .from("player_registrations")
     .update({
       status: "pending",
-      admin_notes: `Waiting for more ${sport} players in ${location}. Will email ${email} when found.`
+      admin_notes: `Waiting for ${playerCount} ${sport} player(s) in ${location}. Will email ${email} when found.`
     })
     .eq("player_id", playerId);
 

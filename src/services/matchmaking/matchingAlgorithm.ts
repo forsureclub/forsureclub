@@ -1,3 +1,4 @@
+
 import { Tables } from "@/integrations/supabase/types";
 
 type Player = Tables<"players">;
@@ -8,13 +9,14 @@ export type MatchingResult = {
 };
 
 /**
- * Advanced AI matchmaking algorithm that finds players based on sport, location, skill level and gender
+ * Advanced AI matchmaking algorithm that finds players based on sport, location, skill level, gender and desired player count
  * Uses a scoring system to find the best possible matches
  * @param sport The sport to match
  * @param location The player's location
  * @param skillLevel The player's skill level
  * @param gender The player's gender
  * @param playerId The current player's ID (to exclude from results)
+ * @param desiredPlayerCount The number of players the user is looking for (default: 1)
  */
 export async function findMatchingPlayers(
   players: Player[],
@@ -22,9 +24,10 @@ export async function findMatchingPlayers(
   location: string,
   skillLevel: string,
   gender: string,
-  playerId: string
+  playerId: string,
+  desiredPlayerCount: number = 1
 ): Promise<MatchingResult> {
-  console.log(`Finding matches for ${sport} in ${location} with level ${skillLevel}, gender: ${gender}`);
+  console.log(`Finding matches for ${sport} in ${location} with level ${skillLevel}, gender: ${gender}, looking for ${desiredPlayerCount} player(s)`);
   
   // Filter out the current player and only include players of the same gender
   const potentialPlayers = players.filter(player => 
@@ -78,12 +81,12 @@ export async function findMatchingPlayers(
   // Sort by score (highest first)
   scoredPlayers.sort((a, b) => b.score - a.score);
   
-  // Get the top matches (up to 3)
-  const bestMatches = scoredPlayers.slice(0, 3).map(match => match.player);
+  // Get the top matches (up to the desired number of players)
+  const bestMatches = scoredPlayers.slice(0, desiredPlayerCount).map(match => match.player);
   const highestScore = scoredPlayers.length > 0 ? scoredPlayers[0].score : 0;
   
-  // We have a good match if we found players with a decent score
-  const foundMatch = bestMatches.length > 0 && highestScore > 60;
+  // We have a good match if we found the exact number of players requested and with a decent score
+  const foundMatch = bestMatches.length === desiredPlayerCount && highestScore > 60;
 
   console.log(`Found ${bestMatches.length} potential matches with highest score: ${highestScore}`);
   

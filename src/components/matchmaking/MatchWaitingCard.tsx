@@ -25,6 +25,18 @@ export const MatchWaitingCard = ({
 }: MatchWaitingCardProps) => {
   const navigate = useNavigate();
 
+  // Get the appropriate term for the match type and player count
+  const getMatchTypeText = () => {
+    if (matchType === 'doubles') return 'Doubles';
+    
+    // For singles, show based on player count
+    const playerCount = matchedPlayers.length;
+    if (playerCount === 1) return 'Partner';
+    if (playerCount === 2) return '2-Player';
+    if (playerCount === 3) return '3-Player';
+    return 'Singles';
+  };
+
   return (
     <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
       <div className="text-center space-y-4">
@@ -36,12 +48,12 @@ export const MatchWaitingCard = ({
           )}
         </div>
         <h2 className="text-2xl font-bold text-gray-900">
-          {foundMatch ? `Perfect ${matchType === 'doubles' ? 'Doubles' : 'Singles'} Match Found!` : "Thank You for Joining!"}
+          {foundMatch ? `Perfect ${getMatchTypeText()} Match Found!` : "Thank You for Joining!"}
         </h2>
         <p className="text-gray-600">
           {foundMatch 
-            ? `Our AI has matched you with ${matchedPlayers.length} ideal ${selectedSport} players in your area for a ${matchType} game!` 
-            : `Our AI is analyzing player profiles to find your perfect ${selectedSport} ${matchType} match.`}
+            ? `Our AI has matched you with ${matchedPlayers.length} ideal ${selectedSport} players in your area!` 
+            : `Our AI is analyzing player profiles to find your perfect ${selectedSport} ${getMatchTypeText()} match.`}
         </p>
         <div className="bg-orange-50 p-4 rounded-lg text-left">
           <h3 className="font-medium text-orange-800 mb-2">What happens next?</h3>
@@ -54,7 +66,7 @@ export const MatchWaitingCard = ({
               </>
             ) : (
               <>
-                <li>• Our AI will contact you at <span className="font-medium">{email}</span> when it finds your ideal {matchType} match based on:</li>
+                <li>• Our AI will contact you at <span className="font-medium">{email}</span> when it finds your ideal match based on:</li>
                 <li className="ml-4">- Sport: {selectedSport}</li>
                 <li className="ml-4">- Location: {location}</li>
                 <li className="ml-4">- Ability Level: {abilityLevel}</li>
