@@ -13,7 +13,7 @@ export type PlayerProfile = {
   gender: 'male' | 'female' | 'other';
   email: string;
   phoneNumber?: string;
-  eloRating?: number; // Added ELO rating field
+  eloRating?: number; 
   skillLevel?: number; // Added skill level field
 };
 
