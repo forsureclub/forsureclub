@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createOrFetchPlayer } from "@/utils/playerRegistration";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { registerPlayerForMatchmaking, organizeFourPlayerMatch } from "@/services/matchmakingService";
+import { registerPlayerForMatchmaking } from "@/services/matchmakingService";
 import { PlayerInfoForm } from "./matchmaking/PlayerInfoForm";
 import { MatchTypeSelector } from "./matchmaking/MatchTypeSelector";
 import { MatchWaitingCard } from "./matchmaking/MatchWaitingCard";
@@ -32,7 +32,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
   const [matchedPlayers, setMatchedPlayers] = useState<any[]>([]);
   const [foundMatch, setFoundMatch] = useState(false);
-  const [matchType, setMatchType] = useState<'singles' | 'doubles'>('singles');
   const [playerCount, setPlayerCount] = useState<'1' | '2' | '3'>('1');
   const { toast } = useToast();
   const { signUp } = useAuth();
@@ -101,31 +100,16 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         initialRating
       });
 
-      let matchResult;
-      
-      // Determine which matchmaking function to use based on preferences
-      if (matchType === 'doubles') {
-        // For 4-player doubles match
-        matchResult = await organizeFourPlayerMatch(
-          playerId,
-          "Padel",
-          location,
-          abilityLevel,
-          gender,
-          email
-        );
-      } else {
-        // For regular singles match - now with additional playerCount parameter
-        matchResult = await registerPlayerForMatchmaking(
-          playerId,
-          "Padel",
-          location,
-          abilityLevel,
-          gender,
-          email,
-          playerCount
-        );
-      }
+      // For regular singles match - now with additional playerCount parameter
+      const matchResult = await registerPlayerForMatchmaking(
+        playerId,
+        "Padel",
+        location,
+        abilityLevel,
+        gender,
+        email,
+        playerCount
+      );
       
       // Update state with match results
       setFoundMatch(matchResult.foundMatch);
@@ -135,13 +119,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
 
       if (matchResult.foundMatch) {
         toast.success({
-          title: `Perfect ${matchType === 'doubles' ? 'Doubles' : 'Singles'} Match Found!`,
-          description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for your ${matchType} game! Check your email for details.`,
+          title: "Perfect Match Found!",
+          description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for your game! Check your email for details.`,
         });
       } else {
         toast.success({
           title: "Registration Successful",
-          description: `Our AI will continue looking for perfect ${matchType} matches and email you when found`,
+          description: `Our AI will continue looking for perfect matches and email you when found`,
         });
       }
       
@@ -163,7 +147,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     return (
       <MatchWaitingCard 
         foundMatch={foundMatch}
-        matchType={matchType}
+        matchType="singles"
         matchedPlayers={matchedPlayers}
         selectedSport={selectedSport}
         email={email}
@@ -178,8 +162,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Join {selectedSport} Match</h2>
       <div className="space-y-4">
         <MatchTypeSelector
-          matchType={matchType}
-          onMatchTypeChange={setMatchType}
           playerCount={playerCount}
           onPlayerCountChange={setPlayerCount}
         />
