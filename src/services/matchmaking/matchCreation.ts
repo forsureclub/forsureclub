@@ -1,4 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { sendMatchNotifications } from "./notifications";
 
 /**
  * Creates a match between players
