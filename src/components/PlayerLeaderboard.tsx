@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getEloRankDescription } from "@/services/matchmaking/eloSystem";
 
 type LeaderboardPlayer = {
   id: string;
@@ -24,12 +25,14 @@ type LeaderboardPlayer = {
   performanceRating: number;
   winPercentage: number;
   recentMatches: number;
+  eloRating: number;
   isCurrentUser: boolean;
 };
 
 export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardPlayer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'elo' | 'performance'>('elo');
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -37,7 +40,7 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
     if (sport) {
       fetchLeaderboardData(sport);
     }
-  }, [sport]);
+  }, [sport, sortBy]);
 
   const fetchLeaderboardData = async (sportType: string) => {
     try {
@@ -50,6 +53,7 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
           id,
           name,
           sport,
+          elo_rating,
           match_players(
             performance_rating,
             play_rating,
@@ -100,12 +104,16 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
           new Date(mp.created_at) >= thirtyDaysAgo
         ).length || 0;
         
+        // Get ELO rating (or default to 1500 if not set)
+        const eloRating = player.elo_rating || 1500;
+        
         return {
           id: player.id,
           name: player.name,
           sport: player.sport,
           matchesPlayed,
           performanceRating: avgRating,
+          eloRating,
           winPercentage,
           recentMatches,
           rank: 0, // Will be assigned after sorting
@@ -116,8 +124,12 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
       // Filter out players with no matches
       const activePlayers = processedData.filter(p => p.matchesPlayed > 0);
       
-      // Sort by performance rating (highest first)
-      activePlayers.sort((a, b) => b.performanceRating - a.performanceRating);
+      // Sort by selected criteria
+      if (sortBy === 'elo') {
+        activePlayers.sort((a, b) => b.eloRating - a.eloRating);
+      } else {
+        activePlayers.sort((a, b) => b.performanceRating - a.performanceRating);
+      }
       
       // Assign ranks
       activePlayers.forEach((player, index) => {
@@ -146,6 +158,10 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
     }
   };
 
+  const toggleSortBy = () => {
+    setSortBy(sortBy === 'elo' ? 'performance' : 'elo');
+  };
+
   if (loading) {
     return (
       <Card className="p-4">
@@ -168,13 +184,23 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
 
   return (
     <Card className="p-4 shadow-md">
-      <h3 className="text-lg font-semibold mb-4">{sport} Leaderboard</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">{sport} Leaderboard</h3>
+        <Badge 
+          variant="outline" 
+          className="cursor-pointer" 
+          onClick={toggleSortBy}
+        >
+          Sort by: {sortBy === 'elo' ? 'ELO Rating' : 'Performance'}
+        </Badge>
+      </div>
       
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">Rank</TableHead>
             <TableHead>Player</TableHead>
+            <TableHead className="text-center">ELO</TableHead>
             <TableHead className="text-center">Matches</TableHead>
             <TableHead className="text-center">Rating</TableHead>
             <TableHead className="text-center hidden md:table-cell">Recent</TableHead>
@@ -198,6 +224,14 @@ export const PlayerLeaderboard = ({ sport }: { sport: string }) => {
                   {player.isCurrentUser && (
                     <Badge variant="outline" className="text-xs">You</Badge>
                   )}
+                </div>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <span className="font-medium">{player.eloRating}</span>
+                  <span className="text-xs text-gray-500">
+                    {getEloRankDescription(player.eloRating)}
+                  </span>
                 </div>
               </TableCell>
               <TableCell className="text-center">{player.matchesPlayed}</TableCell>

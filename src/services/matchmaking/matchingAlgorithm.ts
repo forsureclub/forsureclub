@@ -1,5 +1,5 @@
-
 import { Tables } from "@/integrations/supabase/types";
+import { getDefaultElo } from "./eloSystem";
 
 type Player = Tables<"players">;
 export type MatchingResult = {
@@ -38,6 +38,10 @@ export async function findMatchingPlayers(
   if (!potentialPlayers || potentialPlayers.length === 0) {
     return { matchedPlayers: [], foundMatch: false, matchScore: 0 };
   }
+  
+  // Find the ELO rating of the requesting player
+  const initiatorPlayer = players.find(p => p.id === playerId);
+  const initiatorElo = initiatorPlayer?.elo_rating || getDefaultElo();
 
   // Calculate match score for each player
   const scoredPlayers = potentialPlayers.map(player => {
@@ -66,11 +70,20 @@ export async function findMatchingPlayers(
       skillScore = Math.max(0, 100 - (ratingDiff * 20)); // 20 points per rating difference
     }
     
+    // ELO matching (closer = higher score)
+    const playerElo = player.elo_rating || getDefaultElo();
+    const eloDiff = Math.abs(playerElo - initiatorElo);
+    const eloScore = Math.max(0, 100 - (eloDiff / 30)); // 100 = perfect match, loses 1 point per 30 ELO difference
+    
     // Availability matching bonus
     const availabilityScore = player.play_time === "both" ? 20 : 0;
     
-    // Calculate total score - weight location and skill level more heavily
-    const totalScore = (locationScore * 0.5) + (skillScore * 0.4) + (availabilityScore * 0.1);
+    // Calculate total score with weights
+    const totalScore = 
+      (locationScore * 0.4) + // Location is most important
+      (skillScore * 0.2) +    // Skill level is somewhat important
+      (eloScore * 0.3) +      // ELO is important
+      (availabilityScore * 0.1); // Availability is least important
     
     return {
       player,
@@ -123,6 +136,10 @@ export async function findFourPlayersForMatch(
   if (!potentialPlayers || potentialPlayers.length < 3) {
     return { matchedPlayers: [], foundMatch: false, matchScore: 0 };
   }
+  
+  // Find the ELO rating of the requesting player
+  const initiatorPlayer = players.find(p => p.id === playerId);
+  const initiatorElo = initiatorPlayer?.elo_rating || getDefaultElo();
 
   // Calculate match score for each player
   const scoredPlayers = potentialPlayers.map(player => {
@@ -151,11 +168,20 @@ export async function findFourPlayersForMatch(
       skillScore = Math.max(0, 100 - (ratingDiff * 20)); // 20 points per rating difference
     }
     
+    // ELO matching (closer = higher score)
+    const playerElo = player.elo_rating || getDefaultElo();
+    const eloDiff = Math.abs(playerElo - initiatorElo);
+    const eloScore = Math.max(0, 100 - (eloDiff / 30)); // 100 = perfect match, loses 1 point per 30 ELO difference
+    
     // Availability matching bonus
     const availabilityScore = player.play_time === "both" ? 20 : 0;
     
-    // Calculate total score - weight location more heavily
-    const totalScore = (locationScore * 0.6) + (skillScore * 0.3) + (availabilityScore * 0.1);
+    // Calculate total score with weights
+    const totalScore = 
+      (locationScore * 0.5) + // Location is most important
+      (eloScore * 0.3) +      // ELO is important
+      (skillScore * 0.1) +    // Less emphasis on skill level for doubles
+      (availabilityScore * 0.1); // Availability is least important
     
     return {
       player,

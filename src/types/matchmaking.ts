@@ -13,4 +13,12 @@ export type PlayerProfile = {
   gender: 'male' | 'female' | 'other';
   email: string;
   phoneNumber?: string;
+  eloRating?: number; // Added ELO rating field
 };
+
+export interface EloRatingChange {
+  oldRating: number;
+  newRating: number;
+  change: number;
+}
+

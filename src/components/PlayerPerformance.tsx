@@ -2,10 +2,13 @@
 import { useEffect, useState } from "react";
 import { Card } from "./ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { getEloRankDescription } from "@/services/matchmaking/eloSystem";
+import { Badge } from "./ui/badge";
 
 type PlayerStats = {
   averageRating: number;
   totalMatches: number;
+  eloRating: number;
   recentMatches: {
     played_at: string;
     location: string;
@@ -21,6 +24,15 @@ export const PlayerPerformance = ({ playerId }: { playerId: string }) => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        // Fetch player data including ELO rating
+        const { data: playerData, error: playerError } = await supabase
+          .from('players')
+          .select('elo_rating')
+          .eq('id', playerId)
+          .single();
+
+        if (playerError) throw playerError;
+
         // Fetch player's matches and performance data
         const { data: matchData, error: matchError } = await supabase
           .from('match_players')
@@ -53,6 +65,7 @@ export const PlayerPerformance = ({ playerId }: { playerId: string }) => {
           setStats({
             averageRating,
             totalMatches,
+            eloRating: playerData?.elo_rating || 1500,
             recentMatches,
           });
         }
@@ -79,7 +92,7 @@ export const PlayerPerformance = ({ playerId }: { playerId: string }) => {
       <h3 className="text-lg font-semibold mb-4">Performance Statistics</h3>
       
       <div className="grid gap-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-600">Average Rating</p>
             <p className="text-2xl font-bold">{stats.averageRating.toFixed(1)}/5.0</p>
@@ -87,6 +100,15 @@ export const PlayerPerformance = ({ playerId }: { playerId: string }) => {
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-600">Total Matches</p>
             <p className="text-2xl font-bold">{stats.totalMatches}</p>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <p className="text-sm text-blue-600">ELO Rating</p>
+            <div>
+              <p className="text-2xl font-bold">{stats.eloRating}</p>
+              <Badge variant="outline">
+                {getEloRankDescription(stats.eloRating)}
+              </Badge>
+            </div>
           </div>
         </div>
 
