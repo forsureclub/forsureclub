@@ -112,19 +112,19 @@ export async function createSingleEliminationBracket(
       }
     }
     
+    const bracketData = {
+      matches,
+      rounds: roundCount,
+      roundNames: ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final']
+    };
+    
     // Store the bracket in Supabase
-    const { data: bracketData, error: bracketError } = await supabase
+    const { error: bracketError } = await supabase
       .from('tournaments')
       .update({
-        bracket_data: {
-          matches,
-          rounds: roundCount,
-          roundNames: ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final']
-        }
+        bracket_data: bracketData
       })
-      .eq('id', tournamentId)
-      .select()
-      .single();
+      .eq('id', tournamentId);
       
     if (bracketError) {
       throw new Error(`Error saving bracket: ${bracketError.message}`);
@@ -133,9 +133,7 @@ export async function createSingleEliminationBracket(
     return {
       id: tournamentId,
       name: tournamentName,
-      matches,
-      rounds: roundCount,
-      roundNames: ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final']
+      ...bracketData
     };
   } catch (error) {
     console.error("Error creating tournament bracket:", error);
@@ -159,11 +157,15 @@ export async function advancePlayerInBracket(
       .eq('id', tournamentId)
       .single();
     
-    if (tournamentError || !tournament?.bracket_data) {
+    if (tournamentError || !tournament) {
       throw new Error(`Error fetching tournament bracket: ${tournamentError?.message}`);
     }
     
-    const bracketData = tournament.bracket_data;
+    const bracketData = tournament.bracket_data as any;
+    if (!bracketData || !bracketData.matches) {
+      throw new Error('Tournament bracket not found or is invalid');
+    }
+    
     const matches = bracketData.matches;
     
     // Find the current match

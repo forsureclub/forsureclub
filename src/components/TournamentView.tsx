@@ -22,6 +22,7 @@ interface Tournament {
   status: string;
   min_rating: number;
   max_rating: number;
+  bracket_data?: any;
 }
 
 export const TournamentView = () => {
