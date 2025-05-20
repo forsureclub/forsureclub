@@ -10,16 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
   const [isMatching, setIsMatching] = useState(false);
-  const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [displaySport, setDisplaySport] = useState<string>("Tennis");
+  const [selectedSport, setSelectedSport] = useState<string>("Padel");
   const { user } = useAuth();
 
   const handleBack = () => {
-    if (selectedSport) {
-      setSelectedSport(null);
-    } else {
-      setIsMatching(false);
-    }
+    setIsMatching(false);
   };
 
   // Show Hero for non-authenticated users
@@ -39,66 +34,29 @@ const Index = () => {
               className="text-gray-700"
               onClick={handleBack}
             >
-              {selectedSport ? "Back to Sports" : "Back to Home"}
+              Back to Home
             </Button>
           </header>
 
-          {!selectedSport ? (
-            <>
-              <h2 className="text-3xl font-bold text-center mb-6">Select Your Sport</h2>
-              <SportSelector onSportSelect={setSelectedSport} />
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl font-bold text-center mb-6">
-                Find Your {selectedSport} Match
-              </h2>
-              <MatchmakingCard 
-                selectedSport={selectedSport} 
-              />
-            </>
-          )}
+          <h2 className="text-3xl font-bold text-center mb-6">
+            Find Your Padel Match
+          </h2>
+          <MatchmakingCard 
+            selectedSport="Padel" 
+          />
         </div>
       ) : (
         <div className="space-y-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Player Leaderboard</h1>
+            <h1 className="text-3xl font-bold">Padel Leaderboard</h1>
             <Button onClick={() => setIsMatching(true)}>Find Match</Button>
           </div>
           
-          <div className="flex justify-end space-x-2 mb-4">
-            <Card className="inline-flex p-1">
-              <CardContent className="flex space-x-2 p-1">
-                <Button 
-                  variant={displaySport === "Tennis" ? "default" : "ghost"} 
-                  onClick={() => setDisplaySport("Tennis")}
-                  className="h-8"
-                >
-                  Tennis
-                </Button>
-                <Button 
-                  variant={displaySport === "Golf" ? "default" : "ghost"} 
-                  onClick={() => setDisplaySport("Golf")}
-                  className="h-8"
-                >
-                  Golf
-                </Button>
-                <Button 
-                  variant={displaySport === "Padel" ? "default" : "ghost"} 
-                  onClick={() => setDisplaySport("Padel")}
-                  className="h-8"
-                >
-                  Padel
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <PlayerLeaderboard sport={displaySport} />
+          <PlayerLeaderboard sport="Padel" />
           
           <div className="text-center pt-6">
             <Button onClick={() => setIsMatching(true)} size="lg">
-              Find Your Perfect Match
+              Find Your Perfect Padel Match
             </Button>
           </div>
         </div>

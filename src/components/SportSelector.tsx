@@ -3,33 +3,24 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
-const sports = [
-  "Padel",
-  "Golf",
-  "Tennis"
-];
-
 export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string) => void }) => {
-  const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [selectedSport, setSelectedSport] = useState<string | null>("Padel");
 
-  const handleSportSelect = (sport: string) => {
-    setSelectedSport(sport);
-    onSportSelect(sport);
+  const handleSportSelect = () => {
+    setSelectedSport("Padel");
+    onSportSelect("Padel");
   };
 
   return (
     <Card className="p-6 bg-white shadow-lg rounded-xl">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {sports.map((sport) => (
-          <Button
-            key={sport}
-            onClick={() => handleSportSelect(sport)}
-            variant={selectedSport === sport ? "default" : "outline"}
-            className="h-32 text-xl flex flex-col items-center justify-center gap-3 transition-all hover:scale-105"
-          >
-            {sport}
-          </Button>
-        ))}
+      <div className="grid grid-cols-1 gap-6">
+        <Button
+          onClick={handleSportSelect}
+          variant={selectedSport === "Padel" ? "default" : "outline"}
+          className="h-32 text-xl flex flex-col items-center justify-center gap-3 transition-all hover:scale-105"
+        >
+          Padel
+        </Button>
       </div>
     </Card>
   );

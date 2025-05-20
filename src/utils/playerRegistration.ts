@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface PlayerRegistrationData {
   playerName: string;
-  selectedSport: string;
   location: string;
   clubName: string;
   isClubMember: boolean;
@@ -34,7 +33,7 @@ export const createOrFetchPlayer = async (data: PlayerRegistrationData): Promise
       return existingPlayer.id;
     }
 
-    // Create new player
+    // Create new player - always set sport to "Padel"
     const { data: newPlayer, error: createError } = await supabase
       .from('players')
       .insert([
@@ -42,7 +41,7 @@ export const createOrFetchPlayer = async (data: PlayerRegistrationData): Promise
           name: data.playerName,
           email: data.email || null,
           phone_number: data.phoneNumber || null,
-          sport: data.selectedSport,
+          sport: "Padel",
           city: data.location,
           club: data.isClubMember ? data.clubName : null,
           occupation: data.occupation,

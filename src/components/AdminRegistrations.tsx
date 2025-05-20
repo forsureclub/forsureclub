@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +27,7 @@ export const AdminRegistrations = () => {
           updated_at,
           player:players(name, sport, occupation, city, email, phone_number, gender, play_time, budget_range, club, rating)
         `)
+        .eq('player:players.sport', 'Padel')
         .order('created_at', { ascending: false });
 
       if (error) {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -38,11 +37,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const navigate = useNavigate();
   const { validateForm } = useFormValidation();
 
-  const abilityOptions = selectedSport === "Golf" 
-    ? ["0-5", "6-10", "11-15", "16-20", "21+", "Beginner"] 
-    : ["Beginner", "Intermediate", "Advanced", "Professional"];
-
-  const abilityLabel = selectedSport === "Golf" ? "Handicap" : "Playtomic/LTA Level";
+  const abilityOptions = ["Beginner", "Intermediate", "Advanced", "Professional"];
+  const abilityLabel = "Playtomic/LTA Level";
 
   const handleJoin = async () => {
     // Validate form
@@ -85,27 +81,12 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           initialRating = 3.5;
         } else if (abilityLevel === "Professional") {
           initialRating = 4.5;
-        } else if (selectedSport === "Golf") {
-          // For Golf, lower handicap means higher rating
-          const handicapRange = abilityLevel.split('-');
-          if (handicapRange[0] === "0") {
-            initialRating = 4.5; // 0-5 handicap is very good
-          } else if (handicapRange[0] === "6") {
-            initialRating = 3.5; // 6-10 handicap is good
-          } else if (handicapRange[0] === "11") {
-            initialRating = 2.5; // 11-15 handicap is average
-          } else if (handicapRange[0] === "16") {
-            initialRating = 1.5; // 16-20 handicap is beginner
-          } else {
-            initialRating = 1.0; // 21+ handicap is very beginner
-          }
         }
       }
 
-      // Register the player
+      // Register the player - always with "Padel" as the sport
       const playerId = await createOrFetchPlayer({
         playerName,
-        selectedSport,
         location,
         clubName,
         isClubMember,
@@ -125,7 +106,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         // For 4-player doubles match
         matchResult = await organizeFourPlayerMatch(
           playerId,
-          selectedSport,
+          "Padel",
           location,
           abilityLevel,
           gender,
@@ -135,14 +116,14 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         // For regular singles match - now with gender parameter
         matchResult = await registerPlayerForMatchmaking(
           playerId,
-          selectedSport,
+          "Padel",
           location,
           abilityLevel,
           gender,
           email
         );
       }
-
+      
       // Update state with match results
       setFoundMatch(matchResult.foundMatch);
       setMatchedPlayers(matchResult.matchedPlayers);
