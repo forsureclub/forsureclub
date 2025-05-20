@@ -24,7 +24,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl md:text-5xl font-bold text-gray-900 mb-6"
         >
-          Connecting Players Through Padel
+          Connecting Players Through Padel.
         </motion.h1>
         
         <motion.div 
@@ -61,11 +61,10 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
             onClick={onStartMatching}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 rounded-lg text-lg font-semibold shadow-lg transition-transform hover:scale-105"
           >
-            Start Matching & Register
+            Register & Start Matching
           </Button>
         </motion.div>
       </div>
     </div>
   );
 };
-
