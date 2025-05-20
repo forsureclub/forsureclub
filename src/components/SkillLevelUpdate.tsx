@@ -8,9 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Slider } from "./ui/slider";
 import { SKILL_LEVELS } from "@/types/matchmaking";
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle, Calendar, MapPin, Search, Users } from "lucide-react";
 import { Input } from "./ui/input";
 import { registerPlayerForMatchmaking } from "@/services/matchmakingService";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "./ui/calendar";
 
 type SkillLevelUpdateProps = {
   playerId: string;
@@ -18,6 +22,8 @@ type SkillLevelUpdateProps = {
   sport: string;
   currentRating?: number;
 };
+
+type PlayStyle = "aggressive" | "defensive" | "all-court" | "serve-volley" | "baseline" | "counter-puncher";
 
 export const SkillLevelUpdate = ({ 
   playerId, 
@@ -31,6 +37,8 @@ export const SkillLevelUpdate = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [location, setLocation] = useState("Liverpool");
+  const [matchDate, setMatchDate] = useState<Date | undefined>(new Date());
+  const [playStyle, setPlayStyle] = useState<PlayStyle>("all-court");
   const { toast } = useToast();
 
   const getCurrentLevelDescription = () => {
@@ -128,7 +136,7 @@ export const SkillLevelUpdate = ({
       
       if (playerError) throw playerError;
       
-      // Find a match using the matchmaking service
+      // Find a match using the matchmaking service with enhanced parameters
       const matchResult = await registerPlayerForMatchmaking(
         playerId,
         sport,
@@ -136,18 +144,20 @@ export const SkillLevelUpdate = ({
         skillLevel.toString(),
         playerData.gender,
         playerData.email,
-        '1' // Find 1 player for singles
+        '1', // Find 1 player for singles
+        matchDate ? format(matchDate, 'yyyy-MM-dd') : undefined,
+        playStyle
       );
       
       if (matchResult.foundMatch) {
         toast({
-          title: "Match Found!",
-          description: `We found a perfect match for you in ${location}! Check your email for details.`,
+          title: "Perfect Match Found!",
+          description: `We found an ideal ${playStyle} player in ${location} for ${matchDate ? format(matchDate, 'EEEE, MMM d') : 'your preferred date'}! Check your email for details.`,
         });
       } else {
         toast({
           title: "Match Request Registered",
-          description: `We'll keep looking for a player in ${location} with similar skill level and notify you when found.`,
+          description: `We'll keep looking for a compatible ${playStyle} player in ${location} with similar skill level and notify you when found.`,
         });
       }
     } catch (error) {
@@ -175,6 +185,38 @@ export const SkillLevelUpdate = ({
   // Calculate optimal match range (±1.0 level)
   const optimalMinLevel = Math.max(0, skillLevel - 1.0);
   const optimalMaxLevel = Math.min(7, skillLevel + 1.0);
+
+  // Generate play style options based on sport
+  const getPlayStyleOptions = () => {
+    switch(sport) {
+      case "Tennis":
+        return [
+          { value: "aggressive", label: "Aggressive Baseliner" },
+          { value: "defensive", label: "Defensive Baseliner" },
+          { value: "all-court", label: "All-Court Player" },
+          { value: "serve-volley", label: "Serve & Volley" }
+        ];
+      case "Padel":
+        return [
+          { value: "aggressive", label: "Attacking" },
+          { value: "defensive", label: "Defensive" },
+          { value: "all-court", label: "Balanced" },
+          { value: "baseline", label: "Back-Court Specialist" }
+        ];
+      case "Golf":
+        return [
+          { value: "aggressive", label: "Power Player" },
+          { value: "defensive", label: "Precision Player" },
+          { value: "all-court", label: "Well-Rounded" }
+        ];
+      default:
+        return [
+          { value: "all-court", label: "Balanced" },
+          { value: "aggressive", label: "Aggressive" },
+          { value: "defensive", label: "Defensive" }
+        ];
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -216,12 +258,57 @@ export const SkillLevelUpdate = ({
 
         <div className="space-y-2">
           <Label htmlFor="location">Your Location</Label>
-          <Input 
-            id="location" 
-            value={location} 
-            onChange={(e) => setLocation(e.target.value)} 
-            placeholder="Enter your location (city)"
-          />
+          <div className="flex items-center gap-2">
+            <MapPin size={18} className="text-gray-500" />
+            <Input 
+              id="location" 
+              value={location} 
+              onChange={(e) => setLocation(e.target.value)} 
+              placeholder="Enter your location (city)"
+              className="flex-1"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="date">Preferred Match Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !matchDate && "text-muted-foreground"
+                )}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {matchDate ? format(matchDate, "PPP") : "Select a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <CalendarComponent
+                mode="single"
+                selected={matchDate}
+                onSelect={setMatchDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="playStyle">Your Play Style</Label>
+          <Select value={playStyle} onValueChange={(value) => setPlayStyle(value as PlayStyle)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your play style" />
+            </SelectTrigger>
+            <SelectContent>
+              {getPlayStyleOptions().map((option) => (
+                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-gray-500">We'll match you with players who complement your style</p>
         </div>
 
         <div className="space-y-2">
@@ -263,8 +350,8 @@ export const SkillLevelUpdate = ({
           disabled={isSearching}
           className="w-full bg-orange-600 hover:bg-orange-700 flex items-center gap-2"
         >
-          <Search size={18} />
-          {isSearching ? "Searching..." : `Find ${sport} Match in ${location}`}
+          <Users size={18} />
+          {isSearching ? "Searching..." : `Find Competitive ${sport} Match in ${location}`}
         </Button>
       </div>
     </div>

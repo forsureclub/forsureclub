@@ -15,18 +15,21 @@ export async function registerPlayerForMatchmaking(
   skillLevel: string,
   gender: string,
   email: string,
-  playerCount: '1' | '2' | '3' = '1'
+  playerCount: '1' | '2' | '3' = '1',
+  preferredDate?: string,
+  playStyle?: string
 ): Promise<MatchingResult> {
   try {
     console.log(`Registering player ${playerId} for matchmaking, looking for ${playerCount} players`);
+    console.log(`Additional parameters - Date: ${preferredDate || 'Any'}, Play Style: ${playStyle || 'Any'}`);
     
-    // Register the player in the matchmaking queue with player count info
+    // Register the player in the matchmaking queue with player count info and preferences
     const { error: registrationError } = await supabase
       .from("player_registrations")
       .upsert({
         player_id: playerId,
         status: "waiting",
-        admin_notes: `Looking for ${sport} match in ${location} with ${playerCount} additional player(s)`
+        admin_notes: `Looking for ${sport} match in ${location} with ${playerCount} additional player(s). Preferred date: ${preferredDate || 'Any'}, Play style: ${playStyle || 'Any'}`
       });
 
     if (registrationError) {
@@ -59,7 +62,7 @@ export async function registerPlayerForMatchmaking(
       throw new Error(`Error finding matches: ${error.message}`);
     }
 
-    // Try to find an immediate match using our AI matchmaking algorithm, specifying player count
+    // Try to find an immediate match using our AI matchmaking algorithm, specifying player count and preferences
     const matchResult = await findMatchingPlayers(
       potentialPlayers || [], 
       sport, 
@@ -67,17 +70,34 @@ export async function registerPlayerForMatchmaking(
       skillLevel,
       gender, 
       playerId,
-      parseInt(playerCount) // Convert to number for the algorithm
+      parseInt(playerCount), // Convert to number for the algorithm
+      preferredDate,
+      playStyle
     );
     
     // If we found enough players, create the match
     if (matchResult.foundMatch) {
-      await createMatch(playerId, matchResult.matchedPlayers, sport, location);
+      await createMatch(
+        playerId, 
+        matchResult.matchedPlayers, 
+        sport, 
+        location,
+        preferredDate // Pass preferred date for booking
+      );
       return matchResult;
     }
     
     // If we didn't find enough players, queue them for later matching
-    await queuePlayerForLaterMatching(playerId, email, sport, location, skillLevel, playerCount);
+    await queuePlayerForLaterMatching(
+      playerId, 
+      email, 
+      sport, 
+      location, 
+      skillLevel, 
+      playerCount,
+      preferredDate,
+      playStyle
+    );
     
     return matchResult;
   } catch (error) {

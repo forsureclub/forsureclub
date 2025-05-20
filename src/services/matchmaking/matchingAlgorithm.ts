@@ -1,3 +1,4 @@
+
 import { Tables } from "@/integrations/supabase/types";
 import { getDefaultElo } from "./eloSystem";
 import { getSkillLevelDescription, SKILL_LEVELS } from "@/types/matchmaking";
@@ -10,14 +11,9 @@ export type MatchingResult = {
 };
 
 /**
- * Advanced AI matchmaking algorithm that finds players based on sport, location, skill level, gender and desired player count
+ * Advanced AI matchmaking algorithm that finds players based on sport, location, skill level, gender, 
+ * preferred date, play style, and desired player count
  * Uses a scoring system to find the best possible matches
- * @param sport The sport to match
- * @param location The player's location
- * @param skillLevel The player's skill level
- * @param gender The player's gender
- * @param playerId The current player's ID (to exclude from results)
- * @param desiredPlayerCount The number of players the user is looking for (default: 1)
  */
 export async function findMatchingPlayers(
   players: Player[],
@@ -26,9 +22,12 @@ export async function findMatchingPlayers(
   skillLevel: string,
   gender: string,
   playerId: string,
-  desiredPlayerCount: number = 1
+  desiredPlayerCount: number = 1,
+  preferredDate?: string,
+  playStyle?: string
 ): Promise<MatchingResult> {
   console.log(`Finding matches for ${sport} in ${location} with level ${skillLevel}, gender: ${gender}, looking for ${desiredPlayerCount} player(s)`);
+  console.log(`Additional preferences - Date: ${preferredDate || 'Any'}, Play Style: ${playStyle || 'Any'}`);
   
   // Filter out the current player and only include players of the same gender
   const potentialPlayers = players.filter(player => 
@@ -69,12 +68,25 @@ export async function findMatchingPlayers(
     // Availability matching bonus
     const availabilityScore = player.play_time === "both" ? 20 : 0;
     
-    // Calculate total score with weights - skill level is now even more important
+    // Play style compatibility bonus (if a play style was specified)
+    let playStyleScore = 0;
+    if (playStyle) {
+      // This is simplified - in a real app, you'd have player preferences stored and do more sophisticated matching
+      // For complementary styles: aggressive pairs well with defensive, all-court pairs with anyone
+      if ((playStyle === "aggressive" && player.play_time === "defensive") || 
+          (playStyle === "defensive" && player.play_time === "aggressive") ||
+          playStyle === "all-court" || player.play_time === "all-court") {
+        playStyleScore = 15;
+      }
+    }
+    
+    // Calculate total score with weights
     const totalScore = 
-      (locationScore * 0.35) + // Location is still important
-      (skillScore * 0.45) +    // Skill level is now the most important factor
-      (eloScore * 0.10) +      // ELO is less important given our detailed skill levels
-      (availabilityScore * 0.10); // Availability is still considered
+      (locationScore * 0.30) + // Location is important
+      (skillScore * 0.40) +    // Skill level is now the most important factor
+      (eloScore * 0.10) +      // ELO is important but less than skill level
+      (availabilityScore * 0.10) + // Availability is still considered
+      (playStyleScore * 0.10);  // Play style compatibility
     
     return {
       player,
