@@ -16,11 +16,10 @@ import { useFormValidation } from "./matchmaking/useFormValidation";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
-  const [abilityLevel, setAbilityLevel] = useState("");
+  const [occupation, setOccupation] = useState("");
   const [skillLevel, setSkillLevel] = useState(1.0);
   const [spendingLevel, setSpendingLevel] = useState<'1' | '2' | '3'>('1');
   const [isClubMember, setIsClubMember] = useState(false);
-  const [occupation, setOccupation] = useState("");
   const [clubName, setClubName] = useState("");
   const [location, setLocation] = useState("");
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
@@ -38,14 +37,11 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const navigate = useNavigate();
   const { validateForm } = useFormValidation();
 
-  const abilityOptions = ["Beginner", "Intermediate", "Advanced", "Professional"];
-  const abilityLabel = "Experience Level";
-
   const handleJoin = async () => {
     // Validate form
     const isValid = validateForm(
       playerName,
-      abilityLevel,
+      "Intermediate", // Default value for abilityLevel since we removed the selector
       occupation,
       location,
       isClubMember,
@@ -76,13 +72,13 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         location,
         clubName,
         isClubMember,
-        occupation, // We're still using the same variable name
+        occupation,
         gender,
         preferredDays: 'both', // Set a default value since we removed the field
         spendingLevel,
         email,
         phoneNumber,
-        initialRating: skillLevel // Use the slider value directly
+        initialRating: skillLevel
       });
 
       // For regular singles match - now with additional playerCount parameter
@@ -90,7 +86,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         playerId,
         "Padel",
         location,
-        abilityLevel,
+        "Intermediate", // Default ability level
         gender,
         email,
         playerCount
@@ -137,7 +133,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         selectedSport={selectedSport}
         email={email}
         location={location}
-        abilityLevel={abilityLevel}
+        abilityLevel="Intermediate" // Default ability level
       />
     );
   }
@@ -158,10 +154,10 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setOccupation={setOccupation}
           location={location}
           setLocation={setLocation}
-          abilityLevel={abilityLevel}
-          setAbilityLevel={setAbilityLevel}
-          abilityOptions={abilityOptions}
-          abilityLabel={abilityLabel}
+          abilityLevel="Intermediate" // Default value
+          setAbilityLevel={() => {}} // No-op function since we removed the selector
+          abilityOptions={["Beginner", "Intermediate", "Advanced", "Professional"]}
+          abilityLabel="Experience Level"
           spendingLevel={spendingLevel}
           setSpendingLevel={setSpendingLevel}
           isClubMember={isClubMember}
