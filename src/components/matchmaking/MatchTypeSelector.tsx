@@ -14,7 +14,7 @@ export const MatchTypeSelector = ({
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="player-count" className="text-sm font-medium text-gray-700">Players Needed</Label>
+        <Label htmlFor="player-count" className="text-sm font-medium text-gray-700">Minimum Players</Label>
         <RadioGroup
           value={playerCount}
           onValueChange={(value) => onPlayerCountChange(value as '1' | '2' | '3')}
@@ -22,7 +22,7 @@ export const MatchTypeSelector = ({
         >
           <div className="flex items-center space-x-2 border rounded-md p-2">
             <RadioGroupItem value="1" id="one-player" />
-            <Label htmlFor="one-player" className="cursor-pointer">1 Partner</Label>
+            <Label htmlFor="one-player" className="cursor-pointer">1 Player</Label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md p-2">
             <RadioGroupItem value="2" id="two-players" />
