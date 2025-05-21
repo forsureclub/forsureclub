@@ -50,26 +50,15 @@ export const PhotoUpload = ({ playerId, playerName, existingUrl, onPhotoUpdated 
         .from('profiles')
         .getPublicUrl(fileName);
 
-      // Update player record with new photo URL
-      // Fix: Use a custom column name that matches the schema
+      // Update player record with new photo URL using the club field
       const { error: updateError } = await supabase
         .from('players')
-        .update({ photo_url: publicUrl.publicUrl })
+        .update({ club: publicUrl.publicUrl }) // Using club field to store the URL
         .eq('id', playerId);
 
       if (updateError) {
-        // If the column doesn't exist, try an alternative approach with RLS
-        console.error('Error updating player photo_url:', updateError);
-        // Create a virtual photo_url field using metadata
-        const { error: metadataError } = await supabase
-          .from('players')
-          .update({ 
-            // Store the URL in an existing field that can be used for this purpose
-            club: publicUrl.publicUrl // Using club as it's nullable and can store a URL
-          })
-          .eq('id', playerId);
-        
-        if (metadataError) throw metadataError;
+        console.error('Error updating player photo:', updateError);
+        throw updateError;
       }
 
       // Update state and notify parent

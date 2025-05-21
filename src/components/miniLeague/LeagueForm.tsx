@@ -25,7 +25,7 @@ interface LeagueFormProps {
   setStartDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
-  suggestions: any[];
+  suggestions: string[]; // Changed from any[] to string[]
   isLoading: boolean;
 }
 
@@ -93,18 +93,15 @@ export const LeagueForm = ({
                   )}
                 </CommandEmpty>
                 <CommandGroup heading="Locations">
-                  {suggestions.map((suggestion) => (
+                  {suggestions.map((suggestion, index) => (
                     <CommandItem
-                      key={suggestion.id}
-                      value={suggestion.name}
+                      key={index}
+                      value={suggestion}
                       onSelect={() => {
-                        setQuery(suggestion.name);
+                        setQuery(suggestion);
                       }}
                     >
-                      {suggestion.name}
-                      {suggestion.country && (
-                        <span className="text-gray-400 ml-2">{suggestion.country}</span>
-                      )}
+                      {suggestion}
                     </CommandItem>
                   ))}
                 </CommandGroup>

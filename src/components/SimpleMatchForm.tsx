@@ -106,10 +106,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         const { error: resultError } = await supabase
           .from("match_players")
           .update({ 
-            performance_rating: 3, // Default middle rating
-            // Using numeric field that already exists in the schema
-            // We can't use score directly since it doesn't exist
-            performance_rating: parseInt(playerScore)
+            performance_rating: parseInt(playerScore) // Using performance_rating for score
           })
           .eq("match_id", matchId)
           .eq("player_id", playerId);

@@ -18,7 +18,7 @@ export const CreateMiniLeagueForm = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [selectedPlayers, setSelectedPlayers] = useState<any[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const { query, setQuery, suggestions, isLoading } = useLocationSearch();
+  const { query, setQuery, locationSuggestions, isLoading, fetchLocationSuggestions } = useLocationSearch();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ export const CreateMiniLeagueForm = () => {
         setStartDate={setStartDate}
         query={query}
         setQuery={setQuery}
-        suggestions={suggestions}
+        suggestions={locationSuggestions}
         isLoading={isLoading}
       />
       

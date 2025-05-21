@@ -80,6 +80,11 @@ export function useLocationSearch() {
     [toast]
   );
 
+  // Trigger location search when query changes
+  useEffect(() => {
+    fetchLocationSuggestions(query);
+  }, [query, fetchLocationSuggestions]);
+
   return {
     query,
     setQuery,
