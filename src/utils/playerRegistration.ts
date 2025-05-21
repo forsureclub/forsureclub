@@ -6,7 +6,7 @@ export interface PlayerRegistrationData {
   location: string;
   clubName: string;
   isClubMember: boolean;
-  occupation: string;
+  occupation: string; // We're keeping the field name in the data structure
   gender: string;
   preferredDays: string;
   spendingLevel: string;
@@ -44,7 +44,7 @@ export const createOrFetchPlayer = async (data: PlayerRegistrationData): Promise
           sport: "Padel",
           city: data.location,
           club: data.isClubMember ? data.clubName : null,
-          occupation: data.occupation,
+          occupation: data.occupation, // This field still exists in the database
           gender: data.gender,
           budget_range: data.spendingLevel,
           play_time: data.preferredDays,

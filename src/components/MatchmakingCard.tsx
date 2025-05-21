@@ -76,7 +76,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         location,
         clubName,
         isClubMember,
-        occupation,
+        occupation, // We're still using the same variable name
         gender,
         preferredDays: 'both', // Set a default value since we removed the field
         spendingLevel,

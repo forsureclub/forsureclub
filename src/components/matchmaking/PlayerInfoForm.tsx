@@ -112,12 +112,12 @@ export const PlayerInfoForm = ({
       </div>
       
       <div>
-        <Label htmlFor="occupation" className="text-sm font-medium text-gray-700">Occupation</Label>
+        <Label htmlFor="industry" className="text-sm font-medium text-gray-700">Industry</Label>
         <Input
-          id="occupation"
+          id="industry"
           value={occupation}
           onChange={(e) => setOccupation(e.target.value)}
-          placeholder="Enter your occupation"
+          placeholder="Enter your industry"
           className="mt-1"
         />
       </div>

@@ -1,22 +1,13 @@
 
-import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 export const useFormValidation = () => {
   const { toast } = useToast();
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const validatePhone = (phone: string) => {
-    return /^[\d\+\-\(\) ]{7,15}$/.test(phone);
-  };
-
   const validateForm = (
     playerName: string,
     abilityLevel: string,
-    occupation: string,
+    industry: string,
     location: string,
     isClubMember: boolean,
     clubName: string,
@@ -25,57 +16,95 @@ export const useFormValidation = () => {
     password: string,
     confirmPassword: string
   ): boolean => {
-    if (!playerName || !abilityLevel || !occupation || !location || 
-        (isClubMember && !clubName) || !email) {
+    // Check required fields
+    if (!playerName) {
       toast({
         title: "Missing Information",
-        description: "Please fill out all required fields",
-        variant: "destructive"
+        description: "Please enter your name",
+        variant: "destructive",
       });
       return false;
     }
 
-    if (!validateEmail(email)) {
+    if (!abilityLevel) {
+      toast({
+        title: "Missing Information",
+        description: "Please select your experience level",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!industry) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your industry",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!location) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your location",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (isClubMember && !clubName) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your club name",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!email) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (phoneNumber && !validatePhone(phoneNumber)) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
 
     if (!password) {
       toast({
-        title: "Password Required",
-        description: "Please create a password for your account",
-        variant: "destructive"
+        title: "Missing Information",
+        description: "Please enter a password",
+        variant: "destructive",
       });
       return false;
     }
 
     if (password.length < 6) {
       toast({
-        title: "Password Too Short",
+        title: "Invalid Password",
         description: "Password must be at least 6 characters long",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
 
     if (password !== confirmPassword) {
       toast({
-        title: "Passwords Don't Match",
-        description: "Please make sure your passwords match",
-        variant: "destructive"
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+        variant: "destructive",
       });
       return false;
     }
