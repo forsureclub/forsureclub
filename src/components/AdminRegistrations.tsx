@@ -46,7 +46,7 @@ export const AdminRegistrations = () => {
       }
 
       // Transform the data to match our Registration type
-      const formattedData = data.map(reg => {
+      const formattedData: Registration[] = data.map(reg => {
         const player = reg.players || {};
         
         // Type assertion to make TypeScript happy
@@ -78,7 +78,7 @@ export const AdminRegistrations = () => {
           player: {
             name: typedPlayer.name || '',
             sport: typedPlayer.sport || '',
-            occupation: typedPlayer.occupation || '',
+            industry: typedPlayer.occupation || '', // Map occupation to industry
             city: typedPlayer.city || '',
             email: email,
             phone_number: phone,
@@ -131,7 +131,7 @@ export const AdminRegistrations = () => {
   const exportToCSV = () => {
     try {
       // Create CSV header row
-      let csvContent = "Player,Sport,Location,Email,Phone,Gender,Play Time,Budget,Rating\n";
+      let csvContent = "Player,Sport,Location,Industry,Email,Phone,Gender,Play Time,Budget,Rating\n";
       
       // Add data rows
       registrations.forEach(reg => {
@@ -147,6 +147,7 @@ export const AdminRegistrations = () => {
           player.name,
           player.sport,
           player.city,
+          player.industry, // Updated from occupation to industry
           email,
           phone,
           player.gender,

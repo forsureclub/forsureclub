@@ -155,6 +155,7 @@ export const RegistrationTable = ({
                       <TableHead className="w-[180px]">Player</TableHead>
                       <TableHead>Sport</TableHead>
                       <TableHead>Location</TableHead>
+                      <TableHead>Industry</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Skill Level</TableHead>
                       <TableHead>Registration Date</TableHead>
@@ -172,6 +173,7 @@ export const RegistrationTable = ({
                         </TableCell>
                         <TableCell>{registration.player.sport}</TableCell>
                         <TableCell>{registration.player.city}</TableCell>
+                        <TableCell>{registration.player.industry}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             {formatContactInfo(registration.player.email, registration.player.phone_number)}
