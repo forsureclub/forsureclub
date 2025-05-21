@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,11 +20,7 @@ export const AdminRegistrations = () => {
     try {
       console.log("Fetching registrations as admin...");
       
-      // First verify admin status
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-      
+      // Modified to work without authentication for admin key access
       const { data, error } = await supabase
         .from('player_registrations')
         .select(`
@@ -43,7 +38,7 @@ export const AdminRegistrations = () => {
       if (error) {
         toast({
           title: "Error",
-          description: "Failed to fetch registrations. You might not have admin access.",
+          description: "Failed to fetch registrations.",
           variant: "destructive"
         });
         console.error("Registration error:", error);
