@@ -16,7 +16,7 @@ import { useFormValidation } from "./matchmaking/useFormValidation";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
-  const [abilityLevel, setAbilityLevel] = useState("Beginner");
+  const [abilityLevel, setAbilityLevel] = useState("");
   const [skillLevel, setSkillLevel] = useState(1.0);
   const [spendingLevel, setSpendingLevel] = useState<'1' | '2' | '3'>('1');
   const [isClubMember, setIsClubMember] = useState(false);
@@ -37,6 +37,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { validateForm } = useFormValidation();
+
+  const abilityOptions = ["Beginner", "Intermediate", "Advanced", "Professional"];
+  const abilityLabel = "Experience Level";
 
   const handleJoin = async () => {
     // Validate form
@@ -73,7 +76,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         location,
         clubName,
         isClubMember,
-        occupation,
+        occupation, // We're still using the same variable name
         gender,
         preferredDays: 'both', // Set a default value since we removed the field
         spendingLevel,
@@ -146,8 +149,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         <MatchTypeSelector
           playerCount={playerCount}
           onPlayerCountChange={setPlayerCount}
-          experienceLevel={abilityLevel}
-          onExperienceLevelChange={setAbilityLevel}
         />
         
         <PlayerInfoForm
@@ -159,8 +160,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setLocation={setLocation}
           abilityLevel={abilityLevel}
           setAbilityLevel={setAbilityLevel}
-          abilityOptions={[]}
-          abilityLabel=""
+          abilityOptions={abilityOptions}
+          abilityLabel={abilityLabel}
           spendingLevel={spendingLevel}
           setSpendingLevel={setSpendingLevel}
           isClubMember={isClubMember}

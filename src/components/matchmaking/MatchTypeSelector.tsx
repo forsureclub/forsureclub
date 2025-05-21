@@ -5,20 +5,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 interface MatchTypeSelectorProps {
   playerCount: '1' | '2' | '3';
   onPlayerCountChange: (value: '1' | '2' | '3') => void;
-  experienceLevel: string;
-  onExperienceLevelChange: (value: string) => void;
 }
 
 export const MatchTypeSelector = ({ 
   playerCount, 
-  onPlayerCountChange,
-  experienceLevel,
-  onExperienceLevelChange
+  onPlayerCountChange 
 }: MatchTypeSelectorProps) => {
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="player-count" className="text-sm font-medium text-gray-700">Players Needed</Label>
+        <Label htmlFor="player-count" className="text-sm font-medium text-gray-700">Minimum Players</Label>
         <RadioGroup
           value={playerCount}
           onValueChange={(value) => onPlayerCountChange(value as '1' | '2' | '3')}
