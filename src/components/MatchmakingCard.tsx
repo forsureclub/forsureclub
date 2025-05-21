@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -37,8 +36,6 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { validateForm } = useFormValidation();
-
-  // We removed abilityOptions array since experience level is now handled in the MatchTypeSelector
 
   const handleJoin = async () => {
     // Validate form

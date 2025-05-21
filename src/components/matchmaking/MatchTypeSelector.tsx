@@ -1,7 +1,6 @@
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface MatchTypeSelectorProps {
   playerCount: '1' | '2' | '3';
@@ -38,28 +37,6 @@ export const MatchTypeSelector = ({
             <Label htmlFor="three-players" className="cursor-pointer">3 Players</Label>
           </div>
         </RadioGroup>
-      </div>
-
-      <div>
-        <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
-        <ToggleGroup
-          type="single"
-          value={experienceLevel}
-          onValueChange={(value) => {
-            if (value) onExperienceLevelChange(value);
-          }}
-          className="mt-2 grid grid-cols-3 gap-2"
-        >
-          <ToggleGroupItem value="Beginner" id="beginner" className="text-sm">
-            Beginner
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Intermediate" id="intermediate" className="text-sm">
-            Intermediate
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Advanced" id="advanced" className="text-sm">
-            Advanced
-          </ToggleGroupItem>
-        </ToggleGroup>
       </div>
     </div>
   );
