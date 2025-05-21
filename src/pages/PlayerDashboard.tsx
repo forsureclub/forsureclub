@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,17 @@ import { SportSelector } from "@/components/SportSelector";
 import { User, Calendar, Activity, MessageSquare, Video, Trophy } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { PlayerMatches } from "@/components/PlayerMatches";
+import { MatchmakingCard } from "@/components/MatchmakingCard";
+import { MatchWaitingCard } from "@/components/matchmaking/MatchWaitingCard";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string | null>("Padel"); // Default to Padel
   const [activeTab, setActiveTab] = useState("matches");
+  const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
+  const [foundMatch, setFoundMatch] = useState(false);
+  const [matchedPlayers, setMatchedPlayers] = useState<any[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   const location = useLocation();
@@ -26,7 +32,7 @@ const PlayerDashboard = () => {
     // Check for tab query parameter
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
-    if (tabParam && ["matches", "record-match"].includes(tabParam)) {
+    if (tabParam && ["matches", "record-match", "find-game"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [location]);
@@ -159,6 +165,20 @@ const PlayerDashboard = () => {
     }
   };
 
+  const handleMatchFound = (found: boolean, players: any[]) => {
+    setFoundMatch(found);
+    setMatchedPlayers(players);
+    setIsWaitingForMatch(true);
+    
+    // Automatically switch to matches tab after a delay
+    setTimeout(() => {
+      if (found) {
+        setActiveTab('matches');
+        setIsWaitingForMatch(false);
+      }
+    }, 5000);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -175,20 +195,15 @@ const PlayerDashboard = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Player Dashboard</h1>
-        <div className="flex gap-2">
-          <Link to="/coaching">
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
-              <Video size={18} />
-              AI Coaching
-            </Button>
-          </Link>
-          <Link to="/chat">
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
-              <MessageSquare size={18} />
-              Find Games
-            </Button>
-          </Link>
-        </div>
+        {playerProfile && (
+          <Button 
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2"
+            onClick={() => setActiveTab("find-game")}
+          >
+            <Trophy size={18} />
+            Find Wednesday Game
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -241,11 +256,13 @@ const PlayerDashboard = () => {
                           <span>AI Coaching</span>
                         </Link>
                       </Button>
-                      <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                        <Link to="/chat">
-                          <MessageSquare size={16} />
-                          <span>Find Games with AI</span>
-                        </Link>
+                      <Button 
+                        variant="outline" 
+                        className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        onClick={() => setActiveTab("find-game")}
+                      >
+                        <Trophy size={16} />
+                        <span>Find Wednesday Game</span>
                       </Button>
                       <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                         <Link to={`/player/${playerProfile.id}`}>
@@ -274,7 +291,7 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-2">
+              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-3">
                 <TabsTrigger value="matches" className="flex items-center gap-2">
                   <Trophy size={16} />
                   <span>Your Matches</span>
@@ -282,6 +299,10 @@ const PlayerDashboard = () => {
                 <TabsTrigger value="record-match" className="flex items-center gap-2">
                   <Calendar size={16} />
                   <span>Record Match</span>
+                </TabsTrigger>
+                <TabsTrigger value="find-game" className="flex items-center gap-2">
+                  <Activity size={16} />
+                  <span>Find Game</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -300,6 +321,33 @@ const PlayerDashboard = () => {
                       playerName={playerProfile.name}
                       onMatchRecorded={handleRefreshProfile}
                     />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="find-game">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Find Your Wednesday Game</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isWaitingForMatch ? (
+                      <MatchWaitingCard
+                        foundMatch={foundMatch}
+                        matchType="singles"
+                        matchedPlayers={matchedPlayers}
+                        selectedSport={playerProfile.sport}
+                        email={playerProfile.email}
+                        location={playerProfile.city}
+                        abilityLevel={playerProfile.rating.toFixed(1)}
+                      />
+                    ) : (
+                      <MatchmakingCard 
+                        selectedSport={playerProfile.sport} 
+                        onMatchFound={handleMatchFound}
+                        existingPlayerData={playerProfile}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

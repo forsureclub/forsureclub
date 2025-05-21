@@ -1,4 +1,6 @@
+
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Loader2, Users } from "lucide-react";
 import { Badge } from "../ui/badge";
 
@@ -10,6 +12,7 @@ interface MatchWaitingCardProps {
   email: string;
   location: string;
   abilityLevel: string;
+  onCancel?: () => void;
 }
 
 export const MatchWaitingCard = ({ 
@@ -19,7 +22,8 @@ export const MatchWaitingCard = ({
   selectedSport, 
   email, 
   location, 
-  abilityLevel 
+  abilityLevel,
+  onCancel
 }: MatchWaitingCardProps) => {
   return (
     <Card className="p-6 bg-white shadow-lg rounded-xl max-w-md w-full">
@@ -59,7 +63,7 @@ export const MatchWaitingCard = ({
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Finding Your Match</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Our AI is looking for the perfect {matchType === "singles" ? "player" : "players"} for your {selectedSport} game.
+              Our AI is looking for the perfect {matchType === "singles" ? "player" : "players"} for your {selectedSport} game on Wednesday.
             </p>
             <div className="bg-gray-50 rounded-lg p-4 text-left mb-4">
               <h3 className="font-medium text-gray-800 mb-2">Your Match Preferences:</h3>
@@ -75,9 +79,17 @@ export const MatchWaitingCard = ({
                 We'll send details to {email} once we've found a match.
               </p>
               <Badge className="bg-purple-100 text-purple-800 mt-2">Wednesday Game</Badge>
-              <p className="text-xs text-gray-500 mt-2">
-                You'll be redirected to your dashboard in a moment...
-              </p>
+              {onCancel && (
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={onCancel}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Cancel Search
+                  </Button>
+                </div>
+              )}
             </div>
           </>
         )}
