@@ -49,9 +49,24 @@ export const AdminRegistrations = () => {
       const formattedData = data.map(reg => {
         const player = reg.players || {};
         
+        // Type assertion to make TypeScript happy
+        const typedPlayer = player as {
+          name?: string;
+          sport?: string;
+          occupation?: string;
+          city?: string;
+          email?: string | null;
+          phone_number?: string | null;
+          gender?: string;
+          play_time?: string;
+          budget_range?: string;
+          club?: string;
+          rating?: number;
+        };
+        
         // Normalize email and phone values to ensure consistency
-        const email = player.email || null;
-        const phone = player.phone_number || null;
+        const email = typedPlayer.email || null;
+        const phone = typedPlayer.phone_number || null;
         
         return {
           id: reg.id,
@@ -61,17 +76,17 @@ export const AdminRegistrations = () => {
           created_at: reg.created_at,
           updated_at: reg.updated_at,
           player: {
-            name: player.name || '',
-            sport: player.sport || '',
-            occupation: player.occupation || '',
-            city: player.city || '',
+            name: typedPlayer.name || '',
+            sport: typedPlayer.sport || '',
+            occupation: typedPlayer.occupation || '',
+            city: typedPlayer.city || '',
             email: email,
             phone_number: phone,
-            gender: player.gender || '',
-            play_time: player.play_time || '',
-            budget_range: player.budget_range || '',
-            club: player.club || '',
-            rating: player.rating || 0
+            gender: typedPlayer.gender || '',
+            play_time: typedPlayer.play_time || '',
+            budget_range: typedPlayer.budget_range || '',
+            club: typedPlayer.club || '',
+            rating: typedPlayer.rating || 0
           }
         };
       });

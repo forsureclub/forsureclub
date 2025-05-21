@@ -61,7 +61,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
             onClick={onStartMatching}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 rounded-lg text-lg font-semibold shadow-lg transition-transform hover:scale-105"
           >
-            Register & Start Matching
+            Claim Your Spot
           </Button>
         </motion.div>
       </div>
