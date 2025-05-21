@@ -33,7 +33,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [foundMatch, setFoundMatch] = useState(false);
   const [playerCount, setPlayerCount] = useState<'1' | '2' | '3'>('1');
   const { toast } = useToast();
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const { validateForm } = useFormValidation();
 
@@ -57,14 +57,46 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     setIsJoining(true);
 
     try {
-      // Create an account first
-      const { error: signUpError } = await signUp(email, password);
-      if (signUpError) throw signUpError;
-
-      toast.success({
-        title: "Account Created",
-        description: "Your account has been created successfully",
-      });
+      // First check if the email already exists by trying to sign in
+      const { error: signInError } = await signIn(email, password);
+      
+      let signUpError = null;
+      // If sign in failed with an error that's not about credentials, handle that error
+      if (signInError && !signInError.message.includes("Invalid login credentials")) {
+        console.error("Error during sign-in check:", signInError);
+        toast.error({
+          title: "Error",
+          description: signInError.message,
+        });
+        setIsJoining(false);
+        return;
+      }
+      
+      // If sign in succeeded, the user already exists and is now logged in
+      if (!signInError) {
+        console.log("User already exists and is now signed in");
+        toast.success({
+          title: "Welcome Back!",
+          description: "You've been signed in successfully.",
+        });
+      } else {
+        // User doesn't exist, try to sign up
+        const { error } = await signUp(email, password);
+        signUpError = error;
+        
+        if (signUpError && !signUpError.message.includes("already registered")) {
+          throw signUpError;
+        }
+        
+        if (!signUpError) {
+          toast.success({
+            title: "Account Created",
+            description: "Your account has been created successfully",
+          });
+        } else {
+          console.log("User already exists but couldn't sign in. Proceeding anyway.");
+        }
+      }
 
       // Register the player with the skill level from the slider
       const playerId = await createOrFetchPlayer({

@@ -19,8 +19,10 @@ const Auth = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn, user, resetPassword } = useAuth();
+  const { signIn, user, resetPassword, signUp } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // If user is already logged in, redirect to dashboard
   if (user) {
@@ -49,6 +51,69 @@ const Auth = () => {
       setErrorMessage(error.message || "Failed to sign in. Please check your credentials.");
       toast({
         title: "Sign in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // First check if user already exists
+      const { error: signInError } = await signIn(email, password);
+      
+      // If sign in succeeded, user exists and is now logged in
+      if (!signInError) {
+        toast({
+          title: "Welcome back!",
+          description: "You already have an account and are now signed in.",
+        });
+        navigate("/player-dashboard");
+        return;
+      }
+      
+      // Try to sign up
+      const { error } = await signUp(email, password);
+
+      if (error) {
+        // Handle "user already exists" error gracefully
+        if (error.message?.includes("already registered")) {
+          toast({
+            title: "Account exists",
+            description: "An account with this email already exists. Please try signing in or use password reset if you forgot your password.",
+          });
+          setActiveTab("login");
+          setIsLoading(false);
+          return;
+        } else {
+          throw error;
+        }
+      }
+
+      toast({
+        title: "Sign up successful",
+        description: "You have successfully created an account and are now signed in.",
+      });
+
+      // Let them know they're signed up and redirect
+      navigate("/player-dashboard");
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      setErrorMessage(error.message || "Failed to create account. Please try again.");
+      toast({
+        title: "Sign up failed",
         description: error.message,
         variant: "destructive",
       });
@@ -99,7 +164,9 @@ const Auth = () => {
           </div>
           <CardTitle className="text-xl text-center">Welcome</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your account
+            {activeTab === "login" ? "Sign in to your account" : 
+             activeTab === "signup" ? "Create a new account" :
+             "Reset your password"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -154,6 +221,78 @@ const Auth = () => {
                   "Sign In"
                 )}
               </Button>
+              <div className="text-center mt-4">
+                <span className="text-sm text-gray-500">
+                  Don't have an account?{" "}
+                  <button 
+                    type="button"
+                    className="text-orange-500 hover:text-orange-600" 
+                    onClick={() => setActiveTab("signup")}
+                  >
+                    Sign up
+                  </button>
+                </span>
+              </div>
+            </form>
+          ) : activeTab === "signup" ? (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  placeholder="hello@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  minLength={6}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing Up...
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
+              </Button>
+              <div className="text-center mt-4">
+                <span className="text-sm text-gray-500">
+                  Already have an account?{" "}
+                  <button 
+                    type="button"
+                    className="text-orange-500 hover:text-orange-600" 
+                    onClick={() => setActiveTab("login")}
+                  >
+                    Sign in
+                  </button>
+                </span>
+              </div>
             </form>
           ) : (
             <div>

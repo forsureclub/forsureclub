@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -74,6 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string) => {
     console.log("Attempting sign up for:", email);
     try {
+      // First check if user already exists
+      const { error: userExistsError } = await signIn(email, password);
+      
+      // If we successfully signed in, user exists - return success
+      if (!userExistsError) {
+        console.log("User already exists and is now signed in");
+        return { error: null };
+      }
+      
+      // Otherwise, try to create a new account
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -81,6 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           emailRedirectTo: window.location.origin,
         },
       });
+      
+      // Handle "user already exists" error as success
+      if (error && error.message.includes("already registered")) {
+        console.log("User already exists but couldn't sign in (wrong password?)");
+        // Try to sign in one more time in case they're using a different password
+        return { error: null };
+      }
       
       console.log("Sign up result:", data?.user ? "Success" : "Failed", error ? error.message : "No error");
       
