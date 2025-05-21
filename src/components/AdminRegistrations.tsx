@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,9 +31,8 @@ export const AdminRegistrations = () => {
           status,
           created_at,
           updated_at,
-          player:players(name, sport, occupation, city, email, phone_number, gender, play_time, budget_range, club, rating)
+          players!player_id(name, sport, occupation, city, email, phone_number, gender, play_time, budget_range, club, rating)
         `)
-        .eq('player:players.sport', 'Padel')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -47,9 +47,11 @@ export const AdminRegistrations = () => {
 
       // Transform the data to match our Registration type
       const formattedData = data.map(reg => {
+        const player = reg.players || {};
+        
         // Normalize email and phone values to ensure consistency
-        const email = reg.player?.email || null;
-        const phone = reg.player?.phone_number || null;
+        const email = player.email || null;
+        const phone = player.phone_number || null;
         
         return {
           id: reg.id,
@@ -59,22 +61,23 @@ export const AdminRegistrations = () => {
           created_at: reg.created_at,
           updated_at: reg.updated_at,
           player: {
-            name: reg.player?.name || '',
-            sport: reg.player?.sport || '',
-            occupation: reg.player?.occupation || '',
-            city: reg.player?.city || '',
+            name: player.name || '',
+            sport: player.sport || '',
+            occupation: player.occupation || '',
+            city: player.city || '',
             email: email,
             phone_number: phone,
-            gender: reg.player?.gender || '',
-            play_time: reg.player?.play_time || '',
-            budget_range: reg.player?.budget_range || '',
-            club: reg.player?.club || '',
-            rating: reg.player?.rating || 0
+            gender: player.gender || '',
+            play_time: player.play_time || '',
+            budget_range: player.budget_range || '',
+            club: player.club || '',
+            rating: player.rating || 0
           }
         };
       });
 
       setRegistrations(formattedData);
+      console.log("Registration data loaded:", formattedData.length, "records");
       setLoading(false);
     } catch (err) {
       console.error("Error fetching registrations:", err);
@@ -192,17 +195,23 @@ export const AdminRegistrations = () => {
         </AlertDescription>
       </Alert>
       
-      <RegistrationTable
-        registrations={registrations}
-        onUpdateRegistration={updateRegistration}
-        groupBy={groupBy}
-        setGroupBy={setGroupBy}
-        renderPlayerName={(player, playerId) => (
-          <Link to={`/player/${playerId}`} className="text-blue-600 hover:underline">
-            {player.name}
-          </Link>
-        )}
-      />
+      {registrations.length === 0 ? (
+        <div className="p-8 text-center bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-gray-600">No player registrations found. Players will appear here once they register.</p>
+        </div>
+      ) : (
+        <RegistrationTable
+          registrations={registrations}
+          onUpdateRegistration={updateRegistration}
+          groupBy={groupBy}
+          setGroupBy={setGroupBy}
+          renderPlayerName={(player, playerId) => (
+            <Link to={`/player/${playerId}`} className="text-blue-600 hover:underline">
+              {player.name}
+            </Link>
+          )}
+        />
+      )}
     </div>
   );
 };
