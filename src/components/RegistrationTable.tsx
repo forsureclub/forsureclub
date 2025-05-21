@@ -13,6 +13,7 @@ import { StatusSelect } from "./StatusSelect";
 import { RegistrationNotes } from "./RegistrationNotes";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
+import { Shield } from "lucide-react";
 
 interface RegistrationTableProps {
   registrations: Registration[];
@@ -106,7 +107,11 @@ export const RegistrationTable = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <div className="flex items-center">
+          <Shield className="text-orange-500 mr-2" size={20} />
+          <span className="text-sm font-medium text-orange-600">Admin-only data - Contains sensitive player information</span>
+        </div>
         <div className="w-64">
           <Select
             value={groupBy}

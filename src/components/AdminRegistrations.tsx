@@ -1,21 +1,31 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Registration } from "@/types/registration";
 import { RegistrationTable } from "./RegistrationTable";
 import { Button } from "./ui/button";
-import { Download } from "lucide-react";
+import { Download, ShieldCheck } from "lucide-react";
+import { Alert, AlertDescription } from "./ui/alert";
 
 export const AdminRegistrations = () => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupBy, setGroupBy] = useState<'none' | 'location' | 'sport' | 'skill'>('none');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchRegistrations = async () => {
     try {
-      console.log("Fetching registrations...");
+      console.log("Fetching registrations as admin...");
+      
+      // First verify admin status
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      
       const { data, error } = await supabase
         .from('player_registrations')
         .select(`
@@ -160,18 +170,33 @@ export const AdminRegistrations = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-8">Loading registrations...</div>;
+    return <div className="p-8 flex justify-center">
+      <div className="animate-pulse flex flex-col items-center">
+        <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
+        <div className="h-64 w-full max-w-4xl bg-gray-200 rounded-lg"></div>
+      </div>
+    </div>;
   }
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Player Registrations</h1>
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold">Player Registrations</h1>
+          <ShieldCheck className="ml-2 text-green-600" size={20} />
+        </div>
         <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
           <Download size={16} />
           Export to CSV
         </Button>
       </div>
+      
+      <Alert className="mb-6 border-orange-200 bg-orange-50">
+        <AlertDescription className="text-orange-800">
+          This data is restricted to admin users only. It contains sensitive player information including contact details.
+        </AlertDescription>
+      </Alert>
+      
       <RegistrationTable
         registrations={registrations}
         onUpdateRegistration={updateRegistration}
