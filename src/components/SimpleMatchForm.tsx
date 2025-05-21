@@ -7,6 +7,7 @@ import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
+import { updatePlayerEloRating } from "@/services/matchmaking/eloSystem";
 
 interface SimpleMatchFormProps {
   playerId: string;
@@ -101,13 +102,17 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
     try {
       setIsSubmitting(true);
       
+      const yourScore = parseInt(yourTeamScore);
+      const opponentScore = parseInt(opponentTeamScore);
+      const isWinner = yourScore > opponentScore;
+      
       // If we have a match ID, update that match
       if (matchId) {
         // Record result for the current player
         const { error: resultError } = await supabase
           .from("match_players")
           .update({ 
-            performance_rating: parseInt(yourTeamScore) // Using performance_rating for score
+            performance_rating: yourScore // Using performance_rating for score
           })
           .eq("match_id", matchId)
           .eq("player_id", playerId);
@@ -123,11 +128,51 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         if (opponentPlayerIds.length > 0) {
           const { error: opponentError } = await supabase
             .from("match_players")
-            .update({ performance_rating: parseInt(opponentTeamScore) })
+            .update({ performance_rating: opponentScore })
             .eq("match_id", matchId)
             .in("player_id", opponentPlayerIds);
           
           if (opponentError) throw opponentError;
+          
+          // Update player ELO rating based on match result
+          try {
+            // Get current player's ELO
+            const { data: playerData } = await supabase
+              .from("players")
+              .select("elo_rating")
+              .eq("id", playerId)
+              .single();
+            
+            // Get opponent's ELO
+            const { data: opponentData } = await supabase
+              .from("players")
+              .select("elo_rating")
+              .eq("id", opponentPlayerIds[0]) // Taking first opponent for simplicity
+              .single();
+            
+            if (playerData && opponentData) {
+              const { calculateNewRatings } = await import("@/services/matchmaking/eloSystem");
+              
+              // Determine winner and loser ratings
+              const winnerRating = isWinner ? playerData.elo_rating : opponentData.elo_rating;
+              const loserRating = isWinner ? opponentData.elo_rating : playerData.elo_rating;
+              
+              // Calculate new ratings
+              const { winnerNewRating, loserNewRating } = calculateNewRatings(winnerRating, loserRating);
+              
+              // Update player ratings
+              if (isWinner) {
+                await updatePlayerEloRating(playerId, winnerNewRating);
+                await updatePlayerEloRating(opponentPlayerIds[0], loserNewRating);
+              } else {
+                await updatePlayerEloRating(playerId, loserNewRating);
+                await updatePlayerEloRating(opponentPlayerIds[0], winnerNewRating);
+              }
+            }
+          } catch (eloError) {
+            console.error("Error updating ELO ratings:", eloError);
+            // Continue with match recording even if ELO update fails
+          }
         }
         
         // Update match status to completed
@@ -162,7 +207,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
           .insert({
             match_id: match.id,
             player_id: playerId,
-            performance_rating: parseInt(yourTeamScore), // Using performance_rating for the score
+            performance_rating: yourScore, // Using performance_rating for the score
             has_confirmed: true,
             feedback: teammateName ? `Played with: ${teammateName}` : undefined
           });
@@ -171,23 +216,79 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         
         // Try to find opponents by name if provided
         if (opponentTeamNames) {
-          // Just store the opponent team name in the match details
+          // Store the opponent team name and score in the match details
           const { error: matchUpdateError } = await supabase
             .from("matches")
             .update({
               booking_details: {
-                opponent_team: opponentTeamNames
+                opponent_team: opponentTeamNames,
+                opponent_score: opponentScore
               }
             })
             .eq("id", match.id);
           
           if (matchUpdateError) throw matchUpdateError;
+          
+          // Try to find the opponent in the database by name
+          const opponentName = opponentTeamNames.split(",")[0].trim();
+          const { data: opponentData } = await supabase
+            .from("players")
+            .select("id, elo_rating")
+            .ilike("name", `%${opponentName}%`)
+            .maybeSingle();
+          
+          if (opponentData) {
+            // Add opponent to the match
+            const { error: oppError } = await supabase
+              .from("match_players")
+              .insert({
+                match_id: match.id,
+                player_id: opponentData.id,
+                performance_rating: opponentScore,
+                has_confirmed: false
+              });
+            
+            if (!oppError) {
+              // Update player ELO ratings
+              try {
+                // Get current player's ELO
+                const { data: playerData } = await supabase
+                  .from("players")
+                  .select("elo_rating")
+                  .eq("id", playerId)
+                  .single();
+                
+                if (playerData && opponentData) {
+                  const { calculateNewRatings } = await import("@/services/matchmaking/eloSystem");
+                  
+                  // Determine winner and loser ratings
+                  const winnerRating = isWinner ? playerData.elo_rating : opponentData.elo_rating;
+                  const loserRating = isWinner ? opponentData.elo_rating : playerData.elo_rating;
+                  
+                  // Calculate new ratings
+                  const { winnerNewRating, loserNewRating } = calculateNewRatings(winnerRating, loserRating);
+                  
+                  // Update player ratings
+                  if (isWinner) {
+                    await updatePlayerEloRating(playerId, winnerNewRating);
+                    await updatePlayerEloRating(opponentData.id, loserNewRating);
+                  } else {
+                    await updatePlayerEloRating(playerId, loserNewRating);
+                    await updatePlayerEloRating(opponentData.id, winnerNewRating);
+                  }
+                }
+              } catch (eloError) {
+                console.error("Error updating ELO ratings:", eloError);
+                // Continue with match recording even if ELO update fails
+              }
+            }
+          }
         }
       }
       
       toast({
         title: "Match recorded",
-        description: "Your match result has been saved"
+        description: isWinner ? "Congratulations on your win! Your rating has been updated." : "Your match result has been saved and your rating has been updated."
       });
       
       if (onMatchRecorded) {
