@@ -6,7 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SKILL_LEVELS } from "@/types/matchmaking";
 import { Slider } from "@/components/ui/slider";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useLocationSearch } from "@/hooks/useLocationSearch";
 
 interface PlayerInfoFormProps {
   playerName: string;
@@ -69,6 +74,17 @@ export const PlayerInfoForm = ({
   skillLevel = 1,
   setSkillLevel = () => {}
 }: PlayerInfoFormProps) => {
+  const [open, setOpen] = useState(false);
+  const { query, setQuery, suggestions, isLoading } = useLocationSearch();
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Initialize the search query with the current location value if it exists
+  useEffect(() => {
+    if (location) {
+      setQuery(location);
+    }
+  }, []);
+
   const getCurrentLevelDescription = () => {
     // Find the exact level match or closest level
     const exactLevel = SKILL_LEVELS.find(l => l.level === skillLevel);
@@ -124,13 +140,61 @@ export const PlayerInfoForm = ({
 
       <div>
         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
-        <Input
-          id="location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="Enter your city"
-          className="mt-1"
-        />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <div className="flex items-center mt-1 space-x-2">
+              <MapPin className="h-4 w-4 text-gray-500" />
+              <Input
+                ref={inputRef}
+                id="location"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for a city"
+                className="flex-1"
+                onClick={() => setOpen(true)}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="p-0 w-[300px]" align="start">
+            <Command>
+              <CommandInput 
+                placeholder="Search cities..." 
+                value={query}
+                onValueChange={setQuery}
+              />
+              <CommandList>
+                <CommandEmpty>
+                  {isLoading ? 'Searching...' : 'No cities found.'}
+                </CommandEmpty>
+                <CommandGroup>
+                  {suggestions.map((location) => (
+                    <CommandItem
+                      key={location.id}
+                      onSelect={() => {
+                        setLocation(location.name);
+                        setQuery(location.name);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          location.name === query ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <span>{location.name}</span>
+                      {location.country && (
+                        <span className="text-xs text-gray-500 ml-2">
+                          {location.country}
+                        </span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
       
       <div>
