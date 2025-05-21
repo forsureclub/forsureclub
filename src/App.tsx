@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
@@ -12,6 +13,7 @@ import { Toaster } from "./components/ui/toaster";
 import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./hooks/useAuth";
 import { Navigation } from "./components/Navigation";
+import { TournamentResults } from "./pages/TournamentResults";
 import "./App.css";
 
 // Protected route component
