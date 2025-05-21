@@ -1,16 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Hero } from "../components/Hero";
-import { SportSelector } from "../components/SportSelector";
 import { MatchmakingCard } from "../components/MatchmakingCard";
 import { Button } from "@/components/ui/button";
 import { PlayerLeaderboard } from "@/components/PlayerLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
   const [isMatching, setIsMatching] = useState(false);
-  const [selectedSport, setSelectedSport] = useState<string>("Padel");
   const { user } = useAuth();
 
   const handleBack = () => {
