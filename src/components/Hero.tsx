@@ -1,7 +1,7 @@
 
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
-import { Users, Link } from "lucide-react";
+import { Users, TrendingUp } from "lucide-react";
 
 export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
   return (
@@ -35,11 +35,11 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
         >
           <div className="flex items-center gap-3 text-xl text-gray-600">
             <Users className="h-6 w-6 text-orange-500" />
-            <p>Network with Professionals</p>
+            <p>Connect through competition</p>
           </div>
           <div className="flex items-center gap-3 text-xl text-gray-600">
-            <Link className="h-6 w-6 text-orange-500" />
-            <p>Match with Similar Abilities</p>
+            <TrendingUp className="h-6 w-6 text-orange-500" />
+            <p>Paired by performance</p>
           </div>
         </motion.div>
         
