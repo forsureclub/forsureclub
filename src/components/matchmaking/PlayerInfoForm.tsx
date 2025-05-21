@@ -85,6 +85,11 @@ export const PlayerInfoForm = ({
     }
   }, []);
 
+  // Find the current skill level description
+  const currentSkillLevel = SKILL_LEVELS.find(level => 
+    level.level === skillLevel
+  ) || SKILL_LEVELS.find(level => level.level === 1);
+
   return (
     <>
       <div>
@@ -174,6 +179,31 @@ export const PlayerInfoForm = ({
             </Command>
           </PopoverContent>
         </Popover>
+      </div>
+      
+      {/* Skill Level Slider */}
+      <div>
+        <Label className="text-sm font-medium text-gray-700">Skill Level</Label>
+        <div className="mt-1">
+          <Slider
+            defaultValue={[skillLevel]}
+            max={7}
+            step={0.5}
+            onValueChange={([value]) => setSkillLevel(value)}
+            className="my-4"
+          />
+          <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium text-orange-800">Level {currentSkillLevel?.range}</span>
+              <span className="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full">
+                {currentSkillLevel?.category || 'Intermediate'}
+              </span>
+            </div>
+            <p className="text-xs text-gray-600">
+              {currentSkillLevel?.description || 'Select your skill level using the slider above.'}
+            </p>
+          </div>
+        </div>
       </div>
       
       <div>

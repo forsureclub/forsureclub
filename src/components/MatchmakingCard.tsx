@@ -78,7 +78,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         spendingLevel,
         email,
         phoneNumber,
-        initialRating: skillLevel
+        initialRating: skillLevel // Use the skill level from the slider
       });
 
       // For regular singles match - now with additional playerCount parameter
