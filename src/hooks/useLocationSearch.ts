@@ -9,6 +9,9 @@ interface LocationSuggestion {
   country?: string;
 }
 
+// Mapbox access token - this is a public token so it's okay to include in the code
+const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoibG92YWJsZS1nZW9jb2RpbmciLCJhIjoiY2xza3hvbWhkMHd5ZDJqcDhieXEwcjAzeSJ9.lZksHq7A6fwJQBwpxZ5k5w';
+
 export function useLocationSearch() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
@@ -25,20 +28,7 @@ export function useLocationSearch() {
     };
   };
 
-  // Mock location data - in a real app, you would fetch this from a geocoding API
-  const mockLocations = [
-    { id: '1', name: 'London', city: 'London', country: 'United Kingdom' },
-    { id: '2', name: 'Liverpool', city: 'Liverpool', country: 'United Kingdom' },
-    { id: '3', name: 'Manchester', city: 'Manchester', country: 'United Kingdom' },
-    { id: '4', name: 'Birmingham', city: 'Birmingham', country: 'United Kingdom' },
-    { id: '5', name: 'Leeds', city: 'Leeds', country: 'United Kingdom' },
-    { id: '6', name: 'Glasgow', city: 'Glasgow', country: 'United Kingdom' },
-    { id: '7', name: 'Edinburgh', city: 'Edinburgh', country: 'United Kingdom' },
-    { id: '8', name: 'Bristol', city: 'Bristol', country: 'United Kingdom' },
-    { id: '9', name: 'Cardiff', city: 'Cardiff', country: 'United Kingdom' },
-    { id: '10', name: 'Newcastle', city: 'Newcastle', country: 'United Kingdom' },
-  ];
-
+  // Search locations using Mapbox Geocoding API with UK focus
   const searchLocations = useCallback(
     debounce(async (searchQuery: string) => {
       if (!searchQuery || searchQuery.length < 2) {
@@ -50,12 +40,40 @@ export function useLocationSearch() {
       setIsLoading(true);
 
       try {
-        // In a real app, this would be an API call to a geocoding service
-        // For now, we'll use our mock data and filter it
-        const results = mockLocations.filter(location => 
-          location.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setSuggestions(results);
+        // Mapbox geocoding API endpoint with focus on the UK
+        const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json`;
+        const params = new URLSearchParams({
+          access_token: MAPBOX_ACCESS_TOKEN,
+          country: 'gb', // Focus on Great Britain
+          types: 'place,locality,neighborhood',
+          autocomplete: 'true',
+          language: 'en',
+          limit: '10'
+        });
+
+        const response = await fetch(`${endpoint}?${params.toString()}`);
+        
+        if (!response.ok) {
+          throw new Error(`Geocoding API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Transform Mapbox response to our LocationSuggestion format
+        const locations: LocationSuggestion[] = data.features.map((feature: any) => {
+          // Extract city name and country
+          const placeName = feature.place_name;
+          const parts = placeName.split(', ');
+          
+          return {
+            id: feature.id,
+            name: feature.text,
+            city: feature.text,
+            country: parts.length > 1 ? parts[parts.length - 1] : 'United Kingdom'
+          };
+        });
+
+        setSuggestions(locations);
       } catch (error) {
         console.error('Error searching locations:', error);
         toast({

@@ -149,22 +149,27 @@ export const PlayerInfoForm = ({
                 id="location"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for a city"
+                placeholder="Search for a city or town in the UK"
                 className="flex-1"
                 onClick={() => setOpen(true)}
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent className="p-0 w-[300px]" align="start">
+          <PopoverContent className="p-0 w-[300px] max-h-[400px] overflow-hidden" align="start">
             <Command>
               <CommandInput 
-                placeholder="Search cities..." 
+                placeholder="Search locations..." 
                 value={query}
                 onValueChange={setQuery}
               />
-              <CommandList>
+              <CommandList className="max-h-[300px] overflow-auto">
                 <CommandEmpty>
-                  {isLoading ? 'Searching...' : 'No cities found.'}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <div className="animate-spin h-5 w-5 border-2 border-gray-300 rounded-full border-t-gray-600" />
+                      <span className="ml-2">Searching...</span>
+                    </div>
+                  ) : 'No locations found. Try a different search term.'}
                 </CommandEmpty>
                 <CommandGroup>
                   {suggestions.map((location) => (
@@ -175,14 +180,17 @@ export const PlayerInfoForm = ({
                         setQuery(location.name);
                         setOpen(false);
                       }}
+                      className="flex items-center justify-between"
                     >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          location.name === query ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <span>{location.name}</span>
+                      <div className="flex items-center">
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            location.name === query ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <span className="font-medium">{location.name}</span>
+                      </div>
                       {location.country && (
                         <span className="text-xs text-gray-500 ml-2">
                           {location.country}
