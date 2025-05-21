@@ -1,89 +1,139 @@
-
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SKILL_LEVELS } from "@/types/matchmaking";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { useState, useRef, useEffect } from "react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, MapPin } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 
 interface PlayerInfoFormProps {
   playerName: string;
-  setPlayerName: (value: string) => void;
+  setPlayerName: (name: string) => void;
   occupation: string;
-  setOccupation: (value: string) => void;
+  setOccupation: (occupation: string) => void;
   location: string;
-  setLocation: (value: string) => void;
+  setLocation: (location: string) => void;
   abilityLevel: string;
-  setAbilityLevel: (value: string) => void;
+  setAbilityLevel: (level: string) => void;
   abilityOptions: string[];
   abilityLabel: string;
   spendingLevel: '1' | '2' | '3';
-  setSpendingLevel: (value: '1' | '2' | '3') => void;
+  setSpendingLevel: (level: '1' | '2' | '3') => void;
   isClubMember: boolean;
-  setIsClubMember: (value: boolean) => void;
+  setIsClubMember: (isMember: boolean) => void;
   clubName: string;
-  setClubName: (value: string) => void;
+  setClubName: (clubName: string) => void;
   gender: 'male' | 'female' | 'other';
-  setGender: (value: 'male' | 'female' | 'other') => void;
+  setGender: (gender: 'male' | 'female' | 'other') => void;
   email: string;
-  setEmail: (value: string) => void;
+  setEmail: (email: string) => void;
   phoneNumber: string;
-  setPhoneNumber: (value: string) => void;
+  setPhoneNumber: (phoneNumber: string) => void;
   password: string;
-  setPassword: (value: string) => void;
+  setPassword: (password: string) => void;
   confirmPassword: string;
-  setConfirmPassword: (value: string) => void;
-  skillLevel?: number;
-  setSkillLevel?: (value: number) => void;
+  setConfirmPassword: (confirmPassword: string) => void;
+  skillLevel: number;
+  setSkillLevel: (skillLevel: number) => void;
 }
 
-export const PlayerInfoForm = ({
-  playerName,
-  setPlayerName,
-  occupation,
-  setOccupation,
-  location,
-  setLocation,
-  abilityLevel,
-  setAbilityLevel,
+const SKILL_LEVELS = [
+  {
+    level: 1,
+    range: '1-2',
+    category: 'Beginner',
+    description: 'New to the sport, learning the basics.'
+  },
+  {
+    level: 2,
+    range: '2-3',
+    category: 'Novice',
+    description: 'Understands basic rules and can perform simple techniques.'
+  },
+  {
+    level: 3,
+    range: '3-4',
+    category: 'Intermediate',
+    description: 'Has a good understanding of the game and can execute a range of shots/techniques with consistency.'
+  },
+  {
+    level: 4,
+    range: '4-5',
+    category: 'Advanced',
+    description: 'Highly skilled player with excellent technique, tactical awareness, and consistency.'
+  },
+  {
+    level: 5,
+    range: '5-6',
+    category: 'Expert',
+    description: 'Mastery of the sport, with the ability to adapt to different situations and opponents.'
+  },
+  {
+    level: 6,
+    range: '6-7',
+    category: 'Professional',
+    description: 'Plays at a professional level, competing in tournaments and leagues.'
+  },
+  {
+    level: 7,
+    range: '7+',
+    category: 'World-Class',
+    description: 'One of the best players in the world, with exceptional skill, experience, and achievements.'
+  }
+];
+
+export const PlayerInfoForm = ({ 
+  playerName, setPlayerName,
+  occupation, setOccupation,
+  location, setLocation,
+  abilityLevel, setAbilityLevel,
   abilityOptions,
   abilityLabel,
-  spendingLevel,
-  setSpendingLevel,
-  isClubMember,
-  setIsClubMember,
-  clubName,
-  setClubName,
-  gender,
-  setGender,
-  email,
-  setEmail,
-  phoneNumber,
-  setPhoneNumber,
-  password,
-  setPassword,
-  confirmPassword,
-  setConfirmPassword,
-  skillLevel = 1,
-  setSkillLevel = () => {}
+  spendingLevel, setSpendingLevel,
+  isClubMember, setIsClubMember,
+  clubName, setClubName,
+  gender, setGender,
+  email, setEmail,
+  phoneNumber, setPhoneNumber,
+  password, setPassword,
+  confirmPassword, setConfirmPassword,
+  skillLevel, setSkillLevel
 }: PlayerInfoFormProps) => {
   const [open, setOpen] = useState(false);
-  const { query, setQuery, suggestions, isLoading } = useLocationSearch();
-  const inputRef = useRef<HTMLInputElement>(null);
-  
-  // Initialize the search query with the current location value if it exists
+  const [query, setQuery] = useState('');
+  const { locationSuggestions, fetchLocationSuggestions } = useLocationSearch();
+
   useEffect(() => {
-    if (location) {
+    if (query.length > 2) {
+      fetchLocationSuggestions(query);
+    }
+
+    // If a location is already set, use it as the initial query
+    if (location && !query) {
       setQuery(location);
     }
-  }, []);
+  }, [query, fetchLocationSuggestions]);
 
   // Find the current skill level description
   const currentSkillLevel = SKILL_LEVELS.find(level => 
@@ -96,20 +146,20 @@ export const PlayerInfoForm = ({
         <Label htmlFor="name" className="text-sm font-medium text-gray-700">Your Name</Label>
         <Input
           id="name"
+          placeholder="Enter your name"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
-          placeholder="Enter your name"
           className="mt-1"
         />
       </div>
-      
+
       <div>
-        <Label htmlFor="industry" className="text-sm font-medium text-gray-700">Industry</Label>
+        <Label htmlFor="occupation" className="text-sm font-medium text-gray-700">Occupation</Label>
         <Input
-          id="industry"
+          id="occupation"
+          placeholder="Enter your occupation"
           value={occupation}
           onChange={(e) => setOccupation(e.target.value)}
-          placeholder="Enter your industry"
           className="mt-1"
         />
       </div>
@@ -118,64 +168,44 @@ export const PlayerInfoForm = ({
         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <div className="flex items-center mt-1 space-x-2">
-              <MapPin className="h-4 w-4 text-gray-500" />
-              <Input
-                ref={inputRef}
-                id="location"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for a city or town in the UK"
-                className="flex-1"
-                onClick={() => setOpen(true)}
-              />
-            </div>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between mt-1"
+            >
+              {location || "Select location..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
           </PopoverTrigger>
-          <PopoverContent className="p-0 w-[300px] max-h-[400px] overflow-hidden" align="start">
+          <PopoverContent className="w-[300px] p-0">
             <Command>
               <CommandInput 
-                placeholder="Search locations..." 
+                placeholder="Search location..." 
                 value={query}
                 onValueChange={setQuery}
               />
-              <CommandList className="max-h-[300px] overflow-auto">
-                <CommandEmpty>
-                  {isLoading ? (
-                    <div className="flex items-center justify-center py-6">
-                      <div className="animate-spin h-5 w-5 border-2 border-gray-300 rounded-full border-t-gray-600" />
-                      <span className="ml-2">Searching...</span>
-                    </div>
-                  ) : 'No locations found. Try a different search term.'}
-                </CommandEmpty>
-                <CommandGroup>
-                  {suggestions.map((location) => (
-                    <CommandItem
-                      key={location.id}
-                      onSelect={() => {
-                        setLocation(location.name);
-                        setQuery(location.name);
-                        setOpen(false);
-                      }}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center">
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            location.name === query ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <span className="font-medium">{location.name}</span>
-                      </div>
-                      {location.country && (
-                        <span className="text-xs text-gray-500 ml-2">
-                          {location.country}
-                        </span>
+              <CommandEmpty>No location found.</CommandEmpty>
+              <CommandGroup>
+                {locationSuggestions.map((suggestion) => (
+                  <CommandItem
+                    key={suggestion}
+                    onSelect={() => {
+                      setLocation(suggestion);
+                      setQuery(suggestion);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        location === suggestion ? "opacity-100" : "opacity-0"
                       )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
+                    />
+                    {suggestion}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
             </Command>
           </PopoverContent>
         </Popover>
@@ -208,122 +238,95 @@ export const PlayerInfoForm = ({
       
       <div>
         <Label htmlFor="spending" className="text-sm font-medium text-gray-700">Willing to Pay</Label>
-        <Select 
-          value={spendingLevel} 
-          onValueChange={(value) => setSpendingLevel(value as '1' | '2' | '3')}
-        >
-          <SelectTrigger id="spending" className="w-full">
-            <SelectValue placeholder="Select your budget" />
+        <Select value={spendingLevel} onValueChange={(value) => setSpendingLevel(value as '1' | '2' | '3')}>
+          <SelectTrigger id="spending" className="mt-1">
+            <SelectValue placeholder="Select your spending level" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">💰</SelectItem>
-            <SelectItem value="2">💰💰</SelectItem>
-            <SelectItem value="3">💰💰💰</SelectItem>
+            <SelectItem value="1">$ - Basic court costs only</SelectItem>
+            <SelectItem value="2">$$ - Premium facilities</SelectItem>
+            <SelectItem value="3">$$$ - High-end clubs</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      
-      <div className="flex flex-col gap-2">
+
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-700">Club Membership</Label>
         <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="club-member" 
-            checked={isClubMember}
-            onCheckedChange={(checked) => setIsClubMember(checked as boolean)}
-          />
-          <Label htmlFor="club-member" className="text-sm font-medium text-gray-700">
-            I am a member of a club
-          </Label>
+          <Switch checked={isClubMember} onCheckedChange={setIsClubMember} id="club-member" />
+          <Label htmlFor="club-member">I'm a member of a club</Label>
         </div>
-        
+
         {isClubMember && (
-          <div className="mt-2">
-            <Input
-              id="club-name"
-              value={clubName}
-              onChange={(e) => setClubName(e.target.value)}
-              placeholder="Enter your club name"
-              className="mt-1"
-            />
-          </div>
+          <Input
+            placeholder="Club name"
+            value={clubName}
+            onChange={(e) => setClubName(e.target.value)}
+            className="mt-2"
+          />
         )}
       </div>
-      
+
       <div>
-        <Label className="text-sm font-medium text-gray-700">Gender</Label>
-        <RadioGroup
-          value={gender}
-          onValueChange={(value) => setGender(value as 'male' | 'female' | 'other')}
-          className="mt-2 flex flex-col space-y-1"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="male" id="male" />
-            <Label htmlFor="male" className="cursor-pointer">Male</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="female" id="female" />
-            <Label htmlFor="female" className="cursor-pointer">Female</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="other" id="other" />
-            <Label htmlFor="other" className="cursor-pointer">Other</Label>
-          </div>
-        </RadioGroup>
+        <Label htmlFor="gender" className="text-sm font-medium text-gray-700">Gender</Label>
+        <Select value={gender} onValueChange={(value) => setGender(value as 'male' | 'female' | 'other')}>
+          <SelectTrigger id="gender" className="mt-1">
+            <SelectValue placeholder="Select your gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="male">Male</SelectItem>
+            <SelectItem value="female">Female</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      
+
       <div>
-        <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address *</Label>
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
         <Input
           id="email"
           type="email"
+          placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
           className="mt-1"
-          required
         />
       </div>
-      
+
       <div>
         <Label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone Number</Label>
         <Input
           id="phone"
           type="tel"
+          placeholder="Enter your phone number"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="Enter your phone number"
           className="mt-1"
         />
       </div>
-      
+
       <div>
-        <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password *</Label>
+        <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
         <Input
           id="password"
           type="password"
+          placeholder="Create a password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create a password"
           className="mt-1"
-          required
-          minLength={6}
         />
       </div>
-      
+
       <div>
-        <Label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">Confirm Password *</Label>
+        <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">Confirm Password</Label>
         <Input
-          id="confirm-password"
+          id="confirmPassword"
           type="password"
+          placeholder="Confirm your password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm your password"
           className="mt-1"
-          required
-          minLength={6}
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Password must be at least 6 characters long
-        </p>
       </div>
     </>
   );

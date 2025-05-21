@@ -1,23 +1,24 @@
+
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlayerPerformance } from "@/components/PlayerPerformance";
-import { SkillLevelUpdate } from "@/components/SkillLevelUpdate";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { MatchResults } from "@/components/MatchResults";
+import { SimpleMatchForm } from "@/components/SimpleMatchForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, Calendar, Award, Activity, MessageSquare, Video } from "lucide-react";
+import { User, Calendar, Activity, MessageSquare, Video, Trophy } from "lucide-react";
+import { PhotoUpload } from "@/components/PhotoUpload";
+import { PlayerMatches } from "@/components/PlayerMatches";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("performance");
+  const [activeTab, setActiveTab] = useState("matches");
   const { toast } = useToast();
   const { user } = useAuth();
   const location = useLocation();
@@ -26,7 +27,7 @@ const PlayerDashboard = () => {
     // Check for tab query parameter
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
-    if (tabParam && ["performance", "record-match", "skill"].includes(tabParam)) {
+    if (tabParam && ["matches", "record-match"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [location]);
@@ -152,6 +153,12 @@ const PlayerDashboard = () => {
     }
   };
 
+  const handlePhotoUpdated = (url: string) => {
+    if (playerProfile) {
+      setPlayerProfile({...playerProfile, photo_url: url});
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -187,50 +194,65 @@ const PlayerDashboard = () => {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
           <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
-            <CardHeader className="flex flex-row items-center justify-between bg-gray-50 dark:bg-gray-900">
-              <CardTitle className="flex items-center gap-2">
-                <User size={20} className="text-orange-500" />
-                Profile
-              </CardTitle>
-              {playerProfile?.sport && (
-                <div className="bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 p-2 rounded-full">
-                  <span className="font-medium">{playerProfile.sport}</span>
-                </div>
-              )}
-            </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</p>
-                  <p className="font-medium">{user?.email}</p>
-                </div>
-                
                 {playerProfile ? (
                   <>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Name</p>
-                      <p className="font-medium">{playerProfile.name}</p>
+                    <PhotoUpload 
+                      playerId={playerProfile.id}
+                      playerName={playerProfile.name}
+                      existingUrl={playerProfile.photo_url}
+                      onPhotoUpdated={handlePhotoUpdated}
+                    />
+                    
+                    <div className="text-center">
+                      <h2 className="text-xl font-bold mt-2">{playerProfile.name}</h2>
+                      <p className="text-sm text-gray-500">{playerProfile.city}</p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sport</p>
-                      <p className="font-medium">{playerProfile.sport}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Current Rating</p>
-                      <div className="flex items-center">
-                        <div className="text-lg font-semibold">
-                          {playerProfile.rating}/5
-                        </div>
-                        <div className="ml-2">
-                          {[...Array(5)].map((_, i) => (
-                            <span key={i} className={`text-lg ${i < Math.round(playerProfile.rating) ? 'text-orange-500' : 'text-gray-300'}`}>★</span>
-                          ))}
+
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Sport</span>
+                        <span className="font-medium">{playerProfile.sport}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Rating</span>
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">{playerProfile.rating.toFixed(1)}/5</span>
+                          <div>
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i} className={`text-sm ${i < Math.round(playerProfile.rating) ? 'text-orange-500' : 'text-gray-300'}`}>★</span>
+                            ))}
+                          </div>
                         </div>
                       </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Email</span>
+                        <span className="font-medium">{playerProfile.email}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Location</p>
-                      <p className="font-medium">{playerProfile.city}</p>
+
+                    <div className="pt-4 space-y-2">
+                      <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
+                        <Link to="/coaching">
+                          <Video size={16} />
+                          <span>AI Coaching</span>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
+                        <Link to="/chat">
+                          <MessageSquare size={16} />
+                          <span>Find Games with AI</span>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
+                        <Link to={`/player/${playerProfile.id}`}>
+                          <User size={16} />
+                          <span>View Public Profile</span>
+                        </Link>
+                      </Button>
                     </div>
                   </>
                 ) : (
@@ -244,27 +266,6 @@ const PlayerDashboard = () => {
                     </p>
                   </div>
                 )}
-
-                <div className="pt-4 space-y-2">
-                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                    <Link to="/coaching">
-                      <Video size={16} />
-                      <span>AI Coaching</span>
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                    <Link to="/chat">
-                      <MessageSquare size={16} />
-                      <span>Find Games with AI</span>
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                    <Link to="/">
-                      <User size={16} />
-                      <span>Browse Players</span>
-                    </Link>
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -273,45 +274,31 @@ const PlayerDashboard = () => {
         <div className="md:col-span-2">
           {playerProfile ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-3">
-                <TabsTrigger value="performance" className="flex items-center gap-2">
-                  <Activity size={16} />
-                  <span className="hidden sm:inline">Performance</span>
+              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-2">
+                <TabsTrigger value="matches" className="flex items-center gap-2">
+                  <Trophy size={16} />
+                  <span>Your Matches</span>
                 </TabsTrigger>
                 <TabsTrigger value="record-match" className="flex items-center gap-2">
                   <Calendar size={16} />
-                  <span className="hidden sm:inline">Record Match</span>
-                </TabsTrigger>
-                <TabsTrigger value="skill" className="flex items-center gap-2">
-                  <Award size={16} />
-                  <span className="hidden sm:inline">Update Skill</span>
+                  <span>Record Match</span>
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="performance" className="space-y-4">
-                <PlayerPerformance playerId={playerProfile.id} />
+              <TabsContent value="matches" className="space-y-4">
+                <PlayerMatches />
               </TabsContent>
               
               <TabsContent value="record-match">
                 <Card className="border-0 shadow-lg">
-                  <CardContent className="pt-6">
-                    <MatchResults 
+                  <CardHeader>
+                    <CardTitle>Record Match Result</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SimpleMatchForm 
                       playerId={playerProfile.id}
                       playerName={playerProfile.name}
-                      onResultSubmitted={handleRefreshProfile}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="skill">
-                <Card className="border-0 shadow-lg">
-                  <CardContent className="pt-6">
-                    <SkillLevelUpdate 
-                      playerId={playerProfile.id}
-                      playerName={playerProfile.name}
-                      sport={playerProfile.sport}
-                      currentRating={playerProfile.rating}
+                      onMatchRecorded={handleRefreshProfile}
                     />
                   </CardContent>
                 </Card>
