@@ -27,10 +27,19 @@ export async function createMiniLeague(
     // Create the schedule using the round robin algorithm
     const schedule = generateRoundRobinSchedule(playerIds);
 
-    // Calculate match dates based on start date and weeks between matches
+    // Calculate match dates based on startDate - always on Wednesdays
     const matchDates = schedule.map((round, index) => {
+      // Start with the provided start date
       const date = new Date(startDate);
+      
+      // Add weeks between matches
       date.setDate(date.getDate() + (index * 7 * weeksBetweenMatches));
+      
+      // Ensure it's a Wednesday (day 3)
+      const dayOfWeek = date.getDay();
+      const daysToAdd = (3 - dayOfWeek + 7) % 7; // Adjust to Wednesday
+      date.setDate(date.getDate() + daysToAdd);
+      
       return date;
     });
 

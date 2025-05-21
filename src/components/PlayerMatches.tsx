@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -104,7 +103,8 @@ export const PlayerMatches = () => {
             userConfirmed,
             userRatedMatch,
             allConfirmed,
-            isPastMatch: new Date(match.played_at) < new Date()
+            isPastMatch: new Date(match.played_at) < new Date(),
+            isWednesday: new Date(match.played_at).getDay() === 3 // 3 is Wednesday
           };
         });
         
@@ -255,9 +255,10 @@ export const PlayerMatches = () => {
         <Card key={match.id} className="p-6 shadow-md">
           <div className="flex flex-col md:flex-row justify-between">
             <div className="space-y-4">
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <h3 className="text-xl font-semibold">{match.sport} Match</h3>
                 {getStatusBadge(match.status, match.userConfirmed, match.allConfirmed, match.isPastMatch, match.userRatedMatch)}
+                <Badge className="bg-purple-100 text-purple-800">Wednesday Game</Badge>
               </div>
               
               <div className="flex flex-col space-y-2">

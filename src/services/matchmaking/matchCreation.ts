@@ -13,10 +13,18 @@ export async function createMatch(
   preferredDate?: string
 ) {
   try {
-    // Format match date - use preferred date if provided, otherwise default to tomorrow
-    const matchDate = preferredDate 
-      ? new Date(preferredDate) 
-      : new Date(new Date().setDate(new Date().getDate() + 1));
+    // Format match date - if provided use that, otherwise default to next Wednesday
+    let matchDate;
+    
+    if (preferredDate) {
+      matchDate = new Date(preferredDate);
+    } else {
+      // Find the next Wednesday
+      matchDate = new Date();
+      const currentDay = matchDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const daysUntilWednesday = (3 - currentDay + 7) % 7; // 3 is Wednesday
+      matchDate.setDate(matchDate.getDate() + daysUntilWednesday);
+    }
     
     // Create a match record
     const { data: match, error: matchError } = await supabase
@@ -55,7 +63,7 @@ export async function createMatch(
     // Send match notification emails to all players
     // This would typically call an edge function to send emails
     
-    console.log(`Match created: ${match.id} for ${sport} in ${location} on ${matchDate.toISOString()}`);
+    console.log(`Match created: ${match.id} for ${sport} in ${location} on ${matchDate.toISOString()} (next Wednesday)`);
     return match;
   } catch (error) {
     console.error("Error creating match:", error);
@@ -73,13 +81,19 @@ export async function createDoublesMatch(
   location: string
 ): Promise<void> {
   try {
+    // Find the next Wednesday
+    const matchDate = new Date();
+    const currentDay = matchDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysUntilWednesday = (3 - currentDay + 7) % 7; // 3 is Wednesday
+    matchDate.setDate(matchDate.getDate() + daysUntilWednesday);
+
     // Create a new doubles match
     const { data: match, error: matchError } = await supabase
       .from("matches")
       .insert({
         sport,
         location,
-        played_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week from now
+        played_at: matchDate.toISOString(),
         status: "scheduled",
         booking_details: { format: "doubles", teams: "auto_balanced" }
       })
@@ -116,7 +130,7 @@ export async function createDoublesMatch(
     const playerIds = [initiatorId, ...matchedPlayers.map(p => p.id)];
     await sendMatchNotifications(playerIds, match.id, sport, location, match.played_at);
     
-    console.log(`Doubles match created successfully with ID: ${match.id}`);
+    console.log(`Doubles match created successfully with ID: ${match.id} for next Wednesday`);
   } catch (error) {
     console.error("Error creating doubles match:", error);
     throw error;
