@@ -17,9 +17,29 @@ interface LeagueStandingsProps {
   leagueId: string;
 }
 
+interface PlayerStanding {
+  position: number;
+  id: string;
+  name: string;
+  rating: number;
+  played: number;
+  won: number;
+  lost: number;
+  points: number;
+}
+
+interface League {
+  name: string;
+  sport: string;
+  location: string;
+  start_date: string;
+  status: string;
+  player_count: number;
+}
+
 export const LeagueStandings = ({ leagueId }: LeagueStandingsProps) => {
-  const [league, setLeague] = useState<any>(null);
-  const [players, setPlayers] = useState<any[]>([]);
+  const [league, setLeague] = useState<League | null>(null);
+  const [players, setPlayers] = useState<PlayerStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -57,21 +77,23 @@ export const LeagueStandings = ({ leagueId }: LeagueStandingsProps) => {
         
         if (playersError) throw playersError;
         
-        setLeague(leagueData);
+        setLeague(leagueData as League);
         
         // Process player data
-        const processedPlayers = leaguePlayers.map((player, index) => ({
-          position: index + 1,
-          id: player.player_id,
-          name: player.players?.name || "Unknown Player",
-          rating: player.players?.rating || 0,
-          played: player.matches_played,
-          won: player.matches_won,
-          lost: player.matches_lost,
-          points: player.points
-        }));
-        
-        setPlayers(processedPlayers);
+        if (leaguePlayers) {
+          const processedPlayers = leaguePlayers.map((player: any, index: number) => ({
+            position: index + 1,
+            id: player.player_id,
+            name: player.players?.name || "Unknown Player",
+            rating: player.players?.rating || 0,
+            played: player.matches_played,
+            won: player.matches_won,
+            lost: player.matches_lost,
+            points: player.points
+          }));
+          
+          setPlayers(processedPlayers);
+        }
       } catch (error) {
         console.error("Error fetching league data:", error);
         toast({

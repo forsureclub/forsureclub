@@ -79,7 +79,7 @@ export async function createMiniLeague(
         
         // Only create the match if there are two players (handles odd number of players with byes)
         if (match.length === 2) {
-          await supabase
+          const { data: matchData, error: matchError } = await supabase
             .from("matches")
             .insert({
               sport,
@@ -90,21 +90,22 @@ export async function createMiniLeague(
               round_number: roundIndex + 1
             })
             .select()
-            .single()
-            .then(({ data: matchData, error: matchError }) => {
-              if (matchError) throw matchError;
-              
-              // Add players to the match
-              const playerMatchEntries = match.map(playerId => ({
-                match_id: matchData.id,
-                player_id: playerId,
-                has_confirmed: false
-              }));
-              
-              return supabase
-                .from("match_players")
-                .insert(playerMatchEntries);
-            });
+            .single();
+          
+          if (matchError) throw matchError;
+          
+          // Add players to the match
+          const playerMatchEntries = match.map(playerId => ({
+            match_id: matchData.id,
+            player_id: playerId,
+            has_confirmed: false
+          }));
+          
+          const { error: matchPlayerError } = await supabase
+            .from("match_players")
+            .insert(playerMatchEntries);
+          
+          if (matchPlayerError) throw matchPlayerError;
         }
       }
     }
@@ -146,14 +147,7 @@ export async function getPlayerMiniLeagues(playerId: string) {
         start_date, 
         status,
         player_count,
-        weeks_between_matches,
-        league_players (
-          player_id,
-          matches_played,
-          matches_won,
-          matches_lost,
-          points
-        )
+        weeks_between_matches
       `)
       .in("id", leagueIds);
 
@@ -240,17 +234,23 @@ export async function updateLeagueStandings(matchId: string, leagueId: string) {
     for (const player of players) {
       const isWinner = player.player_id === winnerId;
       
-      // Update league_players record
-      await supabase
+      // Update league_players record with incremented values
+      const { error: updateError } = await supabase
         .from("league_players")
         .update({
-          matches_played: supabase.rpc("increment", { x: 1 }),
-          matches_won: isWinner ? supabase.rpc("increment", { x: 1 }) : undefined,
-          matches_lost: !isWinner ? supabase.rpc("increment", { x: 1 }) : undefined,
-          points: isWinner ? supabase.rpc("increment", { x: 3 }) : undefined
+          matches_played: isWinner || !isWinner ? 1 : 0, // Increment by 1 for both players
+          matches_won: isWinner ? 1 : 0, // Increment by 1 for winner only
+          matches_lost: !isWinner ? 1 : 0, // Increment by 1 for loser only
+          points: isWinner ? 3 : 0 // Add 3 points for winner only
         })
         .eq("league_id", leagueId)
-        .eq("player_id", player.player_id);
+        .eq("player_id", player.player_id)
+        .select();
+
+      if (updateError) {
+        console.error("Error updating league player stats:", updateError);
+        throw updateError;
+      }
     }
   } catch (error) {
     console.error("Error updating league standings:", error);

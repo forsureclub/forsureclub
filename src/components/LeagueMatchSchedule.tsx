@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { getMiniLeagueMatches } from "@/services/matchmaking/miniLeagueService";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, format, isFuture } from "date-fns";
 import { Calendar, MapPin, Users } from "lucide-react";
@@ -14,9 +12,31 @@ interface LeagueMatchScheduleProps {
   leagueId: string;
 }
 
+interface MatchPlayer {
+  player_id: string;
+  has_confirmed: boolean;
+  performance_rating: number | null;
+}
+
+interface Match {
+  id: string;
+  played_at: string;
+  status: string;
+  round_number: number;
+  sport: string;
+  location: string;
+  match_players: MatchPlayer[];
+}
+
+interface Player {
+  id: string;
+  name: string;
+  rating: number;
+}
+
 export const LeagueMatchSchedule = ({ leagueId }: LeagueMatchScheduleProps) => {
-  const [matches, setMatches] = useState<any[]>([]);
-  const [players, setPlayers] = useState<Record<string, any>>({});
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [players, setPlayers] = useState<Record<string, Player>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -26,32 +46,58 @@ export const LeagueMatchSchedule = ({ leagueId }: LeagueMatchScheduleProps) => {
         setLoading(true);
         
         // Fetch all matches for this league
-        const matchesData = await getMiniLeagueMatches(leagueId);
+        const { data: matchesData, error: matchesError } = await supabase
+          .from("matches")
+          .select(`
+            id,
+            played_at,
+            status,
+            round_number,
+            sport,
+            location,
+            match_players (
+              player_id,
+              has_confirmed,
+              performance_rating
+            )
+          `)
+          .eq("league_id", leagueId)
+          .order("played_at", { ascending: true })
+          .order("round_number", { ascending: true });
+        
+        if (matchesError) throw matchesError;
         
         // Get all player IDs from the matches
         const playerIds = new Set<string>();
-        matchesData.forEach(match => {
-          match.match_players.forEach((player: any) => {
-            playerIds.add(player.player_id);
+        if (matchesData) {
+          matchesData.forEach((match: any) => {
+            match.match_players?.forEach((player: MatchPlayer) => {
+              if (player.player_id) {
+                playerIds.add(player.player_id);
+              }
+            });
           });
-        });
+        }
         
         // Fetch player details
-        const { data: playersData, error: playersError } = await supabase
-          .from("players")
-          .select("id, name, rating")
-          .in("id", Array.from(playerIds));
+        if (playerIds.size > 0) {
+          const { data: playersData, error: playersError } = await supabase
+            .from("players")
+            .select("id, name, rating")
+            .in("id", Array.from(playerIds));
+          
+          if (playersError) throw playersError;
+          
+          // Create a lookup map for players
+          const playersMap: Record<string, Player> = {};
+          playersData?.forEach((player: Player) => {
+            playersMap[player.id] = player;
+          });
+          
+          setPlayers(playersMap);
+        }
         
-        if (playersError) throw playersError;
-        
-        // Create a lookup map for players
-        const playersMap: Record<string, any> = {};
-        playersData?.forEach(player => {
-          playersMap[player.id] = player;
-        });
-        
-        setPlayers(playersMap);
-        setMatches(matchesData);
+        setMatches(matchesData || []);
       } catch (error) {
         console.error("Error fetching league matches:", error);
         toast({
@@ -115,7 +161,7 @@ export const LeagueMatchSchedule = ({ leagueId }: LeagueMatchScheduleProps) => {
                     <div>
                       <p className="font-medium">Players:</p>
                       <ul className="list-disc pl-5 space-y-1">
-                        {match.match_players.map((player: any) => (
+                        {match.match_players && match.match_players.map((player: MatchPlayer) => (
                           <li key={player.player_id} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span>{players[player.player_id]?.name || "Unknown Player"}</span>
@@ -183,7 +229,7 @@ export const LeagueMatchSchedule = ({ leagueId }: LeagueMatchScheduleProps) => {
                     <div>
                       <p className="font-medium">Result:</p>
                       <ul className="list-disc pl-5 space-y-1">
-                        {match.match_players.map((player: any) => {
+                        {match.match_players && match.match_players.map((player: MatchPlayer) => {
                           const hasRating = player.performance_rating !== null;
                           
                           return (
@@ -196,10 +242,10 @@ export const LeagueMatchSchedule = ({ leagueId }: LeagueMatchScheduleProps) => {
                                   </span>
                                 )}
                               </div>
-                              {match.match_players.length === 2 && 
+                              {match.match_players && match.match_players.length === 2 && 
                                hasRating && 
                                player.performance_rating === Math.max(
-                                 ...match.match_players.map((p: any) => p.performance_rating || 0)
+                                 ...match.match_players.map((p: MatchPlayer) => p.performance_rating || 0)
                                ) && (
                                 <Badge className="bg-green-100 text-green-800">
                                   Winner

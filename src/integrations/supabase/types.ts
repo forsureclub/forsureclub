@@ -62,6 +62,57 @@ export type Database = {
         }
         Relationships: []
       }
+      league_players: {
+        Row: {
+          created_at: string | null
+          id: string
+          league_id: string
+          matches_lost: number
+          matches_played: number
+          matches_won: number
+          player_id: string
+          points: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          league_id: string
+          matches_lost?: number
+          matches_played?: number
+          matches_won?: number
+          player_id: string
+          points?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          league_id?: string
+          matches_lost?: number
+          matches_played?: number
+          matches_won?: number
+          player_id?: string
+          points?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_players_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "mini_leagues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "league_players_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_players: {
         Row: {
           created_at: string | null
@@ -125,8 +176,10 @@ export type Database = {
           booking_id: string | null
           created_at: string | null
           id: string
+          league_id: string | null
           location: string
           played_at: string
+          round_number: number | null
           sport: string
           status: string | null
         }
@@ -135,8 +188,10 @@ export type Database = {
           booking_id?: string | null
           created_at?: string | null
           id?: string
+          league_id?: string | null
           location: string
           played_at: string
+          round_number?: number | null
           sport: string
           status?: string | null
         }
@@ -145,10 +200,59 @@ export type Database = {
           booking_id?: string | null
           created_at?: string | null
           id?: string
+          league_id?: string | null
           location?: string
           played_at?: string
+          round_number?: number | null
           sport?: string
           status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "mini_leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mini_leagues: {
+        Row: {
+          created_at: string | null
+          id: string
+          location: string
+          name: string
+          player_count: number
+          sport: string
+          start_date: string
+          status: string
+          updated_at: string | null
+          weeks_between_matches: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location: string
+          name: string
+          player_count?: number
+          sport: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+          weeks_between_matches?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location?: string
+          name?: string
+          player_count?: number
+          sport?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          weeks_between_matches?: number
         }
         Relationships: []
       }
