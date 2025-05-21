@@ -16,7 +16,7 @@ import { useFormValidation } from "./matchmaking/useFormValidation";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
-  const [abilityLevel, setAbilityLevel] = useState("");
+  const [abilityLevel, setAbilityLevel] = useState("Beginner");
   const [skillLevel, setSkillLevel] = useState(1.0);
   const [spendingLevel, setSpendingLevel] = useState<'1' | '2' | '3'>('1');
   const [isClubMember, setIsClubMember] = useState(false);
@@ -38,8 +38,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const navigate = useNavigate();
   const { validateForm } = useFormValidation();
 
-  const abilityOptions = ["Beginner", "Intermediate", "Advanced", "Professional"];
-  const abilityLabel = "Experience Level";
+  // We removed abilityOptions array since experience level is now handled in the MatchTypeSelector
 
   const handleJoin = async () => {
     // Validate form
@@ -76,7 +75,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         location,
         clubName,
         isClubMember,
-        occupation, // We're still using the same variable name
+        occupation,
         gender,
         preferredDays: 'both', // Set a default value since we removed the field
         spendingLevel,
@@ -149,6 +148,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         <MatchTypeSelector
           playerCount={playerCount}
           onPlayerCountChange={setPlayerCount}
+          experienceLevel={abilityLevel}
+          onExperienceLevelChange={setAbilityLevel}
         />
         
         <PlayerInfoForm
@@ -160,8 +161,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setLocation={setLocation}
           abilityLevel={abilityLevel}
           setAbilityLevel={setAbilityLevel}
-          abilityOptions={abilityOptions}
-          abilityLabel={abilityLabel}
+          abilityOptions={[]}  // Pass empty array since we no longer need these options
+          abilityLabel=""      // Empty label since we moved this to MatchTypeSelector
           spendingLevel={spendingLevel}
           setSpendingLevel={setSpendingLevel}
           isClubMember={isClubMember}

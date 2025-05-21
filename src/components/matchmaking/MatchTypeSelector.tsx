@@ -1,20 +1,25 @@
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface MatchTypeSelectorProps {
   playerCount: '1' | '2' | '3';
   onPlayerCountChange: (value: '1' | '2' | '3') => void;
+  experienceLevel: string;
+  onExperienceLevelChange: (value: string) => void;
 }
 
 export const MatchTypeSelector = ({ 
   playerCount, 
-  onPlayerCountChange 
+  onPlayerCountChange,
+  experienceLevel,
+  onExperienceLevelChange
 }: MatchTypeSelectorProps) => {
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="player-count" className="text-sm font-medium text-gray-700">Minimum Players</Label>
+        <Label htmlFor="player-count" className="text-sm font-medium text-gray-700">Players Needed</Label>
         <RadioGroup
           value={playerCount}
           onValueChange={(value) => onPlayerCountChange(value as '1' | '2' | '3')}
@@ -33,6 +38,28 @@ export const MatchTypeSelector = ({
             <Label htmlFor="three-players" className="cursor-pointer">3 Players</Label>
           </div>
         </RadioGroup>
+      </div>
+
+      <div>
+        <Label htmlFor="experience" className="text-sm font-medium text-gray-700">Experience Level</Label>
+        <ToggleGroup
+          type="single"
+          value={experienceLevel}
+          onValueChange={(value) => {
+            if (value) onExperienceLevelChange(value);
+          }}
+          className="mt-2 grid grid-cols-3 gap-2"
+        >
+          <ToggleGroupItem value="Beginner" id="beginner" className="text-sm">
+            Beginner
+          </ToggleGroupItem>
+          <ToggleGroupItem value="Intermediate" id="intermediate" className="text-sm">
+            Intermediate
+          </ToggleGroupItem>
+          <ToggleGroupItem value="Advanced" id="advanced" className="text-sm">
+            Advanced
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
     </div>
   );
