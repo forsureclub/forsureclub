@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Card } from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -9,6 +9,7 @@ import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, MapPin, Star, MessageSquare } from "lucide-react";
 
 type MatchResultProps = {
   playerId: string;
@@ -123,188 +124,210 @@ export const MatchResults = ({ playerId, playerName, sport, onResultSubmitted }:
   };
 
   return (
-    <Card className="p-6 space-y-4">
-      <h3 className="text-lg font-semibold">Record Match Results for {sport || "Your Sport"}</h3>
+    <Card className="overflow-hidden border-0 shadow-md">
+      <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        <CardTitle className="flex items-center gap-2">
+          <Calendar size={20} className="text-blue-100" />
+          Record Match Results
+        </CardTitle>
+        <CardDescription className="text-blue-100">
+          For {playerName} in {sport}
+        </CardDescription>
+      </CardHeader>
       
-      <div className="space-y-2">
-        <Label htmlFor="location">Match Location</Label>
-        <Input
-          id="location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="Enter match location"
-        />
-      </div>
+      <CardContent className="p-6 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="location" className="flex items-center gap-1">
+            <MapPin size={16} /> Match Location
+          </Label>
+          <Input
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Enter match location"
+            className="border-blue-100 focus-visible:ring-blue-400"
+          />
+        </div>
 
-      {/* Sport-specific inputs */}
-      {sport && (
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="general">General Rating</TabsTrigger>
-            <TabsTrigger value="sport-specific">{sport} Details</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="general" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="performance-rating">Performance (Overall) Rating</Label>
-              <Select value={performanceRating} onValueChange={setPerformanceRating}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select rating (1-5)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 - Poor</SelectItem>
-                  <SelectItem value="2">2 - Below Average</SelectItem>
-                  <SelectItem value="3">3 - Average</SelectItem>
-                  <SelectItem value="4">4 - Good</SelectItem>
-                  <SelectItem value="5">5 - Excellent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Sport-specific inputs */}
+        {sport && (
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-blue-50">
+              <TabsTrigger value="general" className="data-[state=active]:bg-white">
+                General Rating
+              </TabsTrigger>
+              <TabsTrigger value="sport-specific" className="data-[state=active]:bg-white">
+                {sport} Details
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general" className="mt-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="play-rating">Play Rating</Label>
-                <Select value={playRating} onValueChange={setPlayRating}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Play (1-5)" />
+                <Label htmlFor="performance-rating" className="flex items-center gap-1">
+                  <Star size={16} /> Overall Rating
+                </Label>
+                <Select value={performanceRating} onValueChange={setPerformanceRating}>
+                  <SelectTrigger className="border-blue-100 focus-visible:ring-blue-400">
+                    <SelectValue placeholder="Select rating (1-5)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="1">1 - Poor</SelectItem>
+                    <SelectItem value="2">2 - Below Average</SelectItem>
+                    <SelectItem value="3">3 - Average</SelectItem>
+                    <SelectItem value="4">4 - Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="reliability-rating">Reliability Rating</Label>
-                <Select value={reliabilityRating} onValueChange={setReliabilityRating}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Reliability (1-5)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="5">5</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="etiquette-rating">Etiquette Rating</Label>
-                <Select value={etiquetteRating} onValueChange={setEtiquetteRating}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Etiquette (1-5)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="5">5</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="review-comment">Review Comment</Label>
-              <Textarea
-                id="review-comment"
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                placeholder="Write your feedback or remark about this player's etiquette or spirit"
-              />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="sport-specific" className="space-y-4">
-            {sport === 'Golf' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="golf-score">Score</Label>
-                  <Input
-                    id="golf-score"
-                    type="number"
-                    value={golfScore}
-                    onChange={(e) => setGolfScore(e.target.value)}
-                    placeholder="Enter final score"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="handicap">Handicap</Label>
-                  <Input
-                    id="handicap"
-                    value={handicap}
-                    onChange={(e) => setHandicap(e.target.value)}
-                    placeholder="Your handicap"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="holes">Number of Holes</Label>
-                  <Select value={numberOfHoles} onValueChange={setNumberOfHoles}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select holes" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="play-rating" className="text-sm">Play</Label>
+                  <Select value={playRating} onValueChange={setPlayRating}>
+                    <SelectTrigger className="border-blue-100 focus-visible:ring-blue-400 h-9">
+                      <SelectValue placeholder="1-5" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="9">9 Holes</SelectItem>
-                      <SelectItem value="18">18 Holes</SelectItem>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </>
-            )}
-            
-            {(sport === 'Tennis' || sport === 'Padel') && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="match-format">Match Format</Label>
-                  <Select value={matchFormat} onValueChange={setMatchFormat}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select match format" />
+                
+                <div className="space-y-1">
+                  <Label htmlFor="reliability-rating" className="text-sm">Reliability</Label>
+                  <Select value={reliabilityRating} onValueChange={setReliabilityRating}>
+                    <SelectTrigger className="border-blue-100 focus-visible:ring-blue-400 h-9">
+                      <SelectValue placeholder="1-5" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="best-of-3">Best of 3 sets</SelectItem>
-                      <SelectItem value="best-of-5">Best of 5 sets</SelectItem>
-                      <SelectItem value="single-set">Single set</SelectItem>
-                      <SelectItem value="pro-set">Pro set (first to 8/10)</SelectItem>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="score">Match Score</Label>
-                  <Input
-                    id="score"
-                    value={score}
-                    onChange={(e) => setScore(e.target.value)}
-                    placeholder="e.g. 6-4, 7-5"
-                  />
+                
+                <div className="space-y-1">
+                  <Label htmlFor="etiquette-rating" className="text-sm">Etiquette</Label>
+                  <Select value={etiquetteRating} onValueChange={setEtiquetteRating}>
+                    <SelectTrigger className="border-blue-100 focus-visible:ring-blue-400 h-9">
+                      <SelectValue placeholder="1-5" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="feedback">Additional Details</Label>
-              <Textarea
-                id="feedback"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Any additional details about the match"
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-      )}
+              </div>
 
-      <Button 
-        onClick={handleSubmit} 
-        disabled={isSubmitting}
-        className="w-full"
-      >
-        {isSubmitting ? "Recording..." : "Record Match Results"}
-      </Button>
+              <div className="space-y-1">
+                <Label htmlFor="review-comment" className="flex items-center gap-1">
+                  <MessageSquare size={16} /> Comment
+                </Label>
+                <Textarea
+                  id="review-comment"
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="Write your feedback about this player's performance"
+                  className="border-blue-100 focus-visible:ring-blue-400"
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="sport-specific" className="mt-4 space-y-4">
+              {sport === 'Golf' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="golf-score">Score</Label>
+                    <Input
+                      id="golf-score"
+                      type="number"
+                      value={golfScore}
+                      onChange={(e) => setGolfScore(e.target.value)}
+                      placeholder="Final score"
+                      className="border-blue-100 focus-visible:ring-blue-400"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="handicap">Handicap</Label>
+                    <Input
+                      id="handicap"
+                      value={handicap}
+                      onChange={(e) => setHandicap(e.target.value)}
+                      placeholder="Your handicap"
+                      className="border-blue-100 focus-visible:ring-blue-400"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="holes">Holes</Label>
+                    <Select value={numberOfHoles} onValueChange={setNumberOfHoles}>
+                      <SelectTrigger className="border-blue-100 focus-visible:ring-blue-400">
+                        <SelectValue placeholder="Select holes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="9">9 Holes</SelectItem>
+                        <SelectItem value="18">18 Holes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              {(sport === 'Tennis' || sport === 'Padel') && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="match-format">Match Format</Label>
+                    <Select value={matchFormat} onValueChange={setMatchFormat}>
+                      <SelectTrigger className="border-blue-100 focus-visible:ring-blue-400">
+                        <SelectValue placeholder="Select match format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="best-of-3">Best of 3 sets</SelectItem>
+                        <SelectItem value="best-of-5">Best of 5 sets</SelectItem>
+                        <SelectItem value="single-set">Single set</SelectItem>
+                        <SelectItem value="pro-set">Pro set (first to 8/10)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="score">Match Score</Label>
+                    <Input
+                      id="score"
+                      value={score}
+                      onChange={(e) => setScore(e.target.value)}
+                      placeholder="e.g. 6-4, 7-5"
+                      className="border-blue-100 focus-visible:ring-blue-400"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                <Label htmlFor="feedback">Additional Details</Label>
+                <Textarea
+                  id="feedback"
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Any additional details about the match"
+                  className="border-blue-100 focus-visible:ring-blue-400"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
+
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isSubmitting}
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 mt-4"
+        >
+          {isSubmitting ? "Recording..." : "Record Match Results"}
+        </Button>
+      </CardContent>
     </Card>
   );
 };
