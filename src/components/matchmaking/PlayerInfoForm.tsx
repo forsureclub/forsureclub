@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,22 +11,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLocationSearch } from "@/hooks/useLocationSearch";
 
 interface PlayerInfoFormProps {
   playerName: string;
@@ -60,47 +47,75 @@ interface PlayerInfoFormProps {
 
 const SKILL_LEVELS = [
   {
-    level: 1,
-    range: '1-2',
-    category: 'Beginner',
-    description: 'New to the sport, learning the basics.'
+    level: 0,
+    category: 'Initiation',
+    description: 'Has never played any racket sports.'
   },
   {
-    level: 2,
-    range: '2-3',
-    category: 'Novice',
-    description: 'Understands basic rules and can perform simple techniques.'
+    level: 0.5,
+    category: 'Initiation',
+    description: 'No classes. Less than 6 months playing. No technique or tactics.'
   },
   {
-    level: 3,
-    range: '3-4',
+    level: 1.0,
+    category: 'Initiation',
+    description: 'No classes or only few. Less than 12 months playing. No technique or tactics.'
+  },
+  {
+    level: 1.5,
+    category: 'Initiation/Intermediate',
+    description: 'Few classes. A couple of games a month. Rally and return at low speed.'
+  },
+  {
+    level: 2.0,
+    category: 'Initiation/Intermediate',
+    description: 'Few classes. At least 1 year of play. A couple of games a month. Rally and return at low speed.'
+  },
+  {
+    level: 2.5,
     category: 'Intermediate',
-    description: 'Has a good understanding of the game and can execute a range of shots/techniques with consistency.'
+    description: 'Has almost mastered most of the strokes and controls the directions at a normal pace.'
   },
   {
-    level: 4,
-    range: '4-5',
+    level: 3.0,
+    category: 'Intermediate',
+    description: 'Dominates most strokes, plays flat and drives the ball. Makes many unforced errors.'
+  },
+  {
+    level: 3.5,
+    category: 'Intermediate',
+    description: 'Dominates most strokes. Can play slice forehand, slice backhand and flat. Can direct the ball correctly. Makes a lot of unforced errors.'
+  },
+  {
+    level: 4.0,
+    category: 'Intermediate High',
+    description: 'Masters most strokes. Controls the directions. Is able to play slice forehand, slice backhand or flat and direct the ball. Makes a few unforced errors.'
+  },
+  {
+    level: 4.5,
+    category: 'Intermediate High',
+    description: 'Masters the stroke. Controls the directions. Is able to play slice forehand, slice backhand or flat and direct the ball where wanted. Puts the ball at speed but has difficulties finishing points.'
+  },
+  {
+    level: 5.0,
+    category: 'Intermediate Advanced',
+    description: 'Medium technique and high tactical mindset. Is ready to play matches with good pace.'
+  },
+  {
+    level: 5.5,
     category: 'Advanced',
-    description: 'Highly skilled player with excellent technique, tactical awareness, and consistency.'
+    description: 'Dominates technical and tactical skills. Prepared to play matches at high pace.'
   },
   {
-    level: 5,
-    range: '5-6',
-    category: 'Expert',
-    description: 'Mastery of the sport, with the ability to adapt to different situations and opponents.'
+    level: 6.0,
+    category: 'Advanced',
+    description: 'Strong forehand/backhand, attacking strokes, and wall play. Solid teamwork, reads the game well.'
   },
   {
-    level: 6,
-    range: '6-7',
-    category: 'Professional',
-    description: 'Plays at a professional level, competing in tournaments and leagues.'
+    level: 7.0,
+    category: 'Elite',
+    description: 'Professional player. Top 30 WPT.'
   },
-  {
-    level: 7,
-    range: '7+',
-    category: 'World-Class',
-    description: 'One of the best players in the world, with exceptional skill, experience, and achievements.'
-  }
 ];
 
 export const PlayerInfoForm = ({ 
@@ -120,25 +135,10 @@ export const PlayerInfoForm = ({
   confirmPassword, setConfirmPassword,
   skillLevel, setSkillLevel
 }: PlayerInfoFormProps) => {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const { locationSuggestions, fetchLocationSuggestions } = useLocationSearch();
-
-  useEffect(() => {
-    if (query.length > 2) {
-      fetchLocationSuggestions(query);
-    }
-
-    // If a location is already set, use it as the initial query
-    if (location && !query) {
-      setQuery(location);
-    }
-  }, [query, fetchLocationSuggestions]);
-
   // Find the current skill level description
   const currentSkillLevel = SKILL_LEVELS.find(level => 
     level.level === skillLevel
-  ) || SKILL_LEVELS.find(level => level.level === 1);
+  ) || SKILL_LEVELS.find(level => level.level === 2.5);
 
   return (
     <>
@@ -154,10 +154,10 @@ export const PlayerInfoForm = ({
       </div>
 
       <div>
-        <Label htmlFor="occupation" className="text-sm font-medium text-gray-700">Occupation</Label>
+        <Label htmlFor="industry" className="text-sm font-medium text-gray-700">Industry</Label>
         <Input
-          id="occupation"
-          placeholder="Enter your occupation"
+          id="industry"
+          placeholder="Enter your industry"
           value={occupation}
           onChange={(e) => setOccupation(e.target.value)}
           className="mt-1"
@@ -166,49 +166,13 @@ export const PlayerInfoForm = ({
 
       <div>
         <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-full justify-between mt-1"
-            >
-              {location || "Select location..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-0">
-            <Command>
-              <CommandInput 
-                placeholder="Search location..." 
-                value={query}
-                onValueChange={setQuery}
-              />
-              <CommandEmpty>No location found.</CommandEmpty>
-              <CommandGroup>
-                {locationSuggestions.map((suggestion) => (
-                  <CommandItem
-                    key={suggestion}
-                    onSelect={() => {
-                      setLocation(suggestion);
-                      setQuery(suggestion);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        location === suggestion ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {suggestion}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <Input
+          id="location"
+          placeholder="Enter your location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className="mt-1"
+        />
       </div>
       
       {/* Skill Level Slider */}
@@ -217,6 +181,7 @@ export const PlayerInfoForm = ({
         <div className="mt-1">
           <Slider
             defaultValue={[skillLevel]}
+            min={0}
             max={7}
             step={0.5}
             onValueChange={([value]) => setSkillLevel(value)}
@@ -224,7 +189,7 @@ export const PlayerInfoForm = ({
           />
           <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-orange-800">Level {currentSkillLevel?.range}</span>
+              <span className="text-sm font-medium text-orange-800">Level {skillLevel}</span>
               <span className="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full">
                 {currentSkillLevel?.category || 'Intermediate'}
               </span>
@@ -237,15 +202,15 @@ export const PlayerInfoForm = ({
       </div>
       
       <div>
-        <Label htmlFor="spending" className="text-sm font-medium text-gray-700">Willing to Pay</Label>
+        <Label htmlFor="spending" className="text-sm font-medium text-gray-700">Budget</Label>
         <Select value={spendingLevel} onValueChange={(value) => setSpendingLevel(value as '1' | '2' | '3')}>
           <SelectTrigger id="spending" className="mt-1">
-            <SelectValue placeholder="Select your spending level" />
+            <SelectValue placeholder="Select your budget" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">$ - Basic court costs only</SelectItem>
-            <SelectItem value="2">$$ - Premium facilities</SelectItem>
-            <SelectItem value="3">$$$ - High-end clubs</SelectItem>
+            <SelectItem value="1">💰 Basic</SelectItem>
+            <SelectItem value="2">💰💰 Premium</SelectItem>
+            <SelectItem value="3">💰💰💰 Luxury</SelectItem>
           </SelectContent>
         </Select>
       </div>

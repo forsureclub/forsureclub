@@ -16,8 +16,8 @@ import { useFormValidation } from "./matchmaking/useFormValidation";
 
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
-  const [occupation, setOccupation] = useState("");
-  const [skillLevel, setSkillLevel] = useState(1.0);
+  const [industry, setIndustry] = useState("");
+  const [skillLevel, setSkillLevel] = useState(2.5);
   const [spendingLevel, setSpendingLevel] = useState<'1' | '2' | '3'>('1');
   const [isClubMember, setIsClubMember] = useState(false);
   const [clubName, setClubName] = useState("");
@@ -42,7 +42,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
     const isValid = validateForm(
       playerName,
       "Intermediate", // Default value for abilityLevel since we removed the selector
-      occupation,
+      industry,
       location,
       isClubMember,
       clubName,
@@ -72,7 +72,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         location,
         clubName,
         isClubMember,
-        occupation,
+        occupation: industry, // Pass industry as occupation for backward compatibility
         gender,
         preferredDays: 'both', // Set a default value since we removed the field
         spendingLevel,
@@ -150,8 +150,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         <PlayerInfoForm
           playerName={playerName}
           setPlayerName={setPlayerName}
-          occupation={occupation}
-          setOccupation={setOccupation}
+          occupation={industry}
+          setOccupation={setIndustry}
           location={location}
           setLocation={setLocation}
           abilityLevel="Intermediate" // Default value
@@ -180,7 +180,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         
         <Button
           onClick={handleJoin}
-          disabled={!playerName || !occupation || !location || (isClubMember && !clubName) || !email || !password || isJoining}
+          disabled={!playerName || !industry || !location || (isClubMember && !clubName) || !email || !password || isJoining}
           className="w-full bg-orange-600 hover:bg-orange-700 mt-2"
         >
           {isJoining ? (

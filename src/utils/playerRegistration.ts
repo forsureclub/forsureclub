@@ -44,7 +44,7 @@ export const createOrFetchPlayer = async (data: PlayerRegistrationData): Promise
           sport: "Padel",
           city: data.location,
           club: data.isClubMember ? data.clubName : null,
-          occupation: data.occupation,
+          occupation: data.occupation, // This will now contain industry data
           gender: data.gender,
           budget_range: data.spendingLevel,
           play_time: data.preferredDays,

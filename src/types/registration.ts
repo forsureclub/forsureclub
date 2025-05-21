@@ -9,7 +9,7 @@ export type Registration = {
   player: {
     name: string;
     sport: string;
-    occupation: string; // This is still "occupation" in the database
+    industry: string; // Changed from occupation
     city: string;
     email: string;
     phone_number: string;
