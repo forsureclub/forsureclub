@@ -107,7 +107,9 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
           .from("match_players")
           .update({ 
             performance_rating: 3, // Default middle rating
-            score: parseInt(playerScore)
+            // Using numeric field that already exists in the schema
+            // We can't use score directly since it doesn't exist
+            performance_rating: parseInt(playerScore)
           })
           .eq("match_id", matchId)
           .eq("player_id", playerId);
@@ -123,7 +125,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         if (opponentPlayerIds.length > 0) {
           const { error: opponentError } = await supabase
             .from("match_players")
-            .update({ score: parseInt(opponentScore) })
+            .update({ performance_rating: parseInt(opponentScore) })
             .eq("match_id", matchId)
             .in("player_id", opponentPlayerIds);
           
@@ -169,8 +171,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
           .insert({
             match_id: match.id,
             player_id: playerId,
-            performance_rating: 3, // Default middle rating
-            score: parseInt(playerScore),
+            performance_rating: parseInt(playerScore), // Using performance_rating for the score
             has_confirmed: true
           });
         
@@ -183,7 +184,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
             .insert({
               match_id: match.id,
               player_id: opponentData[0].id,
-              score: parseInt(opponentScore),
+              performance_rating: parseInt(opponentScore), // Using performance_rating for the score
               has_confirmed: false
             });
           

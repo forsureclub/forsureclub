@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-interface LocationSuggestion {
+export interface LocationSuggestion {
   id: string;
   name: string;
   city?: string;
@@ -14,7 +14,7 @@ const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoibG92YWJsZS1nZW9jb2RpbmciLCJhIjoiY2xza3hv
 
 export function useLocationSearch() {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -29,10 +29,10 @@ export function useLocationSearch() {
   };
 
   // Search locations using Mapbox Geocoding API with UK focus
-  const searchLocations = useCallback(
+  const fetchLocationSuggestions = useCallback(
     debounce(async (searchQuery: string) => {
       if (!searchQuery || searchQuery.length < 2) {
-        setSuggestions([]);
+        setLocationSuggestions([]);
         setIsLoading(false);
         return;
       }
@@ -59,21 +59,12 @@ export function useLocationSearch() {
 
         const data = await response.json();
         
-        // Transform Mapbox response to our LocationSuggestion format
-        const locations: LocationSuggestion[] = data.features.map((feature: any) => {
-          // Extract city name and country
-          const placeName = feature.place_name;
-          const parts = placeName.split(', ');
-          
-          return {
-            id: feature.id,
-            name: feature.text,
-            city: feature.text,
-            country: parts.length > 1 ? parts[parts.length - 1] : 'United Kingdom'
-          };
+        // Transform Mapbox response to simple strings
+        const locations: string[] = data.features.map((feature: any) => {
+          return feature.place_name;
         });
 
-        setSuggestions(locations);
+        setLocationSuggestions(locations);
       } catch (error) {
         console.error('Error searching locations:', error);
         toast({
@@ -81,7 +72,7 @@ export function useLocationSearch() {
           description: 'Unable to search locations. Please try again.',
           variant: 'destructive',
         });
-        setSuggestions([]);
+        setLocationSuggestions([]);
       } finally {
         setIsLoading(false);
       }
@@ -89,14 +80,11 @@ export function useLocationSearch() {
     [toast]
   );
 
-  useEffect(() => {
-    searchLocations(query);
-  }, [query, searchLocations]);
-
   return {
     query,
     setQuery,
-    suggestions,
+    locationSuggestions,
+    fetchLocationSuggestions,
     isLoading,
   };
 }

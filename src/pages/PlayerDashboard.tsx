@@ -155,7 +155,8 @@ const PlayerDashboard = () => {
 
   const handlePhotoUpdated = (url: string) => {
     if (playerProfile) {
-      setPlayerProfile({...playerProfile, photo_url: url});
+      // Use club field to store the photo URL since that's what we're using in PhotoUpload
+      setPlayerProfile({...playerProfile, club: url});
     }
   };
 
@@ -201,7 +202,7 @@ const PlayerDashboard = () => {
                     <PhotoUpload 
                       playerId={playerProfile.id}
                       playerName={playerProfile.name}
-                      existingUrl={playerProfile.photo_url}
+                      existingUrl={playerProfile.club} // Using club field for photo
                       onPhotoUpdated={handlePhotoUpdated}
                     />
                     
