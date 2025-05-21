@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "./ui/button";
@@ -233,9 +232,9 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
           <div className="mb-4">
             <Label className="text-sm font-medium text-gray-700">Select Date</Label>
             <div className="mt-1">
-              <DatePicker
+              <DatePicker 
                 date={selectedDate}
-                setDate={setSelectedDate}
+                onDateChange={setSelectedDate}
                 className="w-full"
               />
             </div>

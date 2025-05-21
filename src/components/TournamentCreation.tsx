@@ -153,19 +153,19 @@ export const TournamentCreation = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="start-date">Start Date</Label>
-                <DatePicker
+                <DatePicker 
                   date={startDate}
-                  setDate={setStartDate}
-                  className="mt-1"
+                  onDateChange={setStartDate}
+                  className="w-full"
                 />
               </div>
               
               <div>
                 <Label htmlFor="end-date">End Date</Label>
-                <DatePicker
+                <DatePicker 
                   date={endDate}
-                  setDate={setEndDate}
-                  className="mt-1"
+                  onDateChange={setEndDate}
+                  className="w-full"
                 />
               </div>
             </div>
