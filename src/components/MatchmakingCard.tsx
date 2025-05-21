@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -158,8 +159,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setLocation={setLocation}
           abilityLevel={abilityLevel}
           setAbilityLevel={setAbilityLevel}
-          abilityOptions={[]}  // Pass empty array since we no longer need these options
-          abilityLabel=""      // Empty label since we moved this to MatchTypeSelector
+          abilityOptions={[]}
+          abilityLabel=""
           spendingLevel={spendingLevel}
           setSpendingLevel={setSpendingLevel}
           isClubMember={isClubMember}
