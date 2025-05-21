@@ -1,13 +1,10 @@
 
-import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
 export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string) => void }) => {
-  const [selectedSport, setSelectedSport] = useState<string | null>("Padel");
-
+  // Always select "Padel" by default
   const handleSportSelect = () => {
-    setSelectedSport("Padel");
     onSportSelect("Padel");
   };
 
@@ -16,7 +13,7 @@ export const SportSelector = ({ onSportSelect }: { onSportSelect: (sport: string
       <div className="grid grid-cols-1 gap-6">
         <Button
           onClick={handleSportSelect}
-          variant={selectedSport === "Padel" ? "default" : "outline"}
+          variant="default"
           className="h-32 text-xl flex flex-col items-center justify-center gap-3 transition-all hover:scale-105"
         >
           Padel

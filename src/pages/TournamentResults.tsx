@@ -1,16 +1,13 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { TournamentSummary } from "@/components/tournament/TournamentSummary";
 import { PlayerLeaderboard } from "@/components/PlayerLeaderboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const TournamentResults = () => {
-  const [sport, setSport] = useState<string>("Tennis");
+  // Set sport directly to "Padel" without options to change
+  const sport = "Padel";
   
-  const handleSportChange = (newSport: string) => {
-    setSport(newSport);
-  };
-
   return (
     <div className="container mx-auto py-6 space-y-8">
       <h1 className="text-3xl font-bold">Tournament Results</h1>
@@ -27,25 +24,9 @@ export const TournamentResults = () => {
         
         <TabsContent value="leaderboard" className="mt-6">
           <div className="space-y-4">
-            <div className="flex justify-start gap-4">
-              <button 
-                className={`px-4 py-2 rounded-md ${sport === "Tennis" ? "bg-primary text-white" : "bg-muted"}`}
-                onClick={() => handleSportChange("Tennis")}
-              >
-                Tennis
-              </button>
-              <button 
-                className={`px-4 py-2 rounded-md ${sport === "Golf" ? "bg-primary text-white" : "bg-muted"}`}
-                onClick={() => handleSportChange("Golf")}
-              >
-                Golf
-              </button>
-              <button 
-                className={`px-4 py-2 rounded-md ${sport === "Padel" ? "bg-primary text-white" : "bg-muted"}`}
-                onClick={() => handleSportChange("Padel")}
-              >
-                Padel
-              </button>
+            {/* Remove sport selection buttons and use fixed Padel */}
+            <div className="flex items-center">
+              <h3 className="text-lg font-semibold">Padel Leaderboard</h3>
             </div>
             
             <PlayerLeaderboard sport={sport} />

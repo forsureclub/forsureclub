@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Badge } from "./ui/badge";
 import { getSkillLevelDescription } from "@/types/matchmaking";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const EloMatchRecorder = ({ sport }: { sport: string }) => {
+export const EloMatchRecorder = () => {
   const [winnerIds, setWinnerIds] = useState<string[]>([]);
   const [loserIds, setLoserIds] = useState<string[]>([]);
   const [availablePlayers, setAvailablePlayers] = useState<{ id: string, name: string, rating: number }[]>([]);
@@ -20,7 +19,10 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
   const [isFetching, setIsFetching] = useState(true);
   const { toast } = useToast();
 
-  // Fetch available players for this sport
+  // Set the sport to Padel
+  const sport = "Padel";
+
+  // Fetch available players for Padel
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
@@ -52,7 +54,7 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
     };
 
     fetchPlayers();
-  }, [sport, toast]);
+  }, [toast]);
 
   const addWinner = (playerId: string) => {
     if (winnerIds.includes(playerId)) return;
@@ -206,7 +208,7 @@ export const EloMatchRecorder = ({ sport }: { sport: string }) => {
       <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white pb-4">
         <CardTitle className="flex items-center gap-2">
           <Trophy size={20} />
-          Quick Match Record
+          Quick Match Record - Padel
         </CardTitle>
         <CardDescription className="text-orange-100">
           Record match results and update ELO ratings
