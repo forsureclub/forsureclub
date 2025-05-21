@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -299,7 +298,6 @@ const PlayerDashboard = () => {
                     <MatchResults 
                       playerId={playerProfile.id}
                       playerName={playerProfile.name}
-                      sport={playerProfile.sport}
                       onResultSubmitted={handleRefreshProfile}
                     />
                   </CardContent>
