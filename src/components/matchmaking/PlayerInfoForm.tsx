@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SKILL_LEVELS } from "@/types/matchmaking";
+import { Slider } from "@/components/ui/slider";
 import { useState, useRef, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -82,6 +84,35 @@ export const PlayerInfoForm = ({
       setQuery(location);
     }
   }, []);
+
+  const getCurrentLevelDescription = () => {
+    // Find the exact level match or closest level
+    const exactLevel = SKILL_LEVELS.find(l => l.level === skillLevel);
+    
+    if (exactLevel) {
+      return {
+        level: exactLevel.level,
+        description: exactLevel.description,
+        category: exactLevel.category
+      };
+    }
+    
+    // If no exact match, find the closest level below
+    const closestLevel = SKILL_LEVELS.filter(l => l.level <= skillLevel)
+      .sort((a, b) => b.level - a.level)[0];
+    
+    return closestLevel ? {
+      level: skillLevel,
+      description: closestLevel.description,
+      category: closestLevel.category
+    } : {
+      level: skillLevel,
+      description: 'Custom level',
+      category: ''
+    };
+  };
+
+  const currentLevelInfo = getCurrentLevelDescription();
 
   return (
     <>
@@ -172,6 +203,28 @@ export const PlayerInfoForm = ({
             </Command>
           </PopoverContent>
         </Popover>
+      </div>
+      
+      <div>
+        <Label htmlFor="skill-level" className="text-sm font-medium text-gray-700">Skill Level (0-7)</Label>
+        <div className="pt-6 pb-2">
+          <Slider 
+            id="skillLevel"
+            min={0} 
+            max={7} 
+            step={0.5}
+            value={[skillLevel]} 
+            onValueChange={(value) => setSkillLevel(value[0])}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>Beginner (0)</span>
+          <span>Elite (7)</span>
+        </div>
+        <div className="mt-2 p-3 bg-gray-50 rounded-md">
+          <p className="text-sm font-medium">{currentLevelInfo.level} - {currentLevelInfo.category}</p>
+          <p className="text-xs text-gray-500">{currentLevelInfo.description}</p>
+        </div>
       </div>
       
       <div>

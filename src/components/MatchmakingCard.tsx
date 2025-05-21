@@ -17,6 +17,7 @@ import { useFormValidation } from "./matchmaking/useFormValidation";
 export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) => {
   const [playerName, setPlayerName] = useState("");
   const [abilityLevel, setAbilityLevel] = useState("Beginner");
+  const [skillLevel, setSkillLevel] = useState(1.0);
   const [spendingLevel, setSpendingLevel] = useState<'1' | '2' | '3'>('1');
   const [isClubMember, setIsClubMember] = useState(false);
   const [occupation, setOccupation] = useState("");
@@ -66,7 +67,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         description: "Your account has been created successfully",
       });
 
-      // Register the player with a default skill level since we removed the slider
+      // Register the player with the skill level from the slider
       const playerId = await createOrFetchPlayer({
         playerName,
         location,
@@ -78,7 +79,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         spendingLevel,
         email,
         phoneNumber,
-        initialRating: 1.0 // Use a default value since we removed the slider
+        initialRating: skillLevel // Use the slider value directly
       });
 
       // For regular singles match - now with additional playerCount parameter
@@ -176,6 +177,8 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
           setPassword={setPassword}
           confirmPassword={confirmPassword}
           setConfirmPassword={setConfirmPassword}
+          skillLevel={skillLevel}
+          setSkillLevel={setSkillLevel}
         />
         
         <Button
