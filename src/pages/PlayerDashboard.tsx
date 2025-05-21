@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { PlayerMatches } from "@/components/PlayerMatches";
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [selectedSport, setSelectedSport] = useState<string | null>("Padel"); // Default to Padel
   const [activeTab, setActiveTab] = useState("matches");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -116,7 +115,7 @@ const PlayerDashboard = () => {
           .insert({
             name: user.user_metadata?.name || user.email?.split('@')[0] || 'Player',
             email: user.email,
-            sport: sport,
+            sport: sport || "Padel", // Default to Padel if no sport selected
             rating: 2.5, // Default middle rating
             gender: 'other', // Default, will be updated later
             city: 'Not specified',
@@ -141,7 +140,7 @@ const PlayerDashboard = () => {
         
         toast.success({
           title: "Sport Selected",
-          description: `You've selected ${sport}. Please complete your profile.`,
+          description: `You've selected ${sport || "Padel"}. Please complete your profile.`,
         });
       }
     } catch (error) {
@@ -155,7 +154,7 @@ const PlayerDashboard = () => {
 
   const handlePhotoUpdated = (url: string) => {
     if (playerProfile) {
-      // Use club field to store the photo URL since that's what we're using in PhotoUpload
+      // Use club field to store the photo URL
       setPlayerProfile({...playerProfile, club: url});
     }
   };
@@ -214,7 +213,7 @@ const PlayerDashboard = () => {
                     <div className="mt-4 pt-4 border-t border-gray-100">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Sport</span>
-                        <span className="font-medium">{playerProfile.sport}</span>
+                        <span className="font-medium">{playerProfile.sport || "Padel"}</span>
                       </div>
                       
                       <div className="flex justify-between items-center mb-2">

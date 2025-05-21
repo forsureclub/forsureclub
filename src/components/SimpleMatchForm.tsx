@@ -17,9 +17,10 @@ interface SimpleMatchFormProps {
 
 export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded }: SimpleMatchFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [opponentName, setOpponentName] = useState("");
-  const [playerScore, setPlayerScore] = useState("");
-  const [opponentScore, setOpponentScore] = useState("");
+  const [teammateName, setTeammateName] = useState("");
+  const [opponentTeamNames, setOpponentTeamNames] = useState("");
+  const [yourTeamScore, setYourTeamScore] = useState("");
+  const [opponentTeamScore, setOpponentTeamScore] = useState("");
   const [matchDate, setMatchDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [matchDetails, setMatchDetails] = useState<any | null>(null);
   const { toast } = useToast();
@@ -50,7 +51,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
       if (error) throw error;
       
       if (!match) {
-        toast.error({
+        toast({
           title: "Match not found",
           description: "Could not find the specified match"
         });
@@ -66,7 +67,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         .map((mp: any) => mp.player_id);
       
       if (otherPlayerIds.length > 0) {
-        // Fetch opponent name
+        // Fetch opponent names
         const { data: opponents, error: opponentsError } = await supabase
           .from("players")
           .select("name")
@@ -75,7 +76,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         if (!opponentsError && opponents && opponents.length > 0) {
           // Join opponent names if multiple
           const names = opponents.map((o: any) => o.name).join(", ");
-          setOpponentName(names);
+          setOpponentTeamNames(names);
         }
       }
       
@@ -89,8 +90,8 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
   const recordMatch = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!playerScore || !opponentScore) {
-      toast.error({
+    if (!yourTeamScore || !opponentTeamScore) {
+      toast({
         title: "Missing information",
         description: "Please enter both scores"
       });
@@ -106,7 +107,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         const { error: resultError } = await supabase
           .from("match_players")
           .update({ 
-            performance_rating: parseInt(playerScore) // Using performance_rating for score
+            performance_rating: parseInt(yourTeamScore) // Using performance_rating for score
           })
           .eq("match_id", matchId)
           .eq("player_id", playerId);
@@ -122,7 +123,7 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         if (opponentPlayerIds.length > 0) {
           const { error: opponentError } = await supabase
             .from("match_players")
-            .update({ performance_rating: parseInt(opponentScore) })
+            .update({ performance_rating: parseInt(opponentTeamScore) })
             .eq("match_id", matchId)
             .in("player_id", opponentPlayerIds);
           
@@ -139,21 +140,14 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
         
       } else {
         // Create new match if no match ID provided
-        const matchDate = new Date().toISOString();
-        
-        // Try to find the opponent by name
-        const { data: opponentData } = await supabase
-          .from("players")
-          .select("id")
-          .ilike("name", `%${opponentName}%`)
-          .limit(1);
+        const playedAt = new Date(matchDate).toISOString();
         
         // Create the match
         const { data: match, error: matchError } = await supabase
           .from("matches")
           .insert({
-            sport: "Other",
-            played_at: matchDate,
+            sport: "Padel", // Set default sport to Padel
+            played_at: playedAt,
             location: "Manual Entry",
             status: "completed"
           })
@@ -168,28 +162,30 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
           .insert({
             match_id: match.id,
             player_id: playerId,
-            performance_rating: parseInt(playerScore), // Using performance_rating for the score
-            has_confirmed: true
+            performance_rating: parseInt(yourTeamScore), // Using performance_rating for the score
+            has_confirmed: true,
+            feedback: teammateName ? `Played with: ${teammateName}` : undefined
           });
         
         if (playerError) throw playerError;
         
-        // Add opponent if found
-        if (opponentData && opponentData.length > 0) {
-          const { error: opponentError } = await supabase
-            .from("match_players")
-            .insert({
-              match_id: match.id,
-              player_id: opponentData[0].id,
-              performance_rating: parseInt(opponentScore), // Using performance_rating for the score
-              has_confirmed: false
-            });
+        // Try to find opponents by name if provided
+        if (opponentTeamNames) {
+          // Just store the opponent team name in the match details
+          const { error: matchUpdateError } = await supabase
+            .from("matches")
+            .update({
+              booking_details: {
+                opponent_team: opponentTeamNames
+              }
+            })
+            .eq("id", match.id);
           
-          if (opponentError) throw opponentError;
+          if (matchUpdateError) throw matchUpdateError;
         }
       }
       
-      toast.success({
+      toast({
         title: "Match recorded",
         description: "Your match result has been saved"
       });
@@ -199,13 +195,14 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
       }
       
       // Reset form
-      setOpponentName("");
-      setPlayerScore("");
-      setOpponentScore("");
+      setTeammateName("");
+      setOpponentTeamNames("");
+      setYourTeamScore("");
+      setOpponentTeamScore("");
       
     } catch (error: any) {
       console.error("Error recording match:", error);
-      toast.error({
+      toast({
         title: "Failed to record match",
         description: error.message || "An unexpected error occurred"
       });
@@ -222,25 +219,38 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
             <Calendar className="h-4 w-4" />
             <span>{format(new Date(matchDate), "MMMM d, yyyy")}</span>
             
-            {opponentName && (
+            {opponentTeamNames && (
               <>
                 <span>•</span>
                 <Users className="h-4 w-4" />
-                <span>vs {opponentName}</span>
+                <span>vs {opponentTeamNames}</span>
               </>
             )}
           </div>
         ) : (
           <div className="space-y-2">
             <div>
-              <Label htmlFor="opponent">Opponent Name</Label>
+              <Label htmlFor="teammateName">Your Teammate (Optional)</Label>
               <Input
-                id="opponent"
-                placeholder="Enter opponent name"
-                value={opponentName}
-                onChange={(e) => setOpponentName(e.target.value)}
+                id="teammateName"
+                placeholder="Enter your teammate's name"
+                value={teammateName}
+                onChange={(e) => setTeammateName(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="opponentTeam">Opponent Team</Label>
+              <Input
+                id="opponentTeam"
+                placeholder="Enter opponent team names"
+                value={opponentTeamNames}
+                onChange={(e) => setOpponentTeamNames(e.target.value)}
                 required
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                E.g. "John and Sarah" or "Team Red"
+              </p>
             </div>
             
             <div>
@@ -258,27 +268,27 @@ export const SimpleMatchForm = ({ playerId, playerName, matchId, onMatchRecorded
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="playerScore">{playerName}'s Score</Label>
+            <Label htmlFor="yourTeamScore">Your Team's Score</Label>
             <Input
-              id="playerScore"
+              id="yourTeamScore"
               type="number"
               min="0"
-              placeholder="Your score"
-              value={playerScore}
-              onChange={(e) => setPlayerScore(e.target.value)}
+              placeholder="Your team's score"
+              value={yourTeamScore}
+              onChange={(e) => setYourTeamScore(e.target.value)}
               required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="opponentScore">Opponent's Score</Label>
+            <Label htmlFor="opponentTeamScore">Opponent Team's Score</Label>
             <Input
-              id="opponentScore"
+              id="opponentTeamScore"
               type="number"
               min="0"
-              placeholder="Their score"
-              value={opponentScore}
-              onChange={(e) => setOpponentScore(e.target.value)}
+              placeholder="Their team's score"
+              value={opponentTeamScore}
+              onChange={(e) => setOpponentTeamScore(e.target.value)}
               required
             />
           </div>
