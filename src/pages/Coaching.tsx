@@ -20,9 +20,9 @@ const Coaching = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Padel AI Coaching</h1>
+        <h1 className="text-3xl font-bold mb-6">AI Coaching</h1>
         <p className="text-gray-600 mb-8">
-          Upload short videos of your padel technique and receive AI-powered feedback from our virtual coach.
+          Upload short videos of your technique and receive AI-powered feedback from our virtual coach.
           Perfect your form and improve your game with personalized analysis.
         </p>
 

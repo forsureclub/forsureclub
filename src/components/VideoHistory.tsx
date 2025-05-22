@@ -29,7 +29,6 @@ export const VideoHistory = () => {
         .from('player_videos') as any)
         .select('*')
         .eq('player_id', user?.id)
-        .eq('sport', 'padel') // Only get padel videos
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -46,10 +45,10 @@ export const VideoHistory = () => {
     }
   };
 
-  const shareVideo = async (videoUrl: string) => {
+  const shareVideo = async (videoUrl: string, sport: string) => {
     try {
       // Call the Supabase Edge Function to share to social media
-      const caption = `Check out my padel skills! #ForSureClub #PadelTech`;
+      const caption = `Check out my ${sport} skills! #ForSureClub #SportsTech`;
       
       const { data, error } = await supabase.functions.invoke('share-sports-video', {
         body: { 
@@ -76,18 +75,18 @@ export const VideoHistory = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading your padel videos...</div>;
+    return <div className="text-center py-8">Loading your videos...</div>;
   }
 
   if (videos.length === 0) {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Your Padel Videos</CardTitle>
+          <CardTitle>Your Videos</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-center text-gray-500 py-8">
-            You haven't uploaded any padel videos yet. Start uploading to get AI feedback!
+            You haven't uploaded any videos yet. Start uploading to get AI feedback!
           </p>
         </CardContent>
       </Card>
@@ -97,7 +96,7 @@ export const VideoHistory = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Your Padel Videos</CardTitle>
+        <CardTitle>Your Videos</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -105,13 +104,13 @@ export const VideoHistory = () => {
             <div key={video.id} className="border rounded-md p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="font-medium text-lg">Padel Video</h3>
+                  <h3 className="font-medium text-lg">{video.sport} Video</h3>
                   <div className="flex items-center text-sm text-gray-500 mt-1">
                     <Calendar className="h-4 w-4 mr-1" />
                     {new Date(video.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => shareVideo(video.video_url)}>
+                <Button variant="outline" size="sm" onClick={() => shareVideo(video.video_url, video.sport)}>
                   <Share2 className="h-4 w-4 mr-2" /> Share
                 </Button>
               </div>

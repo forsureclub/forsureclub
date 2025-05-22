@@ -25,10 +25,11 @@ export const VideoAnalysis = () => {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [shareCaption, setShareCaption] = useState("");
   const [isSharing, setIsSharing] = useState(false);
+  const [selectedSport, setSelectedSport] = useState<string>("padel");
   const [playerLevel, setPlayerLevel] = useState<string>("intermediate");
   const [focusArea, setFocusArea] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryAttempt, setRetryAttempt] = useState(0); // Track retry attempts
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
@@ -65,6 +66,7 @@ export const VideoAnalysis = () => {
       // Upload to Supabase Storage
       const fileName = `${user?.id}_${Date.now()}_${file.name}`;
       
+      // Use the upload method without the onUploadProgress option
       const { data, error } = await supabase.storage
         .from('sports_videos')
         .upload(fileName, file, {
@@ -113,7 +115,7 @@ export const VideoAnalysis = () => {
       const { data, error } = await supabase.functions.invoke('analyze-sports-video', {
         body: { 
           videoUrl, 
-          sport: "padel", // Always padel
+          sport: selectedSport,
           playerLevel,
           focusArea
         }
@@ -134,7 +136,7 @@ export const VideoAnalysis = () => {
       const { error: dbError } = await supabase.from('player_videos').insert({
         player_id: user?.id,
         video_url: videoUrl,
-        sport: "padel",
+        sport: selectedSport,
         ai_feedback: data.analysis,
       });
 
@@ -145,7 +147,7 @@ export const VideoAnalysis = () => {
 
       toast.success({
         title: "Analysis Complete",
-        description: "AI has analyzed your padel technique and provided feedback.",
+        description: "AI has analyzed your video and provided feedback.",
       });
     } catch (error: any) {
       console.error("Analysis error:", error);
@@ -187,7 +189,7 @@ export const VideoAnalysis = () => {
       const { data, error } = await supabase.functions.invoke('share-sports-video', {
         body: { 
           videoUrl, 
-          caption: shareCaption || `Check out my padel skills! #ForSureClub #PadelTech`,
+          caption: shareCaption || `Check out my ${selectedSport} skills! #ForSureClub #SportsTech`,
           platform: 'twitter' // Default to Twitter for now
         }
       });
@@ -213,27 +215,66 @@ export const VideoAnalysis = () => {
     fileInputRef.current?.click();
   };
 
-  // Focus area options specifically for padel
-  const getFocusAreaOptions = () => [
-    { value: "bandeja", label: "Bandeja Shot" },
-    { value: "vibora", label: "Vibora Shot" },
-    { value: "smash", label: "Smash" },
-    { value: "volley", label: "Volley" },
-    { value: "positioning", label: "Court Positioning" },
-    { value: "footwork", label: "Footwork" },
-  ];
+  // Focus area options based on selected sport
+  const getFocusAreaOptions = () => {
+    if (selectedSport === "padel") {
+      return [
+        { value: "bandeja", label: "Bandeja Shot" },
+        { value: "vibora", label: "Vibora Shot" },
+        { value: "smash", label: "Smash" },
+        { value: "volley", label: "Volley" },
+        { value: "positioning", label: "Court Positioning" },
+        { value: "footwork", label: "Footwork" },
+      ];
+    } else if (selectedSport === "tennis") {
+      return [
+        { value: "forehand", label: "Forehand" },
+        { value: "backhand", label: "Backhand" },
+        { value: "serve", label: "Serve" },
+        { value: "volley", label: "Volley" },
+        { value: "footwork", label: "Footwork" },
+      ];
+    } else if (selectedSport === "golf") {
+      return [
+        { value: "drive", label: "Drive" },
+        { value: "iron", label: "Iron Play" },
+        { value: "putting", label: "Putting" },
+        { value: "chipping", label: "Chipping" },
+        { value: "swing", label: "Swing Mechanics" },
+      ];
+    }
+    return [];
+  };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Padel Video Analysis</CardTitle>
+        <CardTitle>Video Analysis</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Player Context Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Sport Selection */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Select Sport</label>
+            <select 
+              value={selectedSport} 
+              onChange={(e) => {
+                setSelectedSport(e.target.value);
+                setFocusArea(""); // Reset focus area when sport changes
+              }}
+              className="w-full p-2 border rounded"
+              disabled={isUploading || isAnalyzing}
+            >
+              <option value="padel">Padel</option>
+              <option value="tennis">Tennis</option>
+              <option value="golf">Golf</option>
+            </select>
+          </div>
+          
           {/* Player Level */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Your Padel Skill Level</label>
+            <label className="text-sm font-medium mb-2 block">Your Skill Level</label>
             <select 
               value={playerLevel} 
               onChange={(e) => setPlayerLevel(e.target.value)}
@@ -277,7 +318,7 @@ export const VideoAnalysis = () => {
           {!videoUrl ? (
             <div className="text-center">
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500 mb-2">Upload a video of your padel technique</p>
+              <p className="text-sm text-gray-500 mb-2">Upload a video of your sports performance</p>
               <Button onClick={triggerFileInput} disabled={isUploading || isAnalyzing}>
                 {isUploading ? (
                   <>
@@ -314,7 +355,7 @@ export const VideoAnalysis = () => {
                       Analyzing...
                     </>
                   ) : (
-                    "Analyze My Padel Technique"
+                    "Analyze My Technique"
                   )}
                 </Button>
               </div>
@@ -326,7 +367,7 @@ export const VideoAnalysis = () => {
         {isAnalyzing ? (
           <div className="text-center p-6">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2">Analyzing your padel technique with AI...</p>
+            <p className="mt-2">Analyzing your {selectedSport} technique with AI...</p>
             <p className="text-sm text-gray-500">Generating personalized feedback for {playerLevel} level player</p>
           </div>
         ) : feedback && (
@@ -334,7 +375,7 @@ export const VideoAnalysis = () => {
             <div>
               <h3 className="font-medium text-lg flex items-center">
                 <Award className="mr-2 h-5 w-5 text-orange-500" /> 
-                Padel Coach Feedback
+                AI Coach Feedback
               </h3>
               <div className="p-4 bg-orange-50 rounded-md mt-2">
                 <div className="prose max-w-none whitespace-pre-line">
@@ -370,7 +411,7 @@ export const VideoAnalysis = () => {
               <Textarea
                 value={shareCaption}
                 onChange={(e) => setShareCaption(e.target.value)}
-                placeholder="Write a caption for your padel video!"
+                placeholder={`Write a caption for your ${selectedSport} video!`}
                 className="mb-2"
               />
               <Button onClick={shareToSocial} disabled={isSharing} className="w-full">
