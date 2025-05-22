@@ -2,8 +2,21 @@
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
 import { Users, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const handleClaimSpot = () => {
+    if (user) {
+      navigate("/player-dashboard?tab=find-game");
+    } else {
+      navigate("/auth");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="text-center px-4 max-w-4xl mx-auto">
@@ -58,7 +71,7 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           transition={{ delay: 0.4 }}
         >
           <Button 
-            onClick={onStartMatching}
+            onClick={handleClaimSpot}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 rounded-lg text-lg font-semibold shadow-lg transition-transform hover:scale-105"
           >
             Claim Your Spot
