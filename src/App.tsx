@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
@@ -9,6 +8,7 @@ import Chat from "./pages/Chat";
 import PlayerProfile from "./pages/PlayerProfile";
 import NotFound from "./pages/NotFound";
 import Coaching from "./pages/Coaching";
+import Onboarding from "./pages/Onboarding";
 import { Toaster } from "./components/ui/toaster";
 import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./hooks/useAuth";
@@ -48,6 +48,31 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const routes = [
+  <Route path="/" element={<Index />} />,
+  <Route path="/admin" element={<Admin />} />,
+  <Route path="/auth" element={<Auth />} />,
+  <Route path="/player-dashboard" element={
+    <ProtectedRoute>
+      <PlayerDashboard />
+    </ProtectedRoute>
+  } />,
+  <Route path="/chat" element={
+    <ProtectedRoute>
+      <Chat />
+    </ProtectedRoute>
+  } />,
+  <Route path="/coaching" element={
+    <ProtectedRoute>
+      <Coaching />
+    </ProtectedRoute>
+  } />,
+  <Route path="/player/:id" element={<PlayerProfile />} />,
+  <Route path="/tournament-results" element={<TournamentResults />} />,
+  <Route path="/onboarding" element={<Onboarding />} />,
+  <Route path="*" element={<NotFound />} />,
+];
+
 function App() {
   return (
     <AuthProvider>
@@ -56,27 +81,7 @@ function App() {
           <Navigation />
           <main className="flex-grow">
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/player-dashboard" element={
-                <ProtectedRoute>
-                  <PlayerDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/chat" element={
-                <ProtectedRoute>
-                  <Chat />
-                </ProtectedRoute>
-              } />
-              <Route path="/coaching" element={
-                <ProtectedRoute>
-                  <Coaching />
-                </ProtectedRoute>
-              } />
-              <Route path="/player/:id" element={<PlayerProfile />} />
-              <Route path="/tournament-results" element={<TournamentResults />} />
-              <Route path="*" element={<NotFound />} />
+              {routes}
             </Routes>
           </main>
           <Toaster />

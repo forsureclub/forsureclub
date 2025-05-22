@@ -11,9 +11,11 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
   
   const handleClaimSpot = () => {
     if (user) {
+      // For logged in users, take them to the find game tab
       navigate("/player-dashboard?tab=find-game");
     } else {
-      navigate("/auth");
+      // For new users, direct them to the onboarding page
+      navigate("/onboarding");
     }
   };
 
