@@ -5,6 +5,9 @@ import { MatchmakingCard } from "../components/MatchmakingCard";
 import { Button } from "@/components/ui/button";
 import { PlayerLeaderboard } from "@/components/PlayerLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
+import { PlayerSwiper } from "@/components/PlayerSwiper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Trophy, Users } from "lucide-react";
 
 const Index = () => {
   const [isMatching, setIsMatching] = useState(false);
@@ -45,14 +48,35 @@ const Index = () => {
       ) : (
         <div className="space-y-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Padel Leaderboard</h1>
+            <h1 className="text-3xl font-bold">Padel Matches</h1>
             <Button onClick={() => setIsMatching(true)}>Find Match</Button>
           </div>
           
-          <PlayerLeaderboard sport="Padel" />
+          <Tabs defaultValue="discover" className="space-y-6">
+            <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-2">
+              <TabsTrigger value="discover" className="flex items-center gap-2">
+                <Users size={16} />
+                <span>Discover Players</span>
+              </TabsTrigger>
+              <TabsTrigger value="leaderboard" className="flex items-center gap-2">
+                <Trophy size={16} />
+                <span>Leaderboard</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="discover" className="space-y-6">
+              <div className="max-w-md mx-auto">
+                <PlayerSwiper />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="leaderboard">
+              <PlayerLeaderboard sport="Padel" />
+            </TabsContent>
+          </Tabs>
           
           <div className="text-center pt-6">
-            <Button onClick={() => setIsMatching(true)} size="lg">
+            <Button onClick={() => setIsMatching(true)} size="lg" className="bg-orange-600 hover:bg-orange-700">
               Find Your Perfect Padel Match
             </Button>
           </div>
