@@ -4,23 +4,14 @@ import { Hero } from "../components/Hero";
 import { Button } from "@/components/ui/button";
 import { PlayerLeaderboard } from "@/components/PlayerLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  
-  const handleStartMatching = () => {
-    if (user) {
-      navigate("/player-dashboard?tab=find-game");
-    } else {
-      navigate("/auth");
-    }
-  };
 
   // Show Hero for non-authenticated users
   if (!user) {
-    return <Hero onStartMatching={handleStartMatching} />;
+    return <Hero onStartMatching={() => {}} />;
   }
 
   return (
