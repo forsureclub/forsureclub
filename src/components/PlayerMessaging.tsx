@@ -77,8 +77,14 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
           query = query.like("content", `%"match_id":"${currentMatchId}"%`);
         } else if (currentRecipientId && user.id) {
           // For direct messages, we'll look for messages between these two users
-          const playerId = (await supabase.from("players").select("id").eq("user_id", user.id).single()).data?.id;
-          if (playerId) {
+          const { data: playerData } = await supabase
+            .from("players")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+          
+          if (playerData) {
+            const playerId = playerData.id;
             // Look for messages where the content contains both users' IDs
             query = query.or(
               `content.like.%"sender_id":"${playerId}"%,content.like.%"recipient_id":"${currentRecipientId}"%`,
