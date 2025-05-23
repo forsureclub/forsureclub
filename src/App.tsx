@@ -14,6 +14,7 @@ import { supabase } from "./integrations/supabase/client";
 import { AuthProvider } from "./hooks/useAuth";
 import { Navigation } from "./components/Navigation";
 import { TournamentResults } from "./pages/TournamentResults";
+import PlayerMessagePage from "./pages/PlayerMessagePage";
 import "./App.css";
 
 // Protected route component
@@ -76,6 +77,24 @@ function App() {
               } />
               <Route path="/player/:id" element={<PlayerProfile />} />
               <Route path="/tournament-results" element={<TournamentResults />} />
+              
+              {/* New messaging routes */}
+              <Route path="/messages/match/:matchId" element={
+                <ProtectedRoute>
+                  <PlayerMessagePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/messages/match/:matchId/player/:playerId" element={
+                <ProtectedRoute>
+                  <PlayerMessagePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/messages/player/:playerId" element={
+                <ProtectedRoute>
+                  <PlayerMessagePage />
+                </ProtectedRoute>
+              } />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

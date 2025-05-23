@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Calendar, MapPin, Users, Clock, CheckCircle, Award, UserCheck } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CheckCircle, Award, UserCheck, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow, format } from "date-fns";
@@ -283,24 +282,37 @@ export const PlayerMatches = () => {
                   <span>{match.location}</span>
                 </div>
                 
-                <div className="flex items-start">
-                  <Users className="w-5 h-5 mr-2 text-gray-500" />
-                  <div>
-                    <p className="font-medium">Players:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {match.players.map((player: any) => (
-                        <li key={player.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span>{player.name}</span>
-                            <span className="text-sm text-gray-500">(Rating: {player.rating.toFixed(1)})</span>
-                          </div>
-                          {match.match_players.find((mp: any) => mp.player_id === player.id)?.has_confirmed && (
-                            <UserCheck className="w-4 h-4 ml-2 text-green-500" />
+              <div className="flex items-start">
+                <Users className="w-5 h-5 mr-2 text-gray-500" />
+                <div>
+                  <p className="font-medium">Players:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {match.players.map((player: any) => (
+                      <li key={player.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span>{player.name}</span>
+                          <span className="text-sm text-gray-500">(Rating: {player.rating.toFixed(1)})</span>
+                          
+                          {/* Add message button for other players */}
+                          {player.id !== user?.id && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              asChild
+                              className="p-1 h-auto"
+                            >
+                              <Link to={`/messages/match/${match.id}/player/${player.id}`}>
+                                <MessageCircle className="h-4 w-4 text-orange-600" />
+                              </Link>
+                            </Button>
                           )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                        </div>
+                        {match.match_players.find((mp: any) => mp.player_id === player.id)?.has_confirmed && (
+                          <UserCheck className="w-4 h-4 ml-2 text-green-500" />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>
@@ -317,6 +329,18 @@ export const PlayerMatches = () => {
               )}
               
               <div className="flex flex-col space-y-2">
+                {/* Group chat button for all matches */}
+                <Button 
+                  variant="outline"
+                  asChild
+                  className="flex items-center gap-2"
+                >
+                  <Link to={`/messages/match/${match.id}`}>
+                    <MessageCircle className="h-4 w-4" />
+                    Match Chat
+                  </Link>
+                </Button>
+
                 {match.isPastMatch && !match.userRatedMatch && (
                   <Button 
                     asChild
