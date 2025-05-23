@@ -64,22 +64,54 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
         }
         
         // Fetch existing messages
+        // Use a custom metadata field in the content to store recipient/match info
+        // Format will be JSON stored as string in the content field
         let query = supabase
-          .from("player_messages")
+          .from("chat_messages")
           .select("*")
           .order("created_at", { ascending: true });
           
         if (currentMatchId) {
-          query = query.eq("match_id", currentMatchId);
-        } else if (currentRecipientId) {
-          query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-            .or(`sender_id.eq.${currentRecipientId},recipient_id.eq.${currentRecipientId}`);
+          // For match chat, we'll use a special format in the content field
+          // that starts with a JSON string containing match_id
+          query = query.like("content", `%"match_id":"${currentMatchId}"%`);
+        } else if (currentRecipientId && user.id) {
+          // For direct messages, we'll look for messages between these two users
+          const playerId = (await supabase.from("players").select("id").eq("user_id", user.id).single()).data?.id;
+          if (playerId) {
+            // Look for messages where the content contains both users' IDs
+            query = query.or(
+              `content.like.%"sender_id":"${playerId}"%,content.like.%"recipient_id":"${currentRecipientId}"%`,
+              `content.like.%"sender_id":"${currentRecipientId}"%,content.like.%"recipient_id":"${playerId}"%`
+            );
+          }
         }
         
         const { data: messagesData, error: messagesError } = await query;
         
         if (messagesError) throw messagesError;
-        setMessages(messagesData || []);
+        
+        // Process the messages to extract the actual message content from the JSON
+        const processedMessages = (messagesData || []).map(msg => {
+          try {
+            // The content might be a JSON string with metadata and message
+            const parsedContent = JSON.parse(msg.content);
+            return {
+              ...msg,
+              actualContent: parsedContent.message || msg.content,
+              metadata: parsedContent
+            };
+          } catch (e) {
+            // If parsing fails, just use the content as is
+            return {
+              ...msg,
+              actualContent: msg.content,
+              metadata: {}
+            };
+          }
+        });
+        
+        setMessages(processedMessages);
 
       } catch (error) {
         console.error("Error fetching messaging data:", error);
@@ -97,22 +129,34 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
     
     // Set up subscription for real-time updates
     const channel = supabase
-      .channel('player_messages_changes')
+      .channel('chat_messages_changes')
       .on('postgres_changes', 
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'player_messages',
-          filter: currentMatchId ? `match_id=eq.${currentMatchId}` : 
-            `or(sender_id=eq.${user.id},recipient_id=eq.${user.id})`
+          table: 'chat_messages'
         }, 
         (payload) => {
-          // Only add if it's related to current conversation
-          const msg = payload.new;
-          if ((currentRecipientId && 
-              (msg.sender_id === currentRecipientId || msg.recipient_id === currentRecipientId)) ||
-              currentMatchId) {
-            setMessages(msgs => [...msgs, msg]);
+          const newMsg = payload.new;
+          try {
+            const parsedContent = JSON.parse(newMsg.content);
+            
+            // Check if this message belongs to the current conversation
+            if (
+              (currentMatchId && parsedContent.match_id === currentMatchId) ||
+              (currentRecipientId && 
+                ((parsedContent.sender_id === currentRecipientId) || 
+                 (parsedContent.recipient_id === currentRecipientId)))
+            ) {
+              setMessages(msgs => [...msgs, {
+                ...newMsg,
+                actualContent: parsedContent.message || newMsg.content,
+                metadata: parsedContent
+              }]);
+            }
+          } catch (e) {
+            // If we can't parse the content, ignore this message
+            console.error("Error parsing message content:", e);
           }
         }
       )
@@ -134,16 +178,33 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
     if (!newMessage.trim() || !user) return;
     
     try {
+      // First, get the current player ID for the logged-in user
+      const { data: playerData, error: playerError } = await supabase
+        .from("players")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+        
+      if (playerError) throw playerError;
+      
+      const senderId = playerData.id;
+      
+      // Create the message content with metadata as JSON
       const messageData = {
-        content: newMessage,
-        sender_id: user.id,
+        sender_id: senderId,
         recipient_id: currentRecipientId,
-        match_id: currentMatchId
+        match_id: currentMatchId,
+        message: newMessage,
+        timestamp: new Date().toISOString()
       };
       
       const { error } = await supabase
-        .from("player_messages")
-        .insert(messageData);
+        .from("chat_messages")
+        .insert({
+          user_id: user.id,
+          content: JSON.stringify(messageData),
+          is_ai: false
+        });
         
       if (error) throw error;
       
@@ -205,17 +266,17 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
               <div
                 key={message.id}
                 className={`flex ${
-                  message.sender_id === user?.id ? "justify-end" : "justify-start"
+                  message.metadata?.sender_id === (user?.id ? "currentUser" : message.user_id) ? "justify-end" : "justify-start"
                 }`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
-                    message.sender_id === user?.id
+                    message.metadata?.sender_id === (user?.id ? "currentUser" : message.user_id)
                       ? "bg-orange-600 text-white"
                       : "bg-gray-200 text-gray-800"
                   }`}
                 >
-                  <p>{message.content}</p>
+                  <p>{message.actualContent}</p>
                   <p className="text-xs mt-1 opacity-70">
                     {format(new Date(message.created_at), "h:mm a")}
                   </p>
