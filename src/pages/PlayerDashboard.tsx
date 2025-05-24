@@ -8,14 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, MessageSquare, Video } from "lucide-react";
+import { User, MessageSquare, Video, Bot } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { PlayerMatches } from "@/components/PlayerMatches";
+import { PlayerMessaging } from "@/components/PlayerMessaging";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string | null>("Padel"); // Default to Padel
+  const [showAIChat, setShowAIChat] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const location = useLocation();
@@ -171,6 +173,13 @@ const PlayerDashboard = () => {
               AI Coaching
             </Button>
           </Link>
+          <Button 
+            onClick={() => setShowAIChat(true)}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 flex items-center gap-2"
+          >
+            <Bot size={18} />
+            AI Game Finder
+          </Button>
         </div>
       </div>
 
@@ -224,6 +233,14 @@ const PlayerDashboard = () => {
                           <span>AI Coaching</span>
                         </Link>
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowAIChat(true)}
+                        className="w-full flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      >
+                        <Bot size={16} />
+                        <span>AI Game Finder</span>
+                      </Button>
                       <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                         <Link to={`/player/${playerProfile.id}`}>
                           <User size={16} />
@@ -266,6 +283,17 @@ const PlayerDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* AI Game Finder Sheet */}
+      <Sheet open={showAIChat} onOpenChange={setShowAIChat}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <div className="flex items-center gap-2 mb-4">
+            <Bot className="h-6 w-6 text-blue-600" />
+            <h2 className="text-lg font-semibold">AI Game Finder</h2>
+          </div>
+          <PlayerMessaging />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
