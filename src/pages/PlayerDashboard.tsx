@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, MessageSquare, Video, Bot } from "lucide-react";
+import { User, MessageSquare, Video, Bot, Trophy, Users, Calendar } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { PlayerMatches } from "@/components/PlayerMatches";
 import { PlayerMessaging } from "@/components/PlayerMessaging";
@@ -166,106 +165,133 @@ const PlayerDashboard = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Player Dashboard</h1>
-        <div className="flex gap-2">
-          <Link to="/coaching">
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
-              <Video size={18} />
-              AI Coaching
-            </Button>
-          </Link>
-          <Button 
-            onClick={() => setShowAIChat(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 flex items-center gap-2"
-          >
-            <Bot size={18} />
-            AI Game Finder
-          </Button>
-        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-1">
-          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {playerProfile ? (
-                  <>
-                    <PhotoUpload 
-                      playerId={playerProfile.id}
-                      playerName={playerProfile.name}
-                      existingUrl={playerProfile.club} // Using club field for photo
-                      onPhotoUpdated={handlePhotoUpdated}
-                    />
-                    
-                    <div className="text-center">
-                      <h2 className="text-xl font-bold mt-2">{playerProfile.name}</h2>
-                      <p className="text-sm text-gray-500">{playerProfile.city}</p>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Sport</span>
-                        <span className="font-medium">{playerProfile.sport || "Padel"}</span>
-                      </div>
+      <div className="grid gap-6">
+        {/* Main Dashboard Grid */}
+        <div className="grid gap-6 md:grid-cols-4">
+          {/* Profile Card */}
+          <div className="md:col-span-1">
+            <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {playerProfile ? (
+                    <>
+                      <PhotoUpload 
+                        playerId={playerProfile.id}
+                        playerName={playerProfile.name}
+                        existingUrl={playerProfile.club} // Using club field for photo
+                        onPhotoUpdated={handlePhotoUpdated}
+                      />
                       
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Rating</span>
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">{playerProfile.rating.toFixed(1)}/5</span>
-                          <div>
-                            {[...Array(5)].map((_, i) => (
-                              <span key={i} className={`text-sm ${i < Math.round(playerProfile.rating) ? 'text-orange-500' : 'text-gray-300'}`}>★</span>
-                            ))}
+                      <div className="text-center">
+                        <h2 className="text-xl font-bold mt-2">{playerProfile.name}</h2>
+                        <p className="text-sm text-gray-500">{playerProfile.city}</p>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-gray-600">Sport</span>
+                          <span className="font-medium">{playerProfile.sport || "Padel"}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-gray-600">Rating</span>
+                          <div className="flex items-center">
+                            <span className="font-medium mr-2">{playerProfile.rating.toFixed(1)}/5</span>
+                            <div>
+                              {[...Array(5)].map((_, i) => (
+                                <span key={i} className={`text-sm ${i < Math.round(playerProfile.rating) ? 'text-orange-500' : 'text-gray-300'}`}>★</span>
+                              ))}
+                            </div>
                           </div>
                         </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Email</span>
+                          <span className="font-medium">{playerProfile.email}</span>
+                        </div>
                       </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Email</span>
-                        <span className="font-medium">{playerProfile.email}</span>
-                      </div>
-                    </div>
 
-                    <div className="pt-4 space-y-2">
-                      <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                        <Link to="/coaching">
-                          <Video size={16} />
-                          <span>AI Coaching</span>
-                        </Link>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowAIChat(true)}
-                        className="w-full flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      >
-                        <Bot size={16} />
-                        <span>AI Game Finder</span>
-                      </Button>
                       <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                         <Link to={`/player/${playerProfile.id}`}>
                           <User size={16} />
                           <span>View Public Profile</span>
                         </Link>
                       </Button>
+                    </>
+                  ) : (
+                    <div className="py-4">
+                      <p className="text-gray-500 dark:text-gray-400 mb-4">Please select your sport to continue:</p>
+                      
+                      <SportSelector onSportSelect={handleSportSelection} />
+                      
+                      <p className="mt-4 text-sm text-gray-500">
+                        Your profile will be created automatically based on your selection.
+                      </p>
                     </div>
-                  </>
-                ) : (
-                  <div className="py-4">
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">Please select your sport to continue:</p>
-                    
-                    <SportSelector onSportSelect={handleSportSelection} />
-                    
-                    <p className="mt-4 text-sm text-gray-500">
-                      Your profile will be created automatically based on your selection.
-                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions Cards */}
+          <div className="md:col-span-3">
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              {/* AI Coaching Card */}
+              <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <Link to="/coaching" className="block">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center">
+                      <Video className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-orange-900">AI Coaching</h3>
+                      <p className="text-sm text-orange-700">Video analysis & tips</p>
+                    </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  <p className="text-xs text-orange-600">Upload videos for AI feedback and improve your game</p>
+                </Link>
+              </Card>
+
+              {/* AI Game Finder Card */}
+              <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <div className="block" onClick={() => setShowAIChat(true)}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                      <Bot className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-900">AI Game Finder</h3>
+                      <p className="text-sm text-blue-700">Find perfect matches</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-blue-600">Chat with AI to find players and schedule games</p>
+                </div>
+              </Card>
+
+              {/* Tournament Card */}
+              <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <Link to="/tournament-results" className="block">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                      <Trophy className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-purple-900">Tournaments</h3>
+                      <p className="text-sm text-purple-700">Compete & track results</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-purple-600">Join tournaments and view your performance</p>
+                </Link>
+              </Card>
+            </div>
+          </div>
         </div>
 
-        <div className="md:col-span-2">
+        {/* Matches Section */}
+        <div className="w-full">
           {playerProfile ? (
             <PlayerMatches />
           ) : (
