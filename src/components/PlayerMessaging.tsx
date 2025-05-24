@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,13 +15,14 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState<any>(null);
   const [match, setMatch] = useState<any>(null);
+  const [canMessage, setCanMessage] = useState(false);
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const params = useParams();
 
-  // Use params if props aren't provided
   const currentMatchId = matchId || params.matchId;
   const currentRecipientId = recipientId || params.playerId;
 
@@ -32,16 +33,33 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
       try {
         setLoading(true);
         
+        // Get current player ID
+        const { data: playerData } = await supabase
+          .from("players")
+          .select("id")
+          .eq("email", user.email)
+          .single();
+
+        if (playerData) {
+          setCurrentPlayerId(playerData.id);
+        }
+        
         // Fetch recipient info
         if (currentRecipientId) {
           const { data: playerData, error: playerError } = await supabase
             .from("players")
-            .select("id, name")
+            .select("*")
             .eq("id", currentRecipientId)
             .single();
             
           if (playerError) throw playerError;
           setRecipient(playerData);
+
+          // Check if both players have liked each other (mutual match)
+          if (playerData && currentPlayerId) {
+            const canChat = await checkMutualMatch(currentPlayerId, currentRecipientId);
+            setCanMessage(canChat);
+          }
         }
         
         // Fetch match info if available
@@ -60,80 +78,99 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
             
           if (matchError) throw matchError;
           setMatch(matchData);
+          setCanMessage(true); // Can always message about confirmed matches
         }
         
-        // Fetch existing messages
-        let query = supabase
-          .from("chat_messages")
-          .select("*")
-          .order("created_at", { ascending: true });
-          
-        if (currentMatchId) {
-          // For match chat, filter by match_id in content
-          query = query.like("content", `%"match_id":"${currentMatchId}"%`);
-        } else if (currentRecipientId && user.id) {
-          // For direct messages, we need to get the current user's player ID first
-          const { data: playerData } = await supabase
-            .from("players")
-            .select("id")
-            .eq("user_id", user.id)
-            .single();
-          
-          if (playerData) {
-            const playerId = playerData.id;
-            // Get messages where content contains conversation between these two players
-            const { data: messagesData, error: messagesError } = await supabase
-              .from("chat_messages")
-              .select("*")
-              .order("created_at", { ascending: true });
-            
-            if (messagesError) throw messagesError;
-            
-            // Filter messages manually for direct conversation
-            const filteredMessages = (messagesData || []).filter(msg => {
-              try {
-                const parsedContent = JSON.parse(msg.content);
-                return (
-                  (parsedContent.sender_id === playerId && parsedContent.recipient_id === currentRecipientId) ||
-                  (parsedContent.sender_id === currentRecipientId && parsedContent.recipient_id === playerId)
-                );
-              } catch (e) {
-                return false;
-              }
-            });
-            
-            // Process the filtered messages
-            const processedMessages = filteredMessages.map(msg => {
-              try {
-                const parsedContent = JSON.parse(msg.content);
-                return {
-                  ...msg,
-                  actualContent: parsedContent.message || msg.content,
-                  metadata: parsedContent
-                };
-              } catch (e) {
-                return {
-                  ...msg,
-                  actualContent: msg.content,
-                  metadata: {}
-                };
-              }
-            });
-            
-            setMessages(processedMessages);
-            setLoading(false);
-            return;
-          }
+        // Only fetch messages if messaging is allowed
+        if (canMessage || currentMatchId) {
+          await fetchMessages();
         }
+
+      } catch (error) {
+        console.error("Error fetching messaging data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load messages",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, currentMatchId, currentRecipientId, toast, canMessage, currentPlayerId]);
+
+  const checkMutualMatch = async (playerId1: string, playerId2: string): Promise<boolean> => {
+    try {
+      // Check if player1 liked player2
+      const { data: like1 } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .like("content", `%"type":"like"%`)
+        .like("content", `%"from_player":"${playerId1}"%`)
+        .like("content", `%"to_player":"${playerId2}"%`)
+        .maybeSingle();
+
+      // Check if player2 liked player1
+      const { data: like2 } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .like("content", `%"type":"like"%`)
+        .like("content", `%"from_player":"${playerId2}"%`)
+        .like("content", `%"to_player":"${playerId1}"%`)
+        .maybeSingle();
+
+      return !!(like1 && like2);
+    } catch (error) {
+      console.error("Error checking mutual match:", error);
+      return false;
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      let query = supabase
+        .from("chat_messages")
+        .select("*")
+        .order("created_at", { ascending: true });
         
-        // For match messages, execute the query
-        if (currentMatchId) {
-          const { data: messagesData, error: messagesError } = await query;
+      if (currentMatchId) {
+        // For match chat, filter by match_id in content
+        query = query.like("content", `%"match_id":"${currentMatchId}"%`);
+      } else if (currentRecipientId && user.id) {
+        // For direct messages, we need to get the current user's player ID first
+        const { data: playerData } = await supabase
+          .from("players")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (playerData) {
+          const playerId = playerData.id;
+          // Get messages where content contains conversation between these two players
+          const { data: messagesData, error: messagesError } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .order("created_at", { ascending: true });
           
           if (messagesError) throw messagesError;
           
-          // Process the messages to extract the actual message content from the JSON
-          const processedMessages = (messagesData || []).map(msg => {
+          // Filter messages manually for direct conversation
+          const filteredMessages = (messagesData || []).filter(msg => {
+            try {
+              const parsedContent = JSON.parse(msg.content);
+              return (
+                (parsedContent.sender_id === playerId && parsedContent.recipient_id === currentRecipientId) ||
+                (parsedContent.sender_id === currentRecipientId && parsedContent.recipient_id === playerId)
+              );
+            } catch (e) {
+              return false;
+            }
+          });
+          
+          // Process the filtered messages
+          const processedMessages = filteredMessages.map(msg => {
             try {
               const parsedContent = JSON.parse(msg.content);
               return {
@@ -151,60 +188,47 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
           });
           
           setMessages(processedMessages);
+          setLoading(false);
+          return;
         }
-
-      } catch (error) {
-        console.error("Error fetching messaging data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load messages",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchData();
-    
-    // Set up subscription for real-time updates
-    const channel = supabase
-      .channel('chat_messages_changes')
-      .on('postgres_changes', 
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages'
-        }, 
-        (payload) => {
-          const newMsg = payload.new;
+      
+      // For match messages, execute the query
+      if (currentMatchId) {
+        const { data: messagesData, error: messagesError } = await query;
+        
+        if (messagesError) throw messagesError;
+        
+        // Process the messages to extract the actual message content from the JSON
+        const processedMessages = (messagesData || []).map(msg => {
           try {
-            const parsedContent = JSON.parse(newMsg.content);
-            
-            // Check if this message belongs to the current conversation
-            if (
-              (currentMatchId && parsedContent.match_id === currentMatchId) ||
-              (currentRecipientId && 
-                ((parsedContent.sender_id === currentRecipientId) || 
-                 (parsedContent.recipient_id === currentRecipientId)))
-            ) {
-              setMessages(msgs => [...msgs, {
-                ...newMsg,
-                actualContent: parsedContent.message || newMsg.content,
-                metadata: parsedContent
-              }]);
-            }
+            const parsedContent = JSON.parse(msg.content);
+            return {
+              ...msg,
+              actualContent: parsedContent.message || msg.content,
+              metadata: parsedContent
+            };
           } catch (e) {
-            console.error("Error parsing message content:", e);
+            return {
+              ...msg,
+              actualContent: msg.content,
+              metadata: {}
+            };
           }
-        }
-      )
-      .subscribe();
+        });
+        
+        setMessages(processedMessages);
+      }
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, currentMatchId, currentRecipientId, toast]);
+    } catch (error) {
+      console.error("Error fetching messaging data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -213,18 +237,11 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user || !canMessage) return;
     
     try {
-      const { data: playerData, error: playerError } = await supabase
-        .from("players")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-        
-      if (playerError) throw playerError;
-      
-      const senderId = playerData.id;
+      const senderId = currentPlayerId;
+      if (!senderId) return;
       
       const messageData = {
         sender_id: senderId,
@@ -264,6 +281,19 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
     );
   }
 
+  if (!canMessage && !currentMatchId) {
+    return (
+      <Card className="p-6 text-center">
+        <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Match Required</h3>
+        <p className="text-gray-600">
+          You can only message players after you've both matched with each other. 
+          Use the player finder to like players and wait for them to like you back!
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
@@ -284,6 +314,9 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
             <p className="text-sm text-gray-500">
               {match.sport} match on {format(new Date(match.played_at), "MMMM d, yyyy 'at' h:mm a")}
             </p>
+          )}
+          {recipient && !match && (
+            <p className="text-sm text-green-600">✓ Mutual match - you can message!</p>
           )}
         </div>
       </div>
@@ -328,10 +361,15 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
         <Textarea
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder={canMessage ? "Type a message..." : "Match required to message"}
           className="resize-none"
+          disabled={!canMessage}
         />
-        <Button type="submit" className="bg-orange-600 hover:bg-orange-700 self-end">
+        <Button 
+          type="submit" 
+          className="bg-orange-600 hover:bg-orange-700 self-end"
+          disabled={!canMessage}
+        >
           <Send className="h-4 w-4" />
         </Button>
       </form>

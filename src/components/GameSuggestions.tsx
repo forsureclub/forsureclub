@@ -42,7 +42,7 @@ export const GameSuggestions = () => {
 
       setPlayerProfile(player);
 
-      // Find players with similar ability and same location
+      // Find players with similar ability (within 0.5 rating) and exact same location and sport
       const { data: similarPlayers, error: playersError } = await supabase
         .from("players")
         .select("*")
@@ -82,23 +82,23 @@ export const GameSuggestions = () => {
     }
   };
 
-  const requestGame = async (suggestion: any) => {
+  const requestMatch = async (suggestion: any) => {
     try {
-      // Create a match request
+      // Create a match request (pending until both players confirm)
       const { data: match, error: matchError } = await supabase
         .from("matches")
         .insert({
           sport: suggestion.sport,
           location: suggestion.location,
           played_at: suggestion.suggestedDate.toISOString(),
-          status: "pending"
+          status: "pending_match"
         })
         .select()
         .single();
 
       if (matchError) throw matchError;
 
-      // Add both players to the match
+      // Add both players to the match - initiator is confirmed, recipient needs to confirm
       const { error: playersError } = await supabase
         .from("match_players")
         .insert([
@@ -116,20 +116,46 @@ export const GameSuggestions = () => {
 
       if (playersError) throw playersError;
 
+      // Send notification to the other player
+      await sendMatchNotification(suggestion.opponent.email, {
+        initiatorName: playerProfile.name,
+        sport: suggestion.sport,
+        location: suggestion.location,
+        date: format(suggestion.suggestedDate, "MMM d, yyyy 'at' h:mm a"),
+        matchId: match.id
+      });
+
       toast({
-        title: "Game Requested!",
-        description: `Game request sent to ${suggestion.opponent.name}`,
+        title: "Match Request Sent!",
+        description: `Match request sent to ${suggestion.opponent.name}. They will be notified via email.`,
       });
 
       // Remove from suggestions
       setSuggestedGames(prev => prev.filter(s => s.id !== suggestion.id));
     } catch (error) {
-      console.error("Error requesting game:", error);
+      console.error("Error requesting match:", error);
       toast({
         title: "Error",
-        description: "Failed to request game",
+        description: "Failed to send match request",
         variant: "destructive",
       });
+    }
+  };
+
+  const sendMatchNotification = async (recipientEmail: string, matchDetails: any) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-match-notification", {
+        body: { 
+          recipientEmail,
+          matchDetails
+        }
+      });
+      
+      if (error) {
+        console.error("Failed to send notification:", error);
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
     }
   };
 
@@ -153,18 +179,19 @@ export const GameSuggestions = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Suggested Games</h3>
+        <h3 className="text-lg font-semibold">Suggested Matches</h3>
         <Badge variant="outline" className="bg-orange-50 text-orange-700">
-          {playerProfile.city} • Rating {playerProfile.rating.toFixed(1)}
+          {playerProfile.city} • Rating {playerProfile.rating.toFixed(1)} • Similar ability only
         </Badge>
       </div>
 
       {suggestedGames.length === 0 ? (
         <Card className="p-6 text-center">
           <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Matches Found</h3>
+          <h3 className="text-lg font-semibold mb-2">No Similar Players Found</h3>
           <p className="text-gray-600">
-            No players with similar ability found in {playerProfile.city}. Try checking back later!
+            No players with similar ability (±0.5 rating) found in {playerProfile.city}. 
+            Try checking back later or adjusting your location!
           </p>
         </Card>
       ) : (
@@ -185,7 +212,7 @@ export const GameSuggestions = () => {
                         <Star className="h-4 w-4" />
                         <span>Rating: {suggestion.opponent.rating.toFixed(1)}</span>
                         <span className="text-green-600">
-                          (Match: {(5 - suggestion.matchRating * 2).toFixed(1)}/5)
+                          (Diff: {suggestion.matchRating.toFixed(1)})
                         </span>
                       </div>
                     </div>
@@ -204,10 +231,10 @@ export const GameSuggestions = () => {
                 </div>
                 
                 <Button 
-                  onClick={() => requestGame(suggestion)}
+                  onClick={() => requestMatch(suggestion)}
                   className="bg-orange-600 hover:bg-orange-700"
                 >
-                  Request Game
+                  Send Match Request
                 </Button>
               </div>
             </Card>
