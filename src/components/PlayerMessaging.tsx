@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -64,19 +63,16 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
         }
         
         // Fetch existing messages
-        // Use a custom metadata field in the content to store recipient/match info
-        // Format will be JSON stored as string in the content field
         let query = supabase
           .from("chat_messages")
           .select("*")
           .order("created_at", { ascending: true });
           
         if (currentMatchId) {
-          // For match chat, we'll use a special format in the content field
-          // that starts with a JSON string containing match_id
+          // For match chat, filter by match_id in content
           query = query.like("content", `%"match_id":"${currentMatchId}"%`);
         } else if (currentRecipientId && user.id) {
-          // For direct messages, we'll look for messages between these two users
+          // For direct messages, we need to get the current user's player ID first
           const { data: playerData } = await supabase
             .from("players")
             .select("id")
@@ -85,39 +81,77 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
           
           if (playerData) {
             const playerId = playerData.id;
-            // Look for messages where the content contains both users' IDs
-            query = query.or(
-              `content.like.%"sender_id":"${playerId}"%,content.like.%"recipient_id":"${currentRecipientId}"%`,
-              `content.like.%"sender_id":"${currentRecipientId}"%,content.like.%"recipient_id":"${playerId}"%`
-            );
+            // Get messages where content contains conversation between these two players
+            const { data: messagesData, error: messagesError } = await supabase
+              .from("chat_messages")
+              .select("*")
+              .order("created_at", { ascending: true });
+            
+            if (messagesError) throw messagesError;
+            
+            // Filter messages manually for direct conversation
+            const filteredMessages = (messagesData || []).filter(msg => {
+              try {
+                const parsedContent = JSON.parse(msg.content);
+                return (
+                  (parsedContent.sender_id === playerId && parsedContent.recipient_id === currentRecipientId) ||
+                  (parsedContent.sender_id === currentRecipientId && parsedContent.recipient_id === playerId)
+                );
+              } catch (e) {
+                return false;
+              }
+            });
+            
+            // Process the filtered messages
+            const processedMessages = filteredMessages.map(msg => {
+              try {
+                const parsedContent = JSON.parse(msg.content);
+                return {
+                  ...msg,
+                  actualContent: parsedContent.message || msg.content,
+                  metadata: parsedContent
+                };
+              } catch (e) {
+                return {
+                  ...msg,
+                  actualContent: msg.content,
+                  metadata: {}
+                };
+              }
+            });
+            
+            setMessages(processedMessages);
+            setLoading(false);
+            return;
           }
         }
         
-        const { data: messagesData, error: messagesError } = await query;
-        
-        if (messagesError) throw messagesError;
-        
-        // Process the messages to extract the actual message content from the JSON
-        const processedMessages = (messagesData || []).map(msg => {
-          try {
-            // The content might be a JSON string with metadata and message
-            const parsedContent = JSON.parse(msg.content);
-            return {
-              ...msg,
-              actualContent: parsedContent.message || msg.content,
-              metadata: parsedContent
-            };
-          } catch (e) {
-            // If parsing fails, just use the content as is
-            return {
-              ...msg,
-              actualContent: msg.content,
-              metadata: {}
-            };
-          }
-        });
-        
-        setMessages(processedMessages);
+        // For match messages, execute the query
+        if (currentMatchId) {
+          const { data: messagesData, error: messagesError } = await query;
+          
+          if (messagesError) throw messagesError;
+          
+          // Process the messages to extract the actual message content from the JSON
+          const processedMessages = (messagesData || []).map(msg => {
+            try {
+              const parsedContent = JSON.parse(msg.content);
+              return {
+                ...msg,
+                actualContent: parsedContent.message || msg.content,
+                metadata: parsedContent
+              };
+            } catch (e) {
+              return {
+                ...msg,
+                actualContent: msg.content,
+                metadata: {}
+              };
+            }
+          });
+          
+          setMessages(processedMessages);
+        }
 
       } catch (error) {
         console.error("Error fetching messaging data:", error);
@@ -161,14 +195,12 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
               }]);
             }
           } catch (e) {
-            // If we can't parse the content, ignore this message
             console.error("Error parsing message content:", e);
           }
         }
       )
       .subscribe();
 
-    // Clean up subscription
     return () => {
       supabase.removeChannel(channel);
     };
@@ -184,7 +216,6 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
     if (!newMessage.trim() || !user) return;
     
     try {
-      // First, get the current player ID for the logged-in user
       const { data: playerData, error: playerError } = await supabase
         .from("players")
         .select("id")
@@ -195,7 +226,6 @@ export const PlayerMessaging = ({ matchId, recipientId }: { matchId?: string; re
       
       const senderId = playerData.id;
       
-      // Create the message content with metadata as JSON
       const messageData = {
         sender_id: senderId,
         recipient_id: currentRecipientId,
