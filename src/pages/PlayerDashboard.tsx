@@ -1,15 +1,14 @@
+
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { SimpleMatchForm } from "@/components/SimpleMatchForm";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, Calendar, Activity, MessageSquare, Video, Trophy } from "lucide-react";
+import { User, MessageSquare, Video } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { PlayerMatches } from "@/components/PlayerMatches";
 
@@ -17,19 +16,9 @@ const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string | null>("Padel"); // Default to Padel
-  const [activeTab, setActiveTab] = useState("matches");
   const { toast } = useToast();
   const { user } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    // Check for tab query parameter
-    const params = new URLSearchParams(location.search);
-    const tabParam = params.get("tab");
-    if (tabParam && ["matches", "record-match"].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [location]);
 
   useEffect(() => {
     if (user) {
@@ -182,12 +171,6 @@ const PlayerDashboard = () => {
               AI Coaching
             </Button>
           </Link>
-          <Link to="/chat">
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center gap-2">
-              <MessageSquare size={18} />
-              Find Games
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -242,12 +225,6 @@ const PlayerDashboard = () => {
                         </Link>
                       </Button>
                       <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
-                        <Link to="/chat">
-                          <MessageSquare size={16} />
-                          <span>Find Games with AI</span>
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild className="w-full flex items-center gap-2 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                         <Link to={`/player/${playerProfile.id}`}>
                           <User size={16} />
                           <span>View Public Profile</span>
@@ -273,37 +250,7 @@ const PlayerDashboard = () => {
 
         <div className="md:col-span-2">
           {playerProfile ? (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 grid w-full grid-cols-2">
-                <TabsTrigger value="matches" className="flex items-center gap-2">
-                  <Trophy size={16} />
-                  <span>Your Matches</span>
-                </TabsTrigger>
-                <TabsTrigger value="record-match" className="flex items-center gap-2">
-                  <Calendar size={16} />
-                  <span>Record Match</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="matches" className="space-y-4">
-                <PlayerMatches />
-              </TabsContent>
-              
-              <TabsContent value="record-match">
-                <Card className="border-0 shadow-lg">
-                  <CardHeader>
-                    <CardTitle>Record Match Result</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SimpleMatchForm 
-                      playerId={playerProfile.id}
-                      playerName={playerProfile.name}
-                      onMatchRecorded={handleRefreshProfile}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+            <PlayerMatches />
           ) : (
             <Card className="p-6 border-0 shadow-lg bg-gradient-to-b from-white to-gray-50">
               <div className="text-center space-y-4">
