@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "./ui/button";
@@ -11,6 +10,7 @@ import { Loader2, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
+import { MatchPayment } from "./MatchPayment";
 
 type BookingSlot = {
   date: string;
@@ -38,6 +38,8 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
   const [confirming, setConfirming] = useState(false);
   const [allConfirmed, setAllConfirmed] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [paymentRequired, setPaymentRequired] = useState(false);
+  const [matchPaid, setMatchPaid] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -53,17 +55,31 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
   const facilityId = facilityMap[location] || "facility-123"; // Default to Stockholm facility
 
   useEffect(() => {
-    // Check if all players have confirmed
-    const checkConfirmations = async () => {
+    // Check if all players have confirmed and payment status
+    const checkMatchStatus = async () => {
       try {
         const confirmed = await checkAllPlayersConfirmed(matchId);
         setAllConfirmed(confirmed);
+        
+        if (confirmed) {
+          // Check payment status
+          const { data: match, error } = await supabase
+            .from("matches")
+            .select("status")
+            .eq("id", matchId)
+            .single();
+            
+          if (error) throw error;
+          
+          setPaymentRequired(confirmed && match.status !== 'paid');
+          setMatchPaid(match.status === 'paid');
+        }
       } catch (error) {
-        console.error("Error checking confirmations:", error);
+        console.error("Error checking match status:", error);
       }
     };
 
-    checkConfirmations();
+    checkMatchStatus();
   }, [matchId]);
 
   // Load available slots for the selected date
@@ -122,9 +138,10 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
       setAllConfirmed(confirmed);
       
       if (confirmed) {
+        setPaymentRequired(true);
         toast({
           title: "All players confirmed!",
-          description: "Now you can book a court for this match.",
+          description: "Payment is now required to secure your court booking.",
         });
       }
     } catch (error: any) {
@@ -140,7 +157,7 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
 
   // Book the selected court
   const handleBooking = async () => {
-    if (!selectedSlot || !allConfirmed) return;
+    if (!selectedSlot || !matchPaid) return;
     
     setLoading(true);
     try {
@@ -172,6 +189,15 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentComplete = () => {
+    setPaymentRequired(false);
+    setMatchPaid(true);
+    toast({
+      title: "Payment complete!",
+      description: "You can now proceed to book your court.",
+    });
   };
 
   if (bookingComplete) {
@@ -207,7 +233,7 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
       {!allConfirmed ? (
         <div className="space-y-4">
           <p className="text-gray-600">
-            All players need to confirm before booking a court.
+            All players need to confirm before proceeding to payment.
           </p>
           <Button 
             onClick={handleConfirm} 
@@ -224,10 +250,19 @@ export const CourtBooking = ({ matchId, sport, location, playerIds }: CourtBooki
             )}
           </Button>
         </div>
+      ) : paymentRequired ? (
+        <MatchPayment
+          matchId={matchId}
+          timeSlot={selectedSlot?.startTime || "18:00"}
+          sport={sport}
+          location={location}
+          playedAt={new Date().toISOString()}
+          onPaymentComplete={handlePaymentComplete}
+        />
       ) : (
         <div className="space-y-4">
           <p className="text-gray-600 mb-4">
-            All players have confirmed! Select a date and time to book your {sport} court.
+            Payment complete! Select a date and time to book your {sport} court.
           </p>
           
           <div className="mb-4">
