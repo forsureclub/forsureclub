@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Loader2, CreditCard, Clock, Pound } from "lucide-react";
+import { Loader2, CreditCard, Clock, PoundSterling } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -119,7 +119,7 @@ export const MatchPayment = ({
         <div className="bg-white p-4 rounded-lg border border-green-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Pound className="h-5 w-5 text-green-600" />
+              <PoundSterling className="h-5 w-5 text-green-600" />
               <span className="font-semibold">Your Payment:</span>
             </div>
             <div className="text-right">

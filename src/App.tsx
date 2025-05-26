@@ -8,7 +8,7 @@ import { Navigation } from "./components/Navigation";
 import Index from "./pages/Index";
 import PlayerProfile from "./pages/PlayerProfile";
 import PlayerDashboard from "./pages/PlayerDashboard";
-import TournamentResults from "./pages/TournamentResults";
+import { TournamentResults } from "./pages/TournamentResults";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
