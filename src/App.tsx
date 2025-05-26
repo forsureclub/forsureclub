@@ -10,7 +10,6 @@ import Index from "./pages/Index";
 import PlayerProfile from "./pages/PlayerProfile";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import { TournamentResults } from "./pages/TournamentResults";
-import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Coaching from "./pages/Coaching";
@@ -33,7 +32,6 @@ const App = () => (
             <Route path="/player/:id" element={<PlayerProfile />} />
             <Route path="/player-dashboard" element={<PlayerDashboard />} />
             <Route path="/tournament-results" element={<TournamentResults />} />
-            <Route path="/chat" element={<Chat />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/coaching" element={<Coaching />} />

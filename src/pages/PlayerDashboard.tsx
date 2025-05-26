@@ -1,22 +1,27 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SportSelector } from "@/components/SportSelector";
-import { User, MessageSquare, Video, Bot, Trophy, Users, Calendar } from "lucide-react";
+import { User, MessageSquare, Video, Bot, Trophy, Users, Calendar, Send } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { PlayerMatches } from "@/components/PlayerMatches";
-import { PlayerMessaging } from "@/components/PlayerMessaging";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedSport, setSelectedSport] = useState<string | null>("Padel"); // Default to Padel
+  const [selectedSport, setSelectedSport] = useState<string | null>("Padel");
   const [showAIChat, setShowAIChat] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const location = useLocation();
@@ -24,10 +29,59 @@ const PlayerDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchChatMessages();
     } else {
       setIsLoading(false);
     }
   }, [user]);
+
+  // Set up real-time subscription for new messages
+  useEffect(() => {
+    if (!user) return;
+
+    const chatSubscription = supabase
+      .channel('chat_messages_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          setMessages((current) => [...current, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(chatSubscription);
+    };
+  }, [user]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const fetchChatMessages = async () => {
+    if (!user) return;
+
+    try {
+      const { data: chatMessages } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      
+      if (chatMessages) {
+        setMessages(chatMessages);
+      }
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -78,9 +132,10 @@ const PlayerDashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      toast.error({
+      toast({
         title: "Error",
         description: "Failed to load profile data",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -128,16 +183,17 @@ const PlayerDashboard = () => {
           
         setPlayerProfile(newPlayer);
         
-        toast.success({
+        toast({
           title: "Sport Selected",
           description: `You've selected ${sport || "Padel"}. Please complete your profile.`,
         });
       }
     } catch (error) {
       console.error("Error creating player profile:", error);
-      toast.error({
+      toast({
         title: "Error",
         description: "Failed to create player profile",
+        variant: "destructive",
       });
     }
   };
@@ -146,6 +202,40 @@ const PlayerDashboard = () => {
     if (playerProfile) {
       // Use club field to store the photo URL
       setPlayerProfile({...playerProfile, club: url});
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newMessage.trim() || isSending) return;
+    
+    try {
+      setIsSending(true);
+      
+      // Call the sports-chat edge function
+      const { data, error } = await supabase.functions.invoke('sports-chat', {
+        body: {
+          message: newMessage,
+          userId: user?.id,
+          sport: playerProfile?.sport || "",
+          location: playerProfile?.city || ""
+        }
+      });
+      
+      if (error) throw error;
+      
+      setNewMessage("");
+      
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -317,7 +407,90 @@ const PlayerDashboard = () => {
             <Bot className="h-6 w-6 text-blue-600" />
             <h2 className="text-lg font-semibold">AI Game Finder</h2>
           </div>
-          <PlayerMessaging />
+          
+          {/* Chat Interface */}
+          <div className="flex flex-col h-full">
+            <div className="flex-1 bg-white rounded-lg p-4 mb-4 min-h-[400px] max-h-[500px] overflow-y-auto border">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-center">
+                  <p className="text-gray-500 mb-4">Welcome to the Game Finder AI!</p>
+                  <p className="text-gray-500">
+                    Ask me to help you find {playerProfile?.sport || 'Padel'} matches in {playerProfile?.city || 'your area'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        msg.is_ai ? "justify-start" : "justify-end"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          msg.is_ai
+                            ? "bg-gray-100 text-gray-800"
+                            : "bg-blue-600 text-white"
+                        }`}
+                      >
+                        <p className="whitespace-pre-line">{msg.content}</p>
+                        <p className="text-xs mt-1 opacity-70">
+                          {new Date(msg.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Message Input */}
+            <form onSubmit={handleSendMessage} className="flex gap-2 mb-4">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Ask about finding games..."
+                disabled={isSending}
+                className="flex-1"
+              />
+              <Button type="submit" disabled={isSending} size="sm">
+                {isSending ? <Bot className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </form>
+
+            {/* Suggested Questions */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-700">Quick Actions:</h4>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setNewMessage(`Find me a ${playerProfile?.sport || 'Padel'} match in ${playerProfile?.city || 'my area'}`)}
+                  className="text-left justify-start"
+                >
+                  Find a match
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setNewMessage(`When are good times to play ${playerProfile?.sport || 'Padel'}?`)}
+                  className="text-left justify-start"
+                >
+                  Best play times
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setNewMessage(`Find players at my skill level (${playerProfile?.rating || 2.5}/5)`)}
+                  className="text-left justify-start"
+                >
+                  Similar skill level
+                </Button>
+              </div>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
