@@ -8,10 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SportSelector } from "@/components/SportSelector";
-import { User, MessageSquare, Video, Bot, Trophy, Users, Calendar, Send } from "lucide-react";
+import { User, MessageSquare, Video, Bot, Trophy, Users, Calendar, Send, Heart } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { PlayerMatches } from "@/components/PlayerMatches";
+import { PlayerSwiper } from "@/components/PlayerSwiper";
+import { GameSuggestions } from "@/components/GameSuggestions";
 
 const PlayerDashboard = () => {
   const [playerProfile, setPlayerProfile] = useState<any>(null);
@@ -270,7 +273,7 @@ const PlayerDashboard = () => {
                       <PhotoUpload 
                         playerId={playerProfile.id}
                         playerName={playerProfile.name}
-                        existingUrl={playerProfile.club} // Using club field for photo
+                        existingUrl={playerProfile.club}
                         onPhotoUpdated={handlePhotoUpdated}
                       />
                       
@@ -379,6 +382,40 @@ const PlayerDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Game Finder Section with Tabs */}
+        {playerProfile && (
+          <div className="w-full">
+            <Card className="border-0 shadow-lg bg-gradient-to-b from-white to-gray-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-orange-600" />
+                  Find Players & Schedule Games
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="suggestions" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="suggestions">Game Suggestions</TabsTrigger>
+                    <TabsTrigger value="discover">Discover Players</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="suggestions" className="mt-6">
+                    <GameSuggestions />
+                  </TabsContent>
+                  
+                  <TabsContent value="discover" className="mt-6">
+                    <div className="text-center mb-4">
+                      <h3 className="text-lg font-semibold mb-2">Discover Similar Players</h3>
+                      <p className="text-gray-600">Swipe through players with similar abilities in your area</p>
+                    </div>
+                    <PlayerSwiper />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Matches Section */}
         <div className="w-full">
