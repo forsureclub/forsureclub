@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Calendar, Clock, User } from "lucide-react";
+import { MapPin, Star, User } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
@@ -94,24 +94,18 @@ export const PlayerCard = ({ player, onLike, onSkip }: PlayerCardProps) => {
             </div>
           </div>
 
-          {/* Player Details */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center justify-center p-2 bg-orange-50 rounded-lg">
-              <Calendar size={14} className="mr-2 text-orange-600" />
-              <span className="capitalize text-orange-700 font-medium">{player.play_time}</span>
-            </div>
-            
-            <div className="flex items-center justify-center p-2 bg-blue-50 rounded-lg">
-              <Clock size={14} className="mr-2 text-blue-600" />
-              <span className="text-blue-700 font-medium">Flexible</span>
-            </div>
-          </div>
-
           {/* Sport Badge */}
           <div className="flex justify-center">
             <Badge variant="outline" className="bg-white text-gray-700 border-gray-300 font-medium px-4 py-1">
               {player.sport}
             </Badge>
+          </div>
+
+          {/* Privacy Notice */}
+          <div className="bg-blue-50 rounded-lg p-3 text-center">
+            <p className="text-xs text-blue-700">
+              Contact details will be shared once you match and arrange a game
+            </p>
           </div>
         </div>
 

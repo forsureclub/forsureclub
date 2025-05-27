@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { SkillLevelUpdate } from "@/components/SkillLevelUpdate";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MatchResults } from "@/components/MatchResults";
-import { ChevronLeft, MapPin, Star, Trophy, Users, Calendar } from "lucide-react";
+import { ChevronLeft, MapPin, Star, Trophy, Users, Calendar, Shield } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const PlayerProfile = () => {
@@ -174,12 +175,6 @@ const PlayerProfile = () => {
                 </div>
                 <Separator />
                 
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Play Time</span>
-                  <span className="font-medium capitalize">{player.play_time || "Flexible"}</span>
-                </div>
-                <Separator />
-                
                 {player.club && (
                   <>
                     <div className="flex justify-between">
@@ -193,27 +188,15 @@ const PlayerProfile = () => {
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-3">Contact Information</h3>
-              <div className="space-y-3">
-                {player.email && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Email</span>
-                      <span className="font-medium">{player.email}</span>
-                    </div>
-                    <Separator />
-                  </>
-                )}
-                
-                {player.phone_number && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Phone</span>
-                      <span className="font-medium">{player.phone_number}</span>
-                    </div>
-                    <Separator />
-                  </>
-                )}
+              <h3 className="text-lg font-semibold mb-3">Privacy & Contact</h3>
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-900">Protected Information</span>
+                </div>
+                <p className="text-xs text-blue-700">
+                  Contact details (email and phone) are only shared once you successfully match and arrange a game together for privacy and safety.
+                </p>
               </div>
             </div>
           </div>

@@ -127,7 +127,7 @@ export const GameSuggestions = () => {
 
       toast({
         title: "Match Request Sent!",
-        description: `Match request sent to ${suggestion.opponent.name}. They will be notified via email.`,
+        description: `Match request sent to ${suggestion.opponent.name}. They will be notified via email and contact details will be shared once confirmed.`,
       });
 
       // Remove from suggestions
@@ -218,7 +218,7 @@ export const GameSuggestions = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
                       <span>{suggestion.location}</span>
@@ -227,6 +227,10 @@ export const GameSuggestions = () => {
                       <Calendar className="h-4 w-4" />
                       <span>{format(suggestion.suggestedDate, "MMM d, h:mm a")}</span>
                     </div>
+                  </div>
+
+                  <div className="bg-blue-50 rounded p-2 text-xs text-blue-700">
+                    Contact details will be shared once both players confirm the match
                   </div>
                 </div>
                 
