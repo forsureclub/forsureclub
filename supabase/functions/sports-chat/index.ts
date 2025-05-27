@@ -30,35 +30,123 @@ serve(async (req) => {
         is_ai: false,
       });
 
-    // Generate an AI response based on the sport and location
+    // Get current user's player data first
+    const currentPlayerResponse = await fetch(
+      `${supabaseUrl}/rest/v1/players?select=*&email=eq.${encodeURIComponent(userId)}`,
+      {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    let currentPlayer = null;
+    if (currentPlayerResponse.ok) {
+      const players = await currentPlayerResponse.json();
+      if (players && players.length > 0) {
+        currentPlayer = players[0];
+      }
+    }
+
+    // Generate an AI response based on the sport, location, and user's rating
     let aiResponse = "";
     
-    // Simple matching logic - in a real app, this would use a real AI service
     if (message.toLowerCase().includes('find') || message.toLowerCase().includes('match') || message.toLowerCase().includes('game')) {
-      // Query the database for potential matches
-      const { data: players } = await supabaseClient
-        .from('players')
-        .select('*')
-        .eq('sport', sport)
-        .eq('city', location)
-        .neq('id', userId) // Exclude the current user
-        .limit(3);
+      // Build query for potential matches with rating similarity
+      let queryUrl = `${supabaseUrl}/rest/v1/players?select=*&sport=eq.${encodeURIComponent(sport)}&city=eq.${encodeURIComponent(location)}`;
       
-      if (players && players.length > 0) {
-        aiResponse = `I found ${players.length} potential ${sport} players in ${location} for you:\n\n`;
-        players.forEach((player: any, index: number) => {
-          aiResponse += `${index + 1}. ${player.name} - Skill level: ${player.rating}/5\n`;
-        });
-        aiResponse += `\nWould you like me to help you connect with any of these players?`;
+      if (currentPlayer) {
+        // Exclude current user and find players within 0.5 rating points
+        const minRating = Math.max(1, currentPlayer.rating - 0.5);
+        const maxRating = Math.min(5, currentPlayer.rating + 0.5);
+        queryUrl += `&id=neq.${currentPlayer.id}&rating=gte.${minRating}&rating=lte.${maxRating}`;
+      }
+      
+      queryUrl += '&limit=5';
+      
+      const playersResponse = await fetch(queryUrl, {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (playersResponse.ok) {
+        const players = await playersResponse.json();
+        
+        if (players && players.length > 0) {
+          aiResponse = `🎾 Great! I found ${players.length} ${sport} players in ${location} with similar skill levels:\n\n`;
+          
+          players.forEach((player, index) => {
+            const ratingDiff = currentPlayer ? Math.abs(player.rating - currentPlayer.rating) : 0;
+            const matchQuality = ratingDiff <= 0.2 ? "Perfect match" : ratingDiff <= 0.5 ? "Great match" : "Good match";
+            
+            aiResponse += `${index + 1}. **${player.name}**\n`;
+            aiResponse += `   • Rating: ${player.rating.toFixed(1)}/5.0 (${matchQuality})\n`;
+            aiResponse += `   • Plays: ${player.play_time}\n`;
+            if (currentPlayer) {
+              aiResponse += `   • Rating difference: ${ratingDiff.toFixed(1)} points\n`;
+            }
+            aiResponse += `\n`;
+          });
+          
+          aiResponse += `💡 **Tips for contacting players:**\n`;
+          aiResponse += `• Use the "Discover Players" tab to like players\n`;
+          aiResponse += `• Send match requests through the app\n`;
+          aiResponse += `• Players with ratings ±0.5 from yours provide the best matches\n\n`;
+          aiResponse += `Would you like me to help you find players at a specific time or with other preferences?`;
+        } else {
+          if (currentPlayer) {
+            aiResponse = `😔 No ${sport} players found in ${location} with similar ratings (${currentPlayer.rating.toFixed(1)} ±0.5).\n\n`;
+            aiResponse += `**Suggestions:**\n`;
+            aiResponse += `• Try expanding your search to nearby areas\n`;
+            aiResponse += `• Consider players with slightly different ratings\n`;
+            aiResponse += `• Check back later as new players join regularly\n\n`;
+            aiResponse += `Would you like me to notify you when new players with similar ratings register?`;
+          } else {
+            aiResponse = `I couldn't find any ${sport} players in ${location} right now. Would you like me to notify you when new players register?`;
+          }
+        }
+      }
+    } else if (message.toLowerCase().includes('rating') || message.toLowerCase().includes('skill') || message.toLowerCase().includes('level')) {
+      if (currentPlayer) {
+        const skillLevel = getSkillLevel(currentPlayer.rating);
+        aiResponse = `🏆 Your current ${sport} rating is ${currentPlayer.rating.toFixed(1)}/5.0 (${skillLevel} level).\n\n`;
+        aiResponse += `**Perfect matches:** Players rated ${Math.max(1, currentPlayer.rating - 0.2).toFixed(1)} - ${Math.min(5, currentPlayer.rating + 0.2).toFixed(1)}\n`;
+        aiResponse += `**Good matches:** Players rated ${Math.max(1, currentPlayer.rating - 0.5).toFixed(1)} - ${Math.min(5, currentPlayer.rating + 0.5).toFixed(1)}\n\n`;
+        aiResponse += `Would you like me to find players in your skill range?`;
       } else {
-        aiResponse = `I couldn't find any ${sport} players in ${location} right now. Would you like me to notify you when new players register?`;
+        aiResponse = `I'd be happy to help with skill-based matching! What's your current ${sport} rating or skill level?`;
       }
     } else if (message.toLowerCase().includes('schedule') || message.toLowerCase().includes('when') || message.toLowerCase().includes('time')) {
-      aiResponse = `The best times for ${sport} matches in ${location} are typically weekday evenings after 6pm and weekends. When would you prefer to play?`;
-    } else if (message.toLowerCase().includes('skill') || message.toLowerCase().includes('level') || message.toLowerCase().includes('rating')) {
-      aiResponse = `For ${sport}, we recommend finding players within 0.5-1 rating points of your own skill level for the most competitive matches. Would you like me to find players with a specific skill rating?`;
+      aiResponse = `⏰ Best times for ${sport} matches in ${location}:\n\n`;
+      aiResponse += `**Weekdays:** 6:00 PM - 9:00 PM (most popular)\n`;
+      aiResponse += `**Weekends:** 9:00 AM - 12:00 PM & 2:00 PM - 6:00 PM\n`;
+      aiResponse += `**Peak times:** Wednesday & Saturday evenings\n\n`;
+      if (currentPlayer) {
+        aiResponse += `Your availability: ${currentPlayer.play_time}\n\n`;
+      }
+      aiResponse += `When would you prefer to play? I can help find players available at that time.`;
+    } else if (message.toLowerCase().includes('beginner') || message.toLowerCase().includes('new')) {
+      aiResponse = `🌟 Welcome to ${sport}! Here's how I can help you get started:\n\n`;
+      aiResponse += `**For beginners (Rating 1.0-2.0):**\n`;
+      aiResponse += `• I'll match you with other beginners\n`;
+      aiResponse += `• Look for players with "patient" or "coaching" in their profile\n`;
+      aiResponse += `• Start with casual games to build confidence\n\n`;
+      aiResponse += `Would you like me to find beginner-friendly players in ${location}?`;
     } else {
-      aiResponse = `Thanks for your message about ${sport} in ${location}. How can I help you find a match today?`;
+      aiResponse = `🤖 Hi! I'm your ${sport} match finder. I can help you:\n\n`;
+      aiResponse += `🎯 **Find players with similar ratings** - Just say "find me a match"\n`;
+      aiResponse += `⭐ **Check skill compatibility** - Ask about ratings or skill levels\n`;
+      aiResponse += `🕐 **Schedule games** - Ask about best times to play\n`;
+      aiResponse += `📍 **Local recommendations** - Find players in ${location}\n\n`;
+      if (currentPlayer) {
+        aiResponse += `Your rating: ${currentPlayer.rating.toFixed(1)}/5.0 • Location: ${location}\n\n`;
+      }
+      aiResponse += `What would you like help with today?`;
     }
     
     // Save AI response to database
@@ -94,30 +182,20 @@ serve(async (req) => {
   }
 });
 
+// Helper function to determine skill level
+function getSkillLevel(rating) {
+  if (rating <= 1.5) return "Beginner";
+  if (rating <= 2.5) return "Intermediate";
+  if (rating <= 3.5) return "Advanced";
+  if (rating <= 4.5) return "Expert";
+  return "Professional";
+}
+
 // Simple Supabase client for Deno
-function createClient(supabaseUrl: string, supabaseKey: string) {
+function createClient(supabaseUrl, supabaseKey) {
   return {
-    from: (table: string) => ({
-      select: (columns: string = '*') => ({
-        eq: (column: string, value: any) => ({
-          neq: (column: string, value: any) => ({
-            limit: async (limit: number) => {
-              const response = await fetch(
-                `${supabaseUrl}/rest/v1/${table}?select=${columns}&${column}=eq.${value}&limit=${limit}`,
-                {
-                  headers: {
-                    'apikey': supabaseKey,
-                    'Authorization': `Bearer ${supabaseKey}`,
-                    'Content-Type': 'application/json'
-                  }
-                }
-              );
-              return { data: await response.json() };
-            }
-          })
-        })
-      }),
-      insert: async (record: any) => {
+    from: (table) => ({
+      insert: async (record) => {
         const response = await fetch(
           `${supabaseUrl}/rest/v1/${table}`,
           {
