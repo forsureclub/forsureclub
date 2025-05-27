@@ -1,7 +1,8 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { User, LogOut, Home, MessageSquare } from "lucide-react";
+import { User, LogOut, Home, MessageSquare, Trophy } from "lucide-react";
 
 export const Navigation = () => {
   const location = useLocation();
