@@ -1,7 +1,6 @@
-
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Trophy } from "lucide-react";
+import { Users, TrendingUp } from "lucide-react";
 
 export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
   return (
@@ -12,10 +11,11 @@ export const Hero = ({ onStartMatching }: { onStartMatching: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <Trophy className="h-16 w-16 text-orange-600" />
-            <span className="text-4xl font-bold text-gray-900">ForSure Club</span>
-          </div>
+          <img 
+            src="/lovable-uploads/3f9c0fbf-04f0-4d6d-8412-ea07f3d1aa25.png" 
+            alt="ForSure Club" 
+            className="h-32 mx-auto mb-4"
+          />
         </motion.div>
         
         <motion.h1 

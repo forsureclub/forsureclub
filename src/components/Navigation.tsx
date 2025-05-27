@@ -1,8 +1,7 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, User, LogOut, Home, MessageSquare } from "lucide-react";
+import { User, LogOut, Home, MessageSquare } from "lucide-react";
 
 export const Navigation = () => {
   const location = useLocation();
@@ -21,8 +20,11 @@ export const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <Trophy className="h-8 w-8 text-orange-600" />
-            <span className="text-xl font-bold text-gray-900">ForSure Club</span>
+            <img 
+              src="/lovable-uploads/3f9c0fbf-04f0-4d6d-8412-ea07f3d1aa25.png" 
+              alt="ForSure Club" 
+              className="h-8"
+            />
           </Link>
 
           <div className="flex items-center space-x-4">
