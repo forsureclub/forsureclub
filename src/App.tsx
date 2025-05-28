@@ -15,6 +15,8 @@ import Admin from "./pages/Admin";
 import Coaching from "./pages/Coaching";
 import PlayerMessagePage from "./pages/PlayerMessagePage";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import CourtBooking from "./pages/CourtBooking";
+import ClubDashboard from "./pages/ClubDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/coaching" element={<Coaching />} />
             <Route path="/messages/:type/:id" element={<PlayerMessagePage />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/book-court" element={<CourtBooking />} />
+            <Route path="/club-dashboard" element={<ClubDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
