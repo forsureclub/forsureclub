@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Calendar, Clock, MapPin, Star, Filter, Search } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,17 +31,10 @@ interface Court {
   hourly_rate: number;
 }
 
-interface TimeSlot {
-  time: string;
-  available: boolean;
-  price: number;
-}
-
 export const CourtBookingSystem = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedSport, setSelectedSport] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState<string>("all");
   const [loading, setLoading] = useState(true);
@@ -59,7 +52,7 @@ export const CourtBookingSystem = () => {
 
   useEffect(() => {
     filterClubs();
-  }, [clubs, selectedSport, searchQuery, priceRange]);
+  }, [clubs, searchQuery, priceRange]);
 
   const fetchClubs = async () => {
     try {
@@ -91,12 +84,6 @@ export const CourtBookingSystem = () => {
       filtered = filtered.filter(club =>
         club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         club.location.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (selectedSport !== "all") {
-      filtered = filtered.filter(club =>
-        club.courts?.some(court => court.sport.toLowerCase() === selectedSport.toLowerCase())
       );
     }
 
@@ -135,7 +122,7 @@ export const CourtBookingSystem = () => {
 
       toast({
         title: "Booking Confirmed!",
-        description: `Court booked for ${format(startTime, "MMM d, yyyy 'at' h:mm a")}`,
+        description: `Padel court booked for ${format(startTime, "MMM d, yyyy 'at' h:mm a")}`,
       });
 
       // Redirect to payment processing
@@ -176,7 +163,7 @@ export const CourtBookingSystem = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading courts...</div>;
+    return <div className="flex justify-center p-8">Loading padel courts...</div>;
   }
 
   return (
@@ -186,11 +173,11 @@ export const CourtBookingSystem = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Find Courts
+            Find Padel Courts
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Input
                 placeholder="Search clubs or locations..."
@@ -198,19 +185,6 @@ export const CourtBookingSystem = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
-            <Select value={selectedSport} onValueChange={setSelectedSport}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sport" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sports</SelectItem>
-                <SelectItem value="tennis">Tennis</SelectItem>
-                <SelectItem value="padel">Padel</SelectItem>
-                <SelectItem value="squash">Squash</SelectItem>
-                <SelectItem value="badminton">Badminton</SelectItem>
-              </SelectContent>
-            </Select>
 
             <Select value={priceRange} onValueChange={setPriceRange}>
               <SelectTrigger>
@@ -249,10 +223,9 @@ export const CourtBookingSystem = () => {
       {filteredClubs.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
-            <p className="text-gray-500">No clubs found matching your criteria.</p>
+            <p className="text-gray-500">No padel clubs found matching your criteria.</p>
             <Button variant="outline" onClick={() => {
               setSearchQuery("");
-              setSelectedSport("all");
               setPriceRange("all");
             }}>
               Clear Filters
@@ -278,7 +251,7 @@ const ClubCard = ({ club, selectedDate, timeSlots, onBookCourt }: {
       <div className="aspect-video bg-gradient-to-r from-orange-500 to-orange-600 relative">
         <div className="absolute top-4 left-4">
           <Badge className="bg-white text-orange-600">
-            {club.courts?.length || 0} courts
+            {club.courts?.length || 0} padel courts
           </Badge>
         </div>
         <div className="absolute top-4 right-4 flex items-center gap-1 bg-white/90 rounded px-2 py-1">
@@ -321,7 +294,7 @@ const ClubCard = ({ club, selectedDate, timeSlots, onBookCourt }: {
             <div className="space-y-4 border-t pt-4">
               {/* Court Selection */}
               <div>
-                <h4 className="font-medium mb-2">Select Court:</h4>
+                <h4 className="font-medium mb-2">Select Padel Court:</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {club.courts?.map((court) => (
                     <Button
@@ -331,7 +304,7 @@ const ClubCard = ({ club, selectedDate, timeSlots, onBookCourt }: {
                       onClick={() => setSelectedCourt(court)}
                       className="justify-start"
                     >
-                      {court.name} - {court.sport}
+                      {court.name}
                     </Button>
                   ))}
                 </div>

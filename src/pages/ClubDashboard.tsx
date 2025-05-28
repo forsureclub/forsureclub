@@ -4,7 +4,7 @@ import { ClubManagement } from "@/components/ClubManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, DollarSign, Users, Activity, TrendingUp, Clock } from "lucide-react";
+import { Calendar, DollarSign, Users, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ const ClubDashboard = () => {
     todaysBookings: 0,
     weeklyRevenue: 0,
   });
-  const [recentBookings, setRecentBookings] = useState([]);
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ const ClubDashboard = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Club Dashboard</h1>
+        <h1 className="text-3xl font-bold">Padel Club Dashboard</h1>
         <Button className="bg-orange-600 hover:bg-orange-700">
           View Public Profile
         </Button>
@@ -153,14 +153,14 @@ const ClubDashboard = () => {
                   {recentBookings.map((booking: any, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium">Court {booking.court_id}</p>
+                        <p className="font-medium">Padel Court {booking.court_id}</p>
                         <p className="text-sm text-gray-500">
                           {new Date(booking.start_time).toLocaleDateString()} at{" "}
                           {new Date(booking.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">£{booking.total_price || 25}</p>
+                        <p className="font-medium">£{booking.total_price || 35}</p>
                         <p className="text-sm text-green-600">{booking.status}</p>
                       </div>
                     </div>

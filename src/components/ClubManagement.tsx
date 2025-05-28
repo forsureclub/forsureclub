@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
-import { Calendar, Clock, MapPin, Users, Settings, Plus, Edit } from "lucide-react";
+import { MapPin, Users, Settings, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -79,7 +79,7 @@ export const ClubManagement = () => {
 
       toast({
         title: "Success",
-        description: "Club updated successfully",
+        description: "Padel club updated successfully",
       });
 
       fetchClubs();
@@ -95,23 +95,23 @@ export const ClubManagement = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading clubs...</div>;
+    return <div className="flex justify-center p-8">Loading padel clubs...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Club Management</h2>
+        <h2 className="text-2xl font-bold">Padel Club Management</h2>
         <Dialog>
           <DialogTrigger asChild>
             <Button className="bg-orange-600 hover:bg-orange-700">
               <Plus className="h-4 w-4 mr-2" />
-              Add New Club
+              Add New Padel Club
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Club</DialogTitle>
+              <DialogTitle>Add New Padel Club</DialogTitle>
             </DialogHeader>
             <ClubForm onSubmit={(data) => handleClubUpdate(data)} />
           </DialogContent>
@@ -139,12 +139,7 @@ export const ClubManagement = () => {
                 
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{club.courts?.length || 0} courts</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{club.operating_hours}</span>
+                  <span className="text-sm">{club.courts?.length || 0} padel courts</span>
                 </div>
 
                 <div className="flex flex-wrap gap-1">
@@ -180,7 +175,7 @@ const ClubForm = ({ club, onSubmit }: { club?: Club; onSubmit: (data: any) => vo
     location: club?.location || "",
     description: club?.description || "",
     operating_hours: club?.operating_hours || "6:00 AM - 11:00 PM",
-    price_per_hour: club?.price_per_hour || 25,
+    price_per_hour: club?.price_per_hour || 35,
     contact_email: club?.contact_email || "",
     phone: club?.phone || "",
     amenities: club?.amenities?.join(", ") || "Parking, Changing Rooms, Pro Shop",

@@ -62,6 +62,158 @@ export type Database = {
         }
         Relationships: []
       }
+      clubs: {
+        Row: {
+          amenities: string[] | null
+          contact_email: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          images: string[] | null
+          location: string
+          name: string
+          operating_hours: string | null
+          phone: string | null
+          price_per_hour: number
+          rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          contact_email?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          location: string
+          name: string
+          operating_hours?: string | null
+          phone?: string | null
+          price_per_hour?: number
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          amenities?: string[] | null
+          contact_email?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          location?: string
+          name?: string
+          operating_hours?: string | null
+          phone?: string | null
+          price_per_hour?: number
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      court_bookings: {
+        Row: {
+          booking_date: string
+          club_id: string | null
+          court_id: string | null
+          created_at: string | null
+          end_time: string
+          id: string
+          start_time: string
+          status: string | null
+          stripe_session_id: string | null
+          total_price: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          booking_date: string
+          club_id?: string | null
+          court_id?: string | null
+          created_at?: string | null
+          end_time: string
+          id?: string
+          start_time: string
+          status?: string | null
+          stripe_session_id?: string | null
+          total_price?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          booking_date?: string
+          club_id?: string | null
+          court_id?: string | null
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          total_price?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_bookings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_bookings_court_id_fkey"
+            columns: ["court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courts: {
+        Row: {
+          available: boolean | null
+          club_id: string | null
+          created_at: string | null
+          hourly_rate: number | null
+          id: string
+          name: string
+          sport: string
+          surface: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          available?: boolean | null
+          club_id?: string | null
+          created_at?: string | null
+          hourly_rate?: number | null
+          id?: string
+          name: string
+          sport: string
+          surface?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          available?: boolean | null
+          club_id?: string | null
+          created_at?: string | null
+          hourly_rate?: number | null
+          id?: string
+          name?: string
+          sport?: string
+          surface?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courts_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       league_players: {
         Row: {
           created_at: string | null
