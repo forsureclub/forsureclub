@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DatePicker } from "./ui/date-picker";
 import { format, addHours } from "date-fns";
+import { BookingModal } from "./BookingModal";
 
 interface Club {
   id: string;
@@ -20,6 +21,7 @@ interface Club {
   rating: number;
   courts: Court[];
   images: string[];
+  slug?: string;
 }
 
 interface Court {
@@ -38,6 +40,7 @@ export const CourtBookingSystem = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const { toast } = useToast();
 
   const timeSlots: string[] = [
@@ -97,71 +100,6 @@ export const CourtBookingSystem = () => {
     setFilteredClubs(filtered);
   };
 
-  const bookCourt = async (clubId: string, courtId: string, timeSlot: string) => {
-    try {
-      const startTime = new Date(selectedDate);
-      const [hours, minutes] = timeSlot.split(":").map(Number);
-      startTime.setHours(hours, minutes, 0, 0);
-      
-      const endTime = addHours(startTime, 1);
-
-      const { data, error } = await supabase
-        .from("court_bookings")
-        .insert({
-          club_id: clubId,
-          court_id: courtId,
-          start_time: startTime.toISOString(),
-          end_time: endTime.toISOString(),
-          booking_date: selectedDate.toISOString().split('T')[0],
-          status: 'confirmed'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Booking Confirmed!",
-        description: `Padel court booked for ${format(startTime, "MMM d, yyyy 'at' h:mm a")}`,
-      });
-
-      // Redirect to payment processing
-      await processPayment(data.id, clubId);
-    } catch (error) {
-      console.error("Error booking court:", error);
-      toast({
-        title: "Booking Failed",
-        description: "Unable to book court. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const processPayment = async (bookingId: string, clubId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke("process-court-payment", {
-        body: {
-          bookingId,
-          clubId,
-          returnUrl: window.location.origin + "/booking-success"
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
-      }
-    } catch (error) {
-      console.error("Error processing payment:", error);
-      toast({
-        title: "Payment Error",
-        description: "Unable to process payment. Please contact support.",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (loading) {
     return <div className="flex justify-center p-8">Loading padel courts...</div>;
   }
@@ -215,7 +153,7 @@ export const CourtBookingSystem = () => {
             club={club}
             selectedDate={selectedDate}
             timeSlots={timeSlots}
-            onBookCourt={bookCourt}
+            onBookCourt={() => setSelectedClub(club)}
           />
         ))}
       </div>
@@ -233,6 +171,14 @@ export const CourtBookingSystem = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Booking Modal */}
+      {selectedClub && (
+        <BookingModal
+          club={selectedClub}
+          onClose={() => setSelectedClub(null)}
+        />
+      )}
     </div>
   );
 };
@@ -241,7 +187,7 @@ const ClubCard = ({ club, selectedDate, timeSlots, onBookCourt }: {
   club: Club;
   selectedDate: Date;
   timeSlots: string[];
-  onBookCourt: (clubId: string, courtId: string, timeSlot: string) => void;
+  onBookCourt: () => void;
 }) => {
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
   const [expandedTimeSlots, setExpandedTimeSlots] = useState(false);
@@ -328,7 +274,7 @@ const ClubCard = ({ club, selectedDate, timeSlots, onBookCourt }: {
                         key={time}
                         variant="outline"
                         size="sm"
-                        onClick={() => onBookCourt(club.id, selectedCourt.id, time)}
+                        onClick={onBookCourt}
                         className="hover:bg-orange-50 hover:border-orange-300"
                       >
                         {time}
