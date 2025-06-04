@@ -263,7 +263,14 @@ const ClubCard = ({ club, selectedDate, timeSlots, onBookCourt }: {
       <CardContent className="p-6">
         <div className="space-y-4">
           <div>
-            <h3 className="text-xl font-bold">{club.name}</h3>
+            <h3 className="text-xl font-bold">
+              <a 
+                href={`/club/${club.slug || club.id}`}
+                className="hover:text-orange-600 transition-colors"
+              >
+                {club.name}
+              </a>
+            </h3>
             <div className="flex items-center text-gray-500 mt-1">
               <MapPin className="h-4 w-4 mr-1" />
               <span className="text-sm">{club.location}</span>

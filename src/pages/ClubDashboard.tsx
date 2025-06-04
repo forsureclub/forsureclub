@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ClubManagement } from "@/components/ClubManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Calendar, DollarSign, Users, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { PlayerContactsManager } from "@/components/PlayerContactsManager";
 
 const ClubDashboard = () => {
   const [stats, setStats] = useState({
@@ -138,7 +138,7 @@ const ClubDashboard = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
           <TabsTrigger value="courts">Courts & Facilities</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="players">Player Contacts</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -216,8 +216,8 @@ const ClubDashboard = () => {
           <ClubManagement />
         </TabsContent>
 
-        <TabsContent value="members">
-          <MembersManagement />
+        <TabsContent value="players">
+          <PlayerContactsManager />
         </TabsContent>
 
         <TabsContent value="settings">
