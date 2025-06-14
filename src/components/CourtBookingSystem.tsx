@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -9,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DatePicker } from "./ui/date-picker";
-import { format } from "date-fns";
+import { format, isWednesday } from "date-fns";
 import { BookingModal } from "./BookingModal";
+import { WednesdayBookingCard } from "./WednesdayBookingCard";
 
 interface Club {
   id: string;
@@ -43,6 +43,9 @@ export const CourtBookingSystem = () => {
   const [loading, setLoading] = useState(true);
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const { toast } = useToast();
+
+  // Check if selected date is Wednesday
+  const isWednesdaySelected = isWednesday(selectedDate);
 
   useEffect(() => {
     fetchClubs();
@@ -103,7 +106,22 @@ export const CourtBookingSystem = () => {
       <div className="text-center space-y-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-8 rounded-2xl">
         <h1 className="text-4xl font-bold">Find Your Perfect Padel Court</h1>
         <p className="text-xl opacity-90">Book premium courts in minutes</p>
+        {isWednesdaySelected && (
+          <Badge className="bg-white/20 text-white text-lg px-4 py-2 mt-2">
+            ⭐ Wednesday Warriors Special Day! ⭐
+          </Badge>
+        )}
       </div>
+
+      {/* Wednesday Special Banner */}
+      {isWednesdaySelected && (
+        <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-6 rounded-xl border-2 border-orange-300">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-orange-800">🎯 Wednesday Warriors Mode Activated!</h2>
+            <p className="text-orange-700">Smart scheduling, easy rebooking, and group booking tools available below</p>
+          </div>
+        </div>
+      )}
 
       {/* Simple Search */}
       <Card className="shadow-lg">
@@ -134,11 +152,25 @@ export const CourtBookingSystem = () => {
         </CardContent>
       </Card>
 
+      {/* Wednesday Special Features */}
+      {isWednesdaySelected && filteredClubs.length > 0 && (
+        <WednesdayBookingCard 
+          club={filteredClubs[0]} 
+          onBookingComplete={() => {
+            toast({
+              title: "Wednesday Booking Complete!",
+              description: "Your Wednesday Warriors session is confirmed",
+            });
+          }}
+        />
+      )}
+
       {/* Results */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
             Available Courts {searchQuery && `in "${searchQuery}"`}
+            {isWednesdaySelected && " - Wednesday Warriors"}
           </h2>
           <Badge variant="outline" className="text-lg px-4 py-2">
             {filteredClubs.length} clubs found
@@ -170,6 +202,7 @@ export const CourtBookingSystem = () => {
                 club={club}
                 selectedDate={selectedDate}
                 onBookCourt={() => setSelectedClub(club)}
+                isWednesday={isWednesdaySelected}
               />
             ))}
           </div>
@@ -187,15 +220,22 @@ export const CourtBookingSystem = () => {
   );
 };
 
-const ClubCard = ({ club, selectedDate, onBookCourt }: {
+const ClubCard = ({ club, selectedDate, onBookCourt, isWednesday }: {
   club: Club;
   selectedDate: Date;
   onBookCourt: () => void;
+  isWednesday?: boolean;
 }) => {
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
+    <Card className={`overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-lg ${
+      isWednesday ? 'ring-2 ring-orange-300 bg-gradient-to-br from-orange-50 to-white' : ''
+    }`}>
       {/* Club Image/Header */}
-      <div className="h-48 bg-gradient-to-br from-orange-400 to-orange-600 relative">
+      <div className={`h-48 relative ${
+        isWednesday 
+          ? 'bg-gradient-to-br from-orange-400 to-orange-600' 
+          : 'bg-gradient-to-br from-orange-400 to-orange-600'
+      }`}>
         <div className="absolute top-4 left-4 flex gap-2">
           <Badge className="bg-white text-orange-600 font-semibold">
             <Users className="h-3 w-3 mr-1" />
@@ -205,6 +245,11 @@ const ClubCard = ({ club, selectedDate, onBookCourt }: {
             <Star className="h-3 w-3 mr-1 text-yellow-500 fill-current" />
             {club.rating || 4.5}
           </Badge>
+          {isWednesday && (
+            <Badge className="bg-white text-orange-600 font-semibold animate-pulse">
+              ⭐ Wednesday Special
+            </Badge>
+          )}
         </div>
         
         <div className="absolute bottom-4 left-4 text-white">
@@ -223,6 +268,11 @@ const ClubCard = ({ club, selectedDate, onBookCourt }: {
             <div>
               <span className="text-3xl font-bold text-orange-600">£{club.price_per_hour}</span>
               <span className="text-gray-500 ml-1">/hour</span>
+              {isWednesday && (
+                <Badge className="ml-2 bg-orange-100 text-orange-600 text-xs">
+                  Wednesday Rate
+                </Badge>
+              )}
             </div>
             <div className="text-right text-sm text-gray-500">
               Available {format(selectedDate, "MMM d")}
@@ -272,9 +322,13 @@ const ClubCard = ({ club, selectedDate, onBookCourt }: {
             </Button>
             <Button 
               onClick={onBookCourt}
-              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              className={`flex-1 ${
+                isWednesday 
+                  ? 'bg-orange-600 hover:bg-orange-700 shadow-lg' 
+                  : 'bg-orange-600 hover:bg-orange-700'
+              }`}
             >
-              Book Now
+              {isWednesday ? '⭐ Book Wednesday' : 'Book Now'}
             </Button>
           </div>
         </div>
