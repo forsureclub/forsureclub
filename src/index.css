@@ -1,6 +1,8 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import './styles/mobile.css';
 
 @layer base {
   :root {
@@ -92,12 +94,17 @@
   body {
     @apply bg-background text-foreground transition-colors duration-300;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Improved mobile font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Better mobile scrolling */
+    -webkit-overflow-scrolling: touch;
   }
   
-  /* Modern scrollbar */
+  /* Mobile-optimized scrollbar */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
   
   ::-webkit-scrollbar-track {
@@ -106,11 +113,22 @@
   
   ::-webkit-scrollbar-thumb {
     @apply bg-gray-300 dark:bg-gray-700;
-    border-radius: 5px;
+    border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400 dark:bg-gray-600;
+  }
+  
+  /* Mobile safe areas */
+  @supports (padding: max(0px)) {
+    .mobile-safe-top {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+    
+    .mobile-safe-bottom {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
   }
 }
 
@@ -122,6 +140,49 @@
   .animate-slide-up {
     animation: slideUp 0.3s ease-in-out;
   }
+  
+  /* Mobile-first responsive containers */
+  .mobile-container {
+    @apply w-full px-4 mx-auto;
+    max-width: 100%;
+  }
+  
+  @media (min-width: 640px) {
+    .mobile-container {
+      @apply px-6;
+      max-width: 640px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .mobile-container {
+      @apply px-8;
+      max-width: 1024px;
+    }
+  }
+  
+  /* Touch-friendly interactive elements */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Mobile-optimized buttons */
+  .mobile-btn {
+    @apply px-4 py-3 text-sm font-medium rounded-lg transition-colors;
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .mobile-btn-primary {
+    @apply mobile-btn bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800;
+  }
+  
+  .mobile-btn-secondary {
+    @apply mobile-btn bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300;
+  }
 }
 
 @keyframes fadeIn {
@@ -132,4 +193,35 @@
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* Mobile-specific animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.slide-out-down {
+  animation: slideOutDown 0.3s ease-out;
 }
