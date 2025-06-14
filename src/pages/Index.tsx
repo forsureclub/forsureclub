@@ -2,15 +2,17 @@
 import { useState } from "react";
 import { Hero } from "../components/Hero";
 import { MatchmakingCard } from "../components/MatchmakingCard";
+import { EnhancedMatchmakingCard } from "../components/matchmaking/EnhancedMatchmakingCard";
 import { Button } from "@/components/ui/button";
 import { PlayerLeaderboard } from "@/components/PlayerLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { PlayerSwiper } from "@/components/PlayerSwiper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Trophy, Users } from "lucide-react";
+import { Search, Trophy, Users, Zap } from "lucide-react";
 
 const Index = () => {
   const [isMatching, setIsMatching] = useState(false);
+  const [useEnhancedMatching, setUseEnhancedMatching] = useState(true);
   const { user } = useAuth();
 
   const handleBack = () => {
@@ -29,21 +31,35 @@ const Index = () => {
           <header className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Find Your Match</h1>
             
-            <Button
-              variant="outline"
-              className="text-gray-700"
-              onClick={handleBack}
-            >
-              Back to Home
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant={useEnhancedMatching ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseEnhancedMatching(!useEnhancedMatching)}
+                className="flex items-center gap-2"
+              >
+                <Zap className="h-4 w-4" />
+                {useEnhancedMatching ? "Enhanced AI" : "Basic"}
+              </Button>
+              <Button
+                variant="outline"
+                className="text-gray-700"
+                onClick={handleBack}
+              >
+                Back to Home
+              </Button>
+            </div>
           </header>
 
           <h2 className="text-3xl font-bold text-center mb-6">
             Find Your Padel Match
           </h2>
-          <MatchmakingCard 
-            selectedSport="Padel" 
-          />
+          
+          {useEnhancedMatching ? (
+            <EnhancedMatchmakingCard selectedSport="Padel" />
+          ) : (
+            <MatchmakingCard selectedSport="Padel" />
+          )}
         </div>
       ) : (
         <div className="space-y-8">
