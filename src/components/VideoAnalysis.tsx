@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { VideoAnalysisConfig } from "./VideoAnalysisConfig";
 
 export const VideoAnalysis = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -249,9 +249,9 @@ export const VideoAnalysis = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Video Analysis</CardTitle>
+        <CardTitle>AI Video Analysis</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Player Context Information */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Sport Selection */}
@@ -303,6 +303,13 @@ export const VideoAnalysis = () => {
             </select>
           </div>
         </div>
+
+        {/* AI Configuration Display */}
+        <VideoAnalysisConfig 
+          sport={selectedSport}
+          playerLevel={playerLevel}
+          focusArea={focusArea}
+        />
 
         {/* Upload Section */}
         <div className="flex flex-col items-center p-6 border-2 border-dashed rounded-lg">
@@ -367,15 +374,18 @@ export const VideoAnalysis = () => {
         {isAnalyzing ? (
           <div className="text-center p-6">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2">Analyzing your {selectedSport} technique with AI...</p>
-            <p className="text-sm text-gray-500">Generating personalized feedback for {playerLevel} level player</p>
+            <p className="mt-2">🎯 Analyzing your {selectedSport} technique with enhanced AI...</p>
+            <p className="text-sm text-gray-500">Identifying top 2 priority areas for {playerLevel} level improvement</p>
+            <div className="mt-4 text-xs text-gray-400">
+              Our AI is evaluating technical areas in priority order and will return exactly 2 actionable improvement areas
+            </div>
           </div>
         ) : feedback && (
           <div className="space-y-4">
             <div>
               <h3 className="font-medium text-lg flex items-center">
                 <Award className="mr-2 h-5 w-5 text-orange-500" /> 
-                AI Coach Feedback
+                🎯 Enhanced AI Coach Analysis
               </h3>
               <div className="p-4 bg-orange-50 rounded-md mt-2">
                 <div className="prose max-w-none whitespace-pre-line">
@@ -396,7 +406,7 @@ export const VideoAnalysis = () => {
               {errorMessage && (
                 <div className="mt-2">
                   <Button onClick={retryAnalysis} variant="secondary">
-                    Retry Analysis
+                    🔄 Retry Enhanced Analysis
                   </Button>
                 </div>
               )}
