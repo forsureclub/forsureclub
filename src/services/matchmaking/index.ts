@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { findMatchingPlayers, findFourPlayersForMatch, type MatchingResult } from "./matchingAlgorithm";
@@ -188,6 +189,3 @@ export async function organizeFourPlayerMatch(
 
 export { isMatchReadyForBooking } from "./matchCreation";
 export type { MatchingResult } from "./matchingAlgorithm";
-
-// Export enhanced matchmaking functionality
-export * from "./enhancedMatchmaking";

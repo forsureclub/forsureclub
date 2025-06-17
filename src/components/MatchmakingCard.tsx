@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -30,7 +31,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
   const [isWaitingForMatch, setIsWaitingForMatch] = useState(false);
   const [matchedPlayers, setMatchedPlayers] = useState<any[]>([]);
   const [foundMatch, setFoundMatch] = useState(false);
-  const [playerCount, setPlayerCount] = useState<'1' | '2' | '3'>('3');
+  const [playerCount, setPlayerCount] = useState<'1' | '2' | '3'>('1');
   const { toast } = useToast();
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
@@ -63,10 +64,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       // If sign in failed with an error that's not about credentials, handle that error
       if (signInError && !signInError.message.includes("Invalid login credentials")) {
         console.error("Error during sign-in check:", signInError);
-        toast({
+        toast.error({
           title: "Error",
           description: signInError.message,
-          variant: "destructive",
         });
         setIsJoining(false);
         return;
@@ -75,7 +75,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       // If sign in succeeded, the user already exists and is now logged in
       if (!signInError) {
         console.log("User already exists and is now signed in");
-        toast({
+        toast.success({
           title: "Welcome Back!",
           description: "You've been signed in successfully.",
         });
@@ -89,7 +89,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
         }
         
         if (!signUpError) {
-          toast({
+          toast.success({
             title: "Account Created",
             description: "Your account has been created successfully",
           });
@@ -131,12 +131,12 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       setIsJoining(false);
 
       if (matchResult.foundMatch) {
-        toast({
+        toast.success({
           title: "Perfect Match Found!",
           description: `Our AI has found ${matchResult.matchedPlayers.length} ideal players for your game! Check your email for details.`,
         });
       } else {
-        toast({
+        toast.success({
           title: "Registration Successful",
           description: `Our AI will continue looking for perfect matches and email you when found`,
         });
@@ -148,10 +148,9 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
       }, 3000);
     } catch (error: any) {
       console.error('Player registration error:', error);
-      toast({
+      toast.error({
         title: "Registration Failed",
         description: error.message ? String(error.message) : "An unexpected error occurred. Please try again.",
-        variant: "destructive",
       });
       setIsJoining(false);
     }
@@ -221,7 +220,7 @@ export const MatchmakingCard = ({ selectedSport }: { selectedSport: string }) =>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding Match...
             </span>
           ) : (
-            `Find ${playerCount === '1' ? '1 Player' : playerCount === '2' ? '2 Players' : '3 Players'}`
+            `Find ${playerCount === '1' ? 'a Partner' : playerCount === '2' ? '2 Players' : '3 Players'}`
           )}
         </Button>
       </div>
